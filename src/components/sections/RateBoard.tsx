@@ -53,9 +53,9 @@ export function RateBoard() {
         </span>
       </div>
       <div className="bd-row" style={{ borderBottom: 0 }}>
-        <span className="bd-sym" style={{ color: '#58C27D' }} aria-hidden="true">SOL</span>
+        <span className="bd-sym" style={{ color: 'var(--leaf)' }} aria-hidden="true">SOL</span>
         <span className="bd-lab">{t.lb_sol}</span>
-        <span className="bd-p" style={{ color: '#58C27D' }}>0.99</span>
+        <span className="bd-p" style={{ color: 'var(--leaf)' }}>0.99</span>
         <span className="bd-c flat">
           <span aria-hidden="true">&#9644;</span> {t.l_fixed}
         </span>

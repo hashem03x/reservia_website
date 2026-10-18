@@ -6,7 +6,7 @@
  */
 const en: Record<string, string> = {
 brand:"Reservia",brand_sub:"Integrated Energy Solutions",menu:"Menu",skip:"Skip to content",home_aria:"Reservia home",nav_aria:"Main",wa_aria:"Chat with Reservia on WhatsApp",tabs_aria:"Calculator type",sr_up:"up",map_alt:"Map of Egypt showing Reservia's regions: Cairo headquarters; farms in Wadi El Natrun, Alamein, Upper Egypt and New Valley; industrial and oil and gas sites in the Western Desert fields, Gulf of Suez, Ain Sokhna and 10th of Ramadan.",ab_banner_alt:"Reservia brand banner with the line Clean Energy. A Brighter Tomorrow., and solar panels in front of a city skyline.",
-nav_home:"Home",nav_res:"Homes & villas",nav_agri:"Farms",nav_ind:"Industry",nav_calc:"Savings calculator",nav_how:"How we work",nav_about:"About",nav_contact:"Contact",quote:"Get a free quote",nav_solutions:"Solutions",nav_company:"Company",
+nav_home:"Home",nav_res:"Homes & villas",nav_agri:"Farms",nav_ind:"Industry",nav_calc:"Savings calculator",nav_how:"How we work",nav_about:"About",nav_contact:"Contact",quote:"Get a free quote",nav_solutions:"Solutions",nav_company:"Company",theme_to_dark:"Switch to dark mode",theme_to_light:"Switch to light mode",
 h_eyebrow:"Solar + storage EPC · Egypt",h_title:"Make your own power. Pay less for it every month.",
 h_lead:"Reservia designs, installs and maintains solar and battery systems for homes, farms, oil and gas sites and factories across Egypt. One team from the first survey to years of maintenance.",
 h_cta1:"Calculate your savings",h_cta2:"Talk to an engineer",

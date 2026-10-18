@@ -5,6 +5,7 @@ import { NAV_ENTRIES } from '../../config/navigation';
 import { env } from '../../config/env';
 import { trackCallClick, trackLanguageChange } from '../../services/analytics';
 import { NavDropdown } from './NavDropdown';
+import { ThemeToggle } from './ThemeToggle';
 import { ChevronIcon } from '../icons/ChevronIcon';
 import logo from '../../assets/brand/logo.webp';
 
@@ -124,6 +125,7 @@ export function Header() {
           >
             {env.mobilePhone}
           </a>
+          <ThemeToggle />
           <button className="lang" type="button" lang={nextLang} onClick={switchLanguage}>
             {language === 'ar' ? 'English' : 'عربي'}
           </button>
