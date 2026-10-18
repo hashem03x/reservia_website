@@ -1,0 +1,104 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(8px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding-block: var(--space-4);
+}
+
+.logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-brand-900);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.logoMark {
+  color: var(--color-accent-600);
+}
+
+.nav {
+  display: none;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+.navLink {
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: var(--space-2) 0;
+  border-bottom: 2px solid transparent;
+  transition: color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.navLink:hover {
+  color: var(--color-brand-900);
+}
+
+.navLinkActive {
+  color: var(--color-brand-900);
+  border-color: var(--color-accent-500);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.langButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 0.4rem 0.75rem;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.langButton:hover {
+  border-color: var(--color-brand-700);
+}
+
+.ctaDesktop {
+  display: none;
+}
+
+.menuButton {
+  display: inline-flex;
+  background: transparent;
+  border: none;
+  padding: var(--space-2);
+  cursor: pointer;
+  color: var(--color-brand-900);
+}
+
+@media (min-width: 768px) {
+  .nav {
+    display: flex;
+  }
+  .ctaDesktop {
+    display: inline-flex;
+  }
+  .menuButton {
+    display: none;
+  }
+}

@@ -1,0 +1,73 @@
+/** Matches the reference template's `nav.main` links and `pages` list exactly -- same destinations, same labels. */
+export interface NavItem {
+  path: string;
+  labelKey: string;
+}
+
+/**
+ * The template's header lists all nine pages flat, which wraps onto a
+ * second row at realistic desktop widths (the nav text alone exceeds the
+ * ~1160px content width once the logo, phone pill, language toggle and
+ * CTA are accounted for). Every destination and label below is the same
+ * as the template -- only the presentation is grouped, into the
+ * "Solutions" (the four segment pages, matching the Home page's own
+ * "Pick your site" picker) and "Company" (how-we-work + about) clusters.
+ */
+export type NavEntry =
+  | { type: 'link'; path: string; labelKey: string }
+  | { type: 'group'; labelKey: string; items: NavItem[] };
+
+export const NAV_ENTRIES: NavEntry[] = [
+  { type: 'link', path: '/', labelKey: 'nav_home' },
+  {
+    type: 'group',
+    labelKey: 'nav_solutions',
+    items: [
+      { path: '/residential', labelKey: 'nav_res' },
+      { path: '/agriculture', labelKey: 'nav_agri' },
+      { path: '/industrial', labelKey: 'nav_ind' },
+      { path: '/service', labelKey: 'nav_svc' },
+    ],
+  },
+  { type: 'link', path: '/calculator', labelKey: 'nav_calc' },
+  {
+    type: 'group',
+    labelKey: 'nav_company',
+    items: [
+      { path: '/how-we-work', labelKey: 'nav_how' },
+      { path: '/about', labelKey: 'nav_about' },
+    ],
+  },
+  { type: 'link', path: '/contact', labelKey: 'nav_contact' },
+];
+
+/** Flat form of every main-nav destination, in original template order -- used by the footer's site-map column. */
+export const NAV_ITEMS: NavItem[] = [
+  { path: '/', labelKey: 'nav_home' },
+  { path: '/residential', labelKey: 'nav_res' },
+  { path: '/agriculture', labelKey: 'nav_agri' },
+  { path: '/industrial', labelKey: 'nav_ind' },
+  { path: '/service', labelKey: 'nav_svc' },
+  { path: '/calculator', labelKey: 'nav_calc' },
+  { path: '/how-we-work', labelKey: 'nav_how' },
+  { path: '/about', labelKey: 'nav_about' },
+  { path: '/contact', labelKey: 'nav_contact' },
+];
+
+export type Segment = 'villas' | 'compounds' | 'agriculture' | 'industrial' | 'service' | 'general' | 'calc';
+
+export interface CampaignPage {
+  path: string;
+  segment: Segment;
+  eyebrowKey: string;
+  calcTab: 'home' | 'farm' | 'ind';
+}
+
+/** The five ad-campaign landing pages (`lp-*` in the template), kept separate from the main nav. */
+export const CAMPAIGN_PAGES: CampaignPage[] = [
+  { path: '/lp/villas', segment: 'villas', eyebrowKey: 'lpv_eb', calcTab: 'home' },
+  { path: '/lp/compounds', segment: 'compounds', eyebrowKey: 'lpc_eb', calcTab: 'home' },
+  { path: '/lp/agriculture', segment: 'agriculture', eyebrowKey: 'lpa_eb', calcTab: 'farm' },
+  { path: '/lp/industrial', segment: 'industrial', eyebrowKey: 'lpi_eb', calcTab: 'ind' },
+  { path: '/lp/service', segment: 'service', eyebrowKey: 'lps_eb', calcTab: 'ind' },
+];

@@ -1,0 +1,122 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 560px;
+}
+
+.row {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 560px) {
+  .row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-inline-start: var(--space-1);
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  font: inherit;
+  font-size: var(--fs-body);
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-page);
+  color: var(--text-primary);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.input:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible {
+  border-color: var(--color-brand-700);
+}
+
+.inputError {
+  border-color: var(--color-error);
+}
+
+.textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.error {
+  font-size: var(--fs-micro);
+  color: var(--color-error);
+  margin: 0;
+}
+
+.privacyNote {
+  font-size: var(--fs-micro);
+  color: var(--text-secondary);
+}
+
+.submitRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.statusBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-small);
+}
+
+.statusBanner strong {
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
+.statusSuccess {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.statusError {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.statusMock {
+  background: #fff8ec;
+  border: 1px dashed var(--color-accent-500);
+  color: var(--color-accent-600);
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

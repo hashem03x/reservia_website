@@ -1,0 +1,79 @@
+/*
+  Design tokens ported directly from the supplied reference template
+  (Reservia.html). These are Reservia's real brand values -- not a
+  placeholder palette -- extracted from the template's :root custom
+  properties, including its light/dark mode variants. Variable names are
+  kept identical to the source template so CSS ported from it needs no
+  renaming.
+*/
+
+:root {
+  --bg: #f3f6f8;
+  --surface: #ffffff;
+  --sunken: #e8eef2;
+  --ink: #10263d;
+  --muted: #56687a;
+  --line: #d6e0e8;
+
+  --navy: #0d4782;
+  --teal: #2a7283;
+  --sun: #e8740f;
+  --sun-ink: #10263d;
+  --leaf: #2a7d3c;
+
+  --sun-text: #b84f08;
+  --err: #b3261e;
+  --field: #7b8fa1;
+  --focus: #0d4782;
+  --wa: #12803c;
+  --diesel: #8a7563;
+
+  --display: 'Bebas Neue', 'Readex Pro', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --body: 'IBM Plex Sans Arabic', 'Readex Pro', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+
+  --r: 10px;
+  --wrap: 1160px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0a1622;
+    --surface: #0f2133;
+    --sunken: #132a40;
+    --ink: #e6edf3;
+    --muted: #9db0c2;
+    --line: #21405d;
+    --navy: #7fb2ec;
+    --teal: #6cbacb;
+    --sun: #f59a3c;
+    --sun-ink: #1a0f02;
+    --leaf: #62c276;
+    --diesel: #b79e89;
+    --sun-text: #f59a3c;
+    --err: #ff8a7a;
+    --field: #5f7f9e;
+    --focus: #f59a3c;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #0a1622;
+  --surface: #0f2133;
+  --sunken: #132a40;
+  --ink: #e6edf3;
+  --muted: #9db0c2;
+  --line: #21405d;
+  --navy: #7fb2ec;
+  --teal: #6cbacb;
+  --sun: #f59a3c;
+  --sun-ink: #1a0f02;
+  --leaf: #62c276;
+  --diesel: #b79e89;
+  --sun-text: #f59a3c;
+  --err: #ff8a7a;
+  --field: #5f7f9e;
+  --focus: #f59a3c;
+  color-scheme: dark;
+}

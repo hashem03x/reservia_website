@@ -1,0 +1,10 @@
+.section {
+  padding-block: var(--space-10);
+  text-align: center;
+}
+
+.body {
+  font-size: var(--fs-lead);
+  color: var(--text-secondary);
+  margin-top: var(--space-4);
+}

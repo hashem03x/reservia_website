@@ -1,0 +1,25 @@
+.wrap {
+  max-width: 640px;
+  margin-bottom: var(--space-8);
+}
+
+.wrap.center {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent-600);
+  margin-bottom: var(--space-3);
+}
+
+.subtitle {
+  margin-top: var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--fs-lead);
+}

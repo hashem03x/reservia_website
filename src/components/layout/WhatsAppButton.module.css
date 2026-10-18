@@ -1,0 +1,22 @@
+.button {
+  position: fixed;
+  inset-inline-end: var(--space-5);
+  bottom: var(--space-5);
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: var(--color-brand-900);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-md);
+  transition: background-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.button:hover {
+  background: var(--color-brand-700);
+  transform: translateY(-2px);
+}

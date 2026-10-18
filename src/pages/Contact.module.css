@@ -1,0 +1,60 @@
+.layout {
+  padding-block: var(--space-10);
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-9);
+  grid-template-columns: 1fr;
+}
+
+.methodsTitle {
+  margin-bottom: var(--space-5);
+}
+
+.methods {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  list-style: none;
+}
+
+.method {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: var(--fs-small);
+}
+
+.methodIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  color: var(--color-brand-800);
+  flex-shrink: 0;
+}
+
+.method a {
+  color: var(--color-brand-800);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.method a:hover {
+  color: var(--color-accent-600);
+}
+
+.pending {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+@media (min-width: 960px) {
+  .grid {
+    grid-template-columns: 0.9fr 1.1fr;
+  }
+}

@@ -1,0 +1,9 @@
+.section {
+  padding-block: var(--space-12);
+  text-align: center;
+}
+
+.body {
+  color: var(--text-secondary);
+  margin-block: var(--space-4) var(--space-7);
+}
