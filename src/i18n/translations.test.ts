@@ -68,3 +68,49 @@ describe('required content', () => {
     expect(en.lpv_stat).toBe('EGP 36,800');
   });
 });
+
+describe('October 2026 brief, part 2', () => {
+  it('uses the four solution category names everywhere', () => {
+    const names = { en: ['Residential & Commercial', 'Agricultural Farms', 'Industrial Facilities', 'Services Sector'], ar: ['سكني وتجاري', 'المزارع الزراعية', 'المنشآت الصناعية', 'قطاع الخدمات'] };
+    for (const [lang, dict] of [['en', en], ['ar', ar]] as const) {
+      const n = names[lang];
+      expect([dict.nav_res, dict.nav_agri, dict.nav_ind, dict.nav_svc]).toEqual(n);
+      expect([dict.seg_res_t, dict.seg_agri_t, dict.seg_ind_t, dict.seg_svc_t]).toEqual(n);
+      expect([dict.tab_home, dict.tab_farm, dict.tab_ind, dict.tab_svc]).toEqual(n);
+      expect([dict.r_eyebrow, dict.a_eyebrow, dict.i_eyebrow, dict.s_eyebrow]).toEqual(n);
+    }
+  });
+
+  it('has no payment-terms-by-project-type content left', () => {
+    for (const text of [all(en), all(ar)]) {
+      expect(text).not.toMatch(/payment terms by project type|شروط الدفع حسب نوع المشروع/i);
+      expect(text).not.toMatch(/70 ?\/ ?30|50 ?\/ ?30 ?\/ ?20|80 ?\/ ?20|70% (when you sign|عند)|50% (when you sign|عند)|80% (when you sign|عند)/);
+    }
+    for (const k of ['pay_title', 'terms_title', 'r_terms', 'a_terms', 'i_terms', 'c_terms', 's_faq_q3']) expect(en[k], k).toBeUndefined();
+  });
+
+  it('keeps flexible financing in the homepage and footer descriptions', () => {
+    expect(en.h_lead).toBe(
+      'Reservia is an integrated energy partner helping Egyptian homes, farms, industrial facilities and the services sector ensure business continuity and reduce electricity costs through tailored engineered solar systems, intelligent energy management and flexible financing.',
+    );
+    expect(ar.h_lead).toMatch(/تمويل مرن/);
+    expect(en.foot_desc).toBe(
+      'Reservia designs, finances, installs and maintains tailored energy solutions that help Egyptian homes and businesses reduce electricity costs and achieve reliable, sustainable power.',
+    );
+  });
+
+  it('renames Common questions to FAQ', () => {
+    expect(en.faq_t).toBe('FAQ');
+    expect(all(en)).not.toMatch(/Common questions/);
+  });
+
+  it('shows the LLC company name in the footer identity', () => {
+    expect(en.brand_legal).toBe('Reservia Integrated Energy Solutions LLC');
+    expect(en.foot1).toContain('Reservia Integrated Energy Solutions LLC');
+    expect(ar.foot1).toContain('ش.ذ.م.م');
+  });
+
+  it('has the four slogan words', () => {
+    expect([en.slogan_1, en.slogan_2, en.slogan_3, en.slogan_4]).toEqual(['Generate', 'Store', 'Optimize', 'Sustain']);
+  });
+});

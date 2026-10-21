@@ -2,6 +2,9 @@ import { expect, test, type Page, type Route } from '@playwright/test';
 import { LEADS_URL, PII, blockExternalNavigation, dataLayer, events, open, watchErrors } from './helpers';
 import { WAMSG } from '../../src/content/whatsappMessages';
 
+/** The "Send your bill to WhatsApp" CTA (any page). */
+const BILL = 'main a.btn.wa:has-text("Send your bill to WhatsApp")';
+
 const waText = async (page: Page, locator: string) => {
   const href = await page.locator(locator).first().getAttribute('href');
   return new URL(href!).searchParams.get('text') ?? '';
@@ -24,12 +27,12 @@ test.describe('calculator', () => {
     await expect(results).toContainText('5.3 years');
     await expect(results).toContainText('4.8 years');
 
-    const text = await waText(page, 'a.btn.wa:has-text("Send these numbers")');
+    const text = await waText(page, BILL);
     expect(text.startsWith(WAMSG.en.calc)).toBe(true);
     for (const part of ['6.0 kWp', '184,000 EGP', '36,804 EGP/yr', '5.3 years', '4.8 years']) expect(text).toContain(part);
 
     await blockExternalNavigation(page);
-    await page.locator('a.btn.wa:has-text("Send these numbers")').click();
+    await page.locator(BILL).click();
     const [click] = await events(page, 'click_whatsapp');
     expect(click).toMatchObject({ segment: 'villas', group: 'villas', system_size_kwp: 6, page: '/en/calculator' });
     expect(errors).toEqual([]);
@@ -44,11 +47,11 @@ test.describe('calculator', () => {
     await expect(page.locator('#tab-farm')).toHaveAttribute('aria-selected', 'true');
     await expect(page.locator('#f_hp')).toBeVisible();
     await page.keyboard.press('End');
-    await expect(page.locator('#tab-ind')).toBeFocused();
+    await expect(page.locator('#tab-svc')).toBeFocused();
     await page.keyboard.press('ArrowRight');
     await expect(page.locator('#tab-home')).toBeFocused();
     await page.keyboard.press('ArrowLeft');
-    await expect(page.locator('#tab-ind')).toBeFocused();
+    await expect(page.locator('#tab-svc')).toBeFocused();
     await page.keyboard.press('Home');
     await expect(page.locator('#tab-home')).toHaveAttribute('aria-selected', 'true');
     await expect(page.locator('#calcPanel')).toHaveAttribute('aria-labelledby', 'tab-home');
@@ -65,7 +68,7 @@ test.describe('calculator', () => {
       await page.locator('#h_val').fill(value);
       await expect(page.locator('.calc-invalid')).toHaveText('Enter positive numbers in every field to see an estimate.');
       await expect(page.locator('.results')).not.toContainText('NaN');
-      await expect(page.locator('a.btn.wa:has-text("Send these numbers")')).toHaveCount(0);
+      await expect(page.locator(BILL)).toHaveCount(0);
     }
     await page.locator('#h_val').fill('1200');
     await expect(page.locator('.calc-invalid')).toHaveText('');
@@ -105,10 +108,10 @@ test.describe('keyboard and navigation', () => {
   test('client-side navigation moves focus to the new page heading, one page_view per page', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await open(page, '/en');
-    await page.locator('footer a[href="/en/service"]').click();
+    await page.locator('.cards4 a.seg[href="/en/service"]').click();
     await expect(page).toHaveURL(/\/en\/service$/);
     await expect(page.locator('main h1')).toBeFocused();
-    await page.locator('footer a[href="/en/contact"]').first().click();
+    await page.locator('nav#nav > a[href="/en/contact"]:not(.btn)').click();
     await expect(page.locator('main h1')).toBeFocused();
     await page.goBack();
     await expect(page).toHaveURL(/\/en\/service$/);
@@ -157,8 +160,8 @@ test.describe('WhatsApp links', () => {
       await page.setViewportSize({ width: 1280, height: 900 });
       await open(page, path);
       if (path.includes('/lp/')) {
-        // Campaign pages swap the floating button for the sticky bar on mobile and the in-form link on desktop.
-        expect(await waText(page, '.lpform a.btn.wa')).toBe(WAMSG[lang][segment]);
+        // Campaign pages swap the floating button for the sticky bar (general chat, not the bill CTA).
+        expect(await waText(page, '.lpbar a.btn.wa')).toBe(WAMSG[lang][segment]);
       } else {
         expect(await waText(page, 'a.wafab')).toBe(WAMSG[lang][segment]);
         await expect(page.locator('a.wafab')).toHaveAttribute('rel', 'noopener noreferrer');
@@ -168,9 +171,9 @@ test.describe('WhatsApp links', () => {
 
   test('service page CTAs target the service sector', async ({ page }) => {
     await open(page, '/en/service');
-    expect(await waText(page, 'main a.btn.wa')).toBe(WAMSG.en.service);
+    await expect(page.locator('main a[href^="https://wa.me/"]')).toHaveCount(0);
     await page.locator('main .page-hero a[href="/en/contact?type=service"]').click();
-    await expect(page.locator('#q_type option:checked')).toHaveText('Hospital, hotel or school');
+    await expect(page.locator('#q_type option:checked')).toHaveText('Services sector (hospital, hotel, school, office)');
   });
 
   test('all wa.me links use the configured number', async ({ page }) => {
@@ -208,7 +211,7 @@ test.describe('contact form', () => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' });
     });
     await open(page, '/en/contact?type=service');
-    await expect(page.locator('#q_type option:checked')).toHaveText('Hospital, hotel or school');
+    await expect(page.locator('#q_type option:checked')).toHaveText('Services sector (hospital, hotel, school, office)');
     await page.locator('#q_name').fill(PII.name);
     await page.locator('#q_phone').fill(PII.phone);
     await page.locator('#q_gov').fill(PII.area);
@@ -309,8 +312,7 @@ test.describe('trust, claims and content', () => {
     await expect(page.locator('h2', { hasText: 'What you can check before you sign' })).toBeVisible();
     await expect(page.locator('.tg > div')).toHaveCount(6);
     await expect(page.locator('main details')).toHaveCount(5);
-    await expect(page.locator('.hero a.btn.sun')).toHaveText('Get a free quote');
-    await expect(page.locator('.hero a.btn.wa')).toBeVisible();
+    await expect(page.locator('.hero .cta-row > a')).toHaveText(['Calculate your savings', 'Talk to an engineer', 'Send your bill to WhatsApp']);
     await expect(page.locator('header .tools a.btn.sun')).toHaveText('Get a free quote');
     await expect(page.locator('body')).not.toContainText(/NREA|certified/i);
     await expect(page.locator('.board')).toContainText('2.89');
@@ -341,7 +343,6 @@ test.describe('trust, claims and content', () => {
   test('home segment picker includes the service sector', async ({ page }) => {
     await open(page, '/en');
     await expect(page.locator('.cards4 a.seg[href="/en/service"]')).toBeVisible();
-    await expect(page.locator('footer a[href="/en/service"]')).toBeVisible();
     await expect(page.locator('footer a[href="/en/lp/service"]')).toBeVisible();
   });
 });

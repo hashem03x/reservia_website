@@ -3,7 +3,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { isLeadsApiConfigured } from '../../config/env';
 import { useLeadForm } from '../../hooks/useLeadForm';
 import { parseOptionalNumber, validateName, validateOptionalNumber, validatePhone } from '../../services/validation';
-import { WaLink } from '../ui/WaLink';
+import { BillWaLink, WaLink } from '../ui/WaLink';
 import { FieldErrorText } from './FieldErrorText';
 import type { Segment } from '../../config/navigation';
 
@@ -116,9 +116,10 @@ export function LeadForm({ segment, extraLabel, idPrefix }: { segment: Segment; 
         </button>
       )}
       {!done && (
-        <WaLink segment={segment} style={{ width: '100%', marginTop: 10 }}>
+        // Residential & Commercial campaign pages only (BillWaLink enforces the rule).
+        <BillWaLink segment={segment} style={{ width: '100%', marginTop: 10 }}>
           {t.lp_wa_direct}
-        </WaLink>
+        </BillWaLink>
       )}
 
       <div role="status" aria-live="polite">

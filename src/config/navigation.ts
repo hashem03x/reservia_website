@@ -63,15 +63,32 @@ export type Segment = 'villas' | 'compounds' | 'agriculture' | 'industrial' | 's
  * 'industrial' (client brief). Website-only assumption -- it does not
  * touch ERP payment or accounting logic.
  */
+/**
+ * Where "Send your bill to WhatsApp" may appear (client rule, October 2026):
+ * the homepage ('general') and the Residential & Commercial solution
+ * (villas, compounds) only. Agricultural Farms, Industrial Facilities and
+ * the Services Sector never show it. The general WhatsApp chat (floating
+ * button, footer, contact page) is a different CTA and is not affected.
+ * Enforced in one place by <BillWaLink>.
+ */
+const BILL_WHATSAPP_SEGMENTS: ReadonlySet<Segment> = new Set<Segment>(['general', 'villas', 'compounds']);
+
+export function offersBillWhatsapp(segment: Segment): boolean {
+  return BILL_WHATSAPP_SEGMENTS.has(segment);
+}
+
 export function segmentGroup(segment: Segment): string {
   return segment === 'service' ? 'industrial' : segment;
 }
+
+/** Savings-calculator tabs, one per solution category (Residential & Commercial, Agricultural Farms, Industrial Facilities, Services Sector). */
+export type CalcTab = 'home' | 'farm' | 'ind' | 'svc';
 
 export interface CampaignPage {
   path: string;
   segment: Segment;
   eyebrowKey: string;
-  calcTab: 'home' | 'farm' | 'ind';
+  calcTab: CalcTab;
 }
 
 /** The five ad-campaign landing pages (`lp-*` in the template), kept separate from the main nav. */
@@ -80,7 +97,7 @@ export const CAMPAIGN_PAGES: CampaignPage[] = [
   { path: '/lp/compounds', segment: 'compounds', eyebrowKey: 'lpc_eb', calcTab: 'home' },
   { path: '/lp/agriculture', segment: 'agriculture', eyebrowKey: 'lpa_eb', calcTab: 'farm' },
   { path: '/lp/industrial', segment: 'industrial', eyebrowKey: 'lpi_eb', calcTab: 'ind' },
-  { path: '/lp/service', segment: 'service', eyebrowKey: 'lps_eb', calcTab: 'ind' },
+  { path: '/lp/service', segment: 'service', eyebrowKey: 'lps_eb', calcTab: 'svc' },
 ];
 
 /** Ported from the template's `route()`: which WhatsApp segment the floating button/sticky bar uses, by current page. */

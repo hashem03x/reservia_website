@@ -18,6 +18,8 @@ small, local change. The **Change when answered** column says exactly where.
 | 8 | Clickable emails | Emails are plain text with a Copy button | `VITE_ENABLE_MAILTO_LINKS=true` |
 | 9 | Public company details | Organization JSON-LD omits phones, emails and legal name | `VITE_PUBLISH_ORG_CONTACTS=true` |
 | 10 | Meta server-side (CAPI) | Lead `eventId` is sent to the lead endpoint for deduplication | Backend work, see below |
+| 11 | Partner logos | "Our partners" section hidden: no approved partner assets exist | Add logos to `src/content/partners.ts` |
+| 12 | Financing wording | "Flexible financing" in homepage, footer and trust copy; payment terms removed | Confirm the offer applies to every segment |
 
 ---
 
@@ -129,6 +131,11 @@ small, local change. The **Change when answered** column says exactly where.
 - **Needed from the client.** Legal company name, mobile number, both email addresses.
 - **When answered.** Set `VITE_PUBLISH_ORG_CONTACTS=true` (and the `VITE_*_EMAIL` / `VITE_*_PHONE`
   values if they differ). Add `legalName` in `src/content/organization.ts` once it is confirmed.
+- **Update (October 2026, part 2).** The client asked for **"Reservia Integrated Energy Solutions
+  LLC"** in the footer identity and copyright line, which is done. It has **not** been added to
+  structured data as `legalName`, because the brief says not to change registered legal
+  information elsewhere without verifying the source. Confirm it is the registered name and it
+  can go into the JSON-LD too.
 
 ## 10. Meta Conversions API (server-side) and CRM
 
@@ -158,9 +165,39 @@ small, local change. The **Change when answered** column says exactly where.
 
 ---
 
+## 11. Partner logos (added October 2026, part 2)
+
+- **Why it matters.** The homepage "Our partners" carousel must show real, approved partnerships
+  only.
+- **Current state.** The repository has no partner names or logos, so none were invented.
+  `PARTNERS` in `src/content/partners.ts` is empty and the section is **not rendered** in
+  production, so the homepage shows no gap. In local development, or in a build with
+  `VITE_PARTNERS_PREVIEW=true`, the carousel shows labelled "Logo pending" tiles so the design
+  can be reviewed. Never set that flag for production.
+- **Needed from the client.** For each partner: the approved company name, the logo (SVG or
+  transparent WebP/PNG, at least 400 px wide), an optional website link, and written permission to
+  display it.
+- **When answered.** Add each logo under `src/assets/partners/` and an entry in `PARTNERS`
+  (instructions are in that file). The section appears automatically.
+
+## 12. Payment terms and financing wording (added October 2026, part 2)
+
+- Payment terms by project type (the 70/30, 50/30/20 and 80/20 table, the per-page payment rows,
+  the campaign-page payment chips and the service-sector payment FAQ) were removed at the client's
+  request. Trust point 3 now reads: "You pay in stages tied to delivery, as set out in your
+  contract, and flexible financing is available."
+- "Flexible financing" appears in the homepage description, the footer ("designs, finances,
+  installs and maintains") and trust point 3, all from the client's own copy. Please confirm the
+  financing offer is available to every segment before launch.
+
 ### Other copy flagged for client review
 
-- New Arabic copy written for this brief (not from the approved template deck): WhatsApp
+- New Arabic copy written for the second October brief: the four category names (سكني وتجاري،
+  المزارع الزراعية، المنشآت الصناعية، قطاع الخدمات), the slogan (توليد. تخزين. ترشيد. استدامة.),
+  the homepage and footer descriptions, the LLC name (ش.ذ.م.م), the calculator fields (on-grid and
+  off-grid, monthly cost, facility type, crop and tree lists), "الأسئلة الشائعة" and the partners
+  labels.
+- New Arabic copy written for the first October brief (not from the approved template deck): WhatsApp
   messages, form states (`q_sent`, `q_fail`, `lp_mock_*`, `err_number`, `q_err_summary`),
   service FAQ (`s_faq_*`), rate-board note (`l_res_cmp`, `l_dsl_warn`), `map_lead`, `a_perm`,
   `r_a2`, `tk6_d`, `a_small`, `lang_switch_sr`.

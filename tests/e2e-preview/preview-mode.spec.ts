@@ -25,6 +25,12 @@ test.describe('preview mode (no lead endpoint, no domain)', () => {
     expect(await events(page, 'generate_lead')).toHaveLength(0);
   });
 
+  test('no partners section until real partner logos are added (nothing invented)', async ({ page }) => {
+    await open(page, '/en');
+    await expect(page.locator('section.partners')).toHaveCount(0);
+    await expect(page.locator('body')).not.toContainText('Logo pending');
+  });
+
   test('static HTML per route has its own head and no guessed canonical URL', async ({ request }) => {
     const ar = await (await request.get('/ar/service')).text();
     expect(ar).toContain('<html lang="ar" dir="rtl">');

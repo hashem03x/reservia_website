@@ -3,7 +3,19 @@ import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { waHref } from '../../services/whatsapp';
 import { trackWhatsappClick } from '../../services/analytics';
-import type { Segment } from '../../config/navigation';
+import { offersBillWhatsapp, type Segment } from '../../config/navigation';
+
+/**
+ * "Send your bill to WhatsApp". Renders only where the client's visibility
+ * rule allows it (homepage and Residential & Commercial, see
+ * offersBillWhatsapp in config/navigation.ts), so no page can show it by
+ * mistake. `children` defaults to the standard label.
+ */
+export function BillWaLink(props: Omit<Parameters<typeof WaLink>[0], 'children'> & { children?: ReactNode }) {
+  const { t } = useLanguage();
+  if (!offersBillWhatsapp(props.trackSegment ?? props.segment)) return null;
+  return <WaLink {...props}>{props.children ?? t.h_cta_wa}</WaLink>;
+}
 
 /**
  * One WhatsApp link implementation for the whole site: prefilled message

@@ -4,14 +4,13 @@ import { Seo } from '../components/layout/Seo';
 import { Pillars } from '../components/sections/Pillars';
 import { Faq, faqPairs } from '../components/sections/Faq';
 import { CtaBand } from '../components/sections/CtaBand';
-import { WaLink } from '../components/ui/WaLink';
 
 /**
  * Service-sector segment (hospitals and clinics, hotels and resorts,
  * schools and universities, malls, offices and clubs). Priced and tracked
- * under the industrial model on the website (50/30/20 terms; analytics
- * segment = 'service', group = 'industrial'). The 2.55 EGP/kWh grid rate
- * is disclosed as an assumption (s_note, s_faq_a1), never as the tariff
+ * under the industrial model on the website (analytics segment =
+ * 'service', group = 'industrial'). No WhatsApp bill CTA here (client
+ * rule). The 2.55 EGP/kWh grid rate is disclosed as an assumption (s_note, s_faq_a1), never as the tariff
  * every such building pays. The industry examples are third-party
  * installations, each explicitly labelled "Not a Reservia project".
  */
@@ -25,7 +24,6 @@ const GROUPS = [
 const FAQ_KEYS: Array<[string, string]> = [
   ['s_faq_q1', 's_faq_a1'],
   ['s_faq_q2', 's_faq_a2'],
-  ['s_faq_q3', 's_faq_a3'],
 ];
 
 export default function Service() {
@@ -41,9 +39,8 @@ export default function Service() {
           <h1>{t.s_title}</h1>
           <p className="lead">{t.s_lead}</p>
           <div className="cta-row">
-            <Link className="btn sun" to={`/${language}/calculator?tab=ind`}>{t.try_calc_ind}</Link>
+            <Link className="btn sun" to={`/${language}/calculator?tab=svc`}>{t.try_calc_ind}</Link>
             <Link className="btn ghost" to={`/${language}/contact?type=service`}>{t.quote}</Link>
-            <WaLink segment="service">{t.s_cta_wa}</WaLink>
           </div>
         </div>
       </section>
@@ -73,11 +70,6 @@ export default function Service() {
         <div className="wrap">
           <h2>{t.s_how_t}</h2>
           <Pillars items={[{ body: t.s_h1 }, { body: t.s_h2 }, { body: t.s_h3 }, { body: t.s_h4 }]} />
-          <div className="termsline">
-            <span className="chip">50 / 30 / 20</span>
-            <b>{t.terms_label}</b>
-            <span>{t.i_terms}</span>
-          </div>
         </div>
       </section>
 

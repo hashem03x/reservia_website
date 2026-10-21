@@ -5,6 +5,32 @@ import type { Language } from '../i18n/LanguageContext';
 
 export { segmentGroup };
 
+/**
+ * The savings-calculator estimate a visitor chose to send with their
+ * enquiry ("Get an exact quote"). Built only from the active tab's
+ * fields, so inputs from another category are never carried over.
+ * Option ids (crop, tree, facility type) are stable identifiers from
+ * src/content/farmCrops.ts and the calculator, never free text.
+ */
+export interface CalculatorContext {
+  category: 'residential_commercial' | 'agricultural_farms' | 'industrial_facilities' | 'services_sector';
+  siteConfig?: 'on-grid' | 'off-grid';
+  monthlyKwh?: number;
+  roofM2?: number;
+  battery?: boolean;
+  pumpHp?: number;
+  crop?: string;
+  tree?: string;
+  facilityType?: string;
+  monthlyElectricityCostEgp?: number;
+  solarSharePct?: number;
+  dieselPriceEgp?: number;
+  systemSizeKwp: number;
+  indicativePriceEgp: number;
+  yearlySavingEgp: number;
+  paybackYears: number | null;
+}
+
 export interface LeadFormInput {
   name: string;
   phone: string;
@@ -14,6 +40,7 @@ export interface LeadFormInput {
   /** Numeric field from a landing-page form (bill, pump hp, diesel litres, ...). */
   siteInput?: number;
   source: 'contact_form' | 'landing_form';
+  calculator?: CalculatorContext;
 }
 
 export interface LeadPayload extends LeadFormInput {

@@ -9,6 +9,13 @@ import { useLeadForm } from '../hooks/useLeadForm';
 import { trackCallClick, trackEmailClick } from '../services/analytics';
 import { validateName, validatePhone } from '../services/validation';
 import type { Segment } from '../config/navigation';
+import type { CalculatorContext } from '../services/leadService';
+
+/** Estimate handed over by the calculator's "Get an exact quote" link (router state, never the URL). */
+function readCalcState(state: unknown): { context: CalculatorContext; summary: string } | null {
+  const calc = (state as { calc?: { context?: CalculatorContext; summary?: string } } | null)?.calc;
+  return calc && calc.context && typeof calc.summary === 'string' ? { context: calc.context, summary: calc.summary } : null;
+}
 
 /**
  * Site-type options, matching the template's qform o1..o7. `id` is the
@@ -72,6 +79,7 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
 export default function Contact() {
   const { t } = useLanguage();
   const location = useLocation();
+  const [calc, setCalc] = useState(() => readCalcState(location.state));
   const [searchParams] = useSearchParams();
   const preselected = Math.max(0, SITE_TYPES.findIndex((o) => o.id === searchParams.get('type')));
 
@@ -92,6 +100,7 @@ export default function Contact() {
       governorate: gov.trim() || undefined,
       message: note.trim() || undefined,
       source: 'contact_form',
+      calculator: calc?.context,
     }),
   });
 
@@ -140,12 +149,21 @@ export default function Contact() {
               <span className="v">{env.website}</span>
             </div>
             <div style={{ borderBottom: 0 }}>
-              <WaLink segment="general">{t.h_cta_wa}</WaLink>
+              {/* General chat, not the bill CTA (that one is homepage + Residential & Commercial only). */}
+              <WaLink segment="general">{t.wa_chat}</WaLink>
             </div>
           </div>
 
           <form className="panel" noValidate onSubmit={onSubmit} aria-labelledby="qform-t" aria-busy={submitting}>
             <h2 className="fh" id="qform-t" style={{ marginBottom: 14 }}>{t.lp_form_t}</h2>
+            {calc && (
+              <div className="calc-attached">
+                <p><b>{t.ct_calc_attached}</b> {calc.summary}</p>
+                {!done && !submitting && (
+                  <button type="button" className="copy" onClick={() => setCalc(null)}>{t.ct_calc_remove}</button>
+                )}
+              </div>
+            )}
             <div className="field">
               <label htmlFor="q_name">{t.q_name}</label>
               <input

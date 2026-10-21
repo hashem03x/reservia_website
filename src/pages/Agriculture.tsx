@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
 import { Faq, faqPairs } from '../components/sections/Faq';
-import { WaLink } from '../components/ui/WaLink';
 
 const FAQ_KEYS: Array<[string, string]> = [
   ['a_q1', 'a_a1'],
@@ -26,7 +25,6 @@ export default function Agriculture() {
           <div className="cta-row">
             <Link className="btn sun" to={`/${language}/calculator?tab=farm`}>{t.try_calc_farm}</Link>
             <Link className="btn ghost" to={`/${language}/contact?type=farm`}>{t.quote}</Link>
-            <WaLink segment="agriculture">{t.a_cta_wa}</WaLink>
           </div>
         </div>
       </section>
@@ -85,13 +83,6 @@ export default function Agriculture() {
               <div><dt>{t.ex_payback}</dt><dd>{t.a_ex5}</dd></div>
             </dl>
             <p className="foot">{t.a_ex_note}</p>
-          </div>
-        </div>
-        <div className="wrap">
-          <div className="termsline">
-            <span className="chip">80 / 20</span>
-            <b>{t.terms_label}</b>
-            <span>{t.a_terms}</span>
           </div>
         </div>
       </section>

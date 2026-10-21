@@ -1,10 +1,18 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { CAMPAIGN_PAGES, NAV_ENTRIES } from '../../config/navigation';
+import { CAMPAIGN_PAGES } from '../../config/navigation';
 import { env, flags, isLeadsApiConfigured } from '../../config/env';
 import { trackCallClick, trackEmailClick } from '../../services/analytics';
+import { WaLink } from '../ui/WaLink';
+import { WhatsAppIcon } from '../icons/SegmentIcons';
 import logo from '../../assets/brand/logo.webp';
 
+/**
+ * Two-column footer: company identity (name with the LLC suffix, the
+ * footer description and a general WhatsApp chat button) and contact
+ * details. The former "Main menu" link column was removed at the client's
+ * request; the header navigation covers every page.
+ */
 export function Footer() {
   const { language, t } = useLanguage();
   const location = useLocation();
@@ -18,33 +26,19 @@ export function Footer() {
               <img src={logo} alt="" width={34} height={36} />
               <div>
                 <b>{t.brand}</b>
-                <small>{t.brand_sub}</small>
+                <small>{t.brand_legal}</small>
               </div>
             </div>
-            <p>{t.h_lead}</p>
+            <p>{t.foot_desc}</p>
+            {/* General WhatsApp chat (not the bill CTA). */}
+            <WaLink segment="general" className="btn wa footerWa">
+              <WhatsAppIcon />
+              <span>{t.wa_chat}</span>
+            </WaLink>
           </div>
 
           <div className="footerCol">
-            <h3>{t.nav_aria}</h3>
-            <ul>
-              {NAV_ENTRIES.map((entry) =>
-                entry.type === 'link' ? (
-                  <li key={entry.path}>
-                    <Link to={`/${language}${entry.path === '/' ? '' : entry.path}`}>{t[entry.labelKey]}</Link>
-                  </li>
-                ) : (
-                  entry.items.map((item) => (
-                    <li key={item.path}>
-                      <Link to={`/${language}${item.path}`}>{t[item.labelKey]}</Link>
-                    </li>
-                  ))
-                ),
-              )}
-            </ul>
-          </div>
-
-          <div className="footerCol">
-            <h3>{t.ct_eyebrow}</h3>
+            <h2 className="footerHeading">{t.ct_eyebrow}</h2>
             <ul>
               <li>
                 <a href={`tel:${env.mobilePhone.replace(/[^\d+]/g, '')}`} dir="ltr" onClick={() => trackCallClick(location.pathname)}>

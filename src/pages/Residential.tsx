@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
 import { Faq, faqPairs } from '../components/sections/Faq';
-import { WaLink } from '../components/ui/WaLink';
+import { BillWaLink } from '../components/ui/WaLink';
 import { CtaBand } from '../components/sections/CtaBand';
 
 const FAQ_KEYS: Array<[string, string]> = [
@@ -30,7 +30,7 @@ export default function Residential() {
           <div className="cta-row">
             <Link className="btn sun" to={`/${language}/calculator?tab=home`}>{t.try_calc}</Link>
             <Link className="btn ghost" to={`/${language}/contact?type=home`}>{t.quote}</Link>
-            <WaLink segment="villas">{t.h_cta_wa}</WaLink>
+            <BillWaLink segment="villas" />
           </div>
         </div>
       </section>
@@ -63,13 +63,6 @@ export default function Residential() {
               <div><dt>{t.ex_payback}</dt><dd>{t.r_ex5}</dd></div>
             </dl>
             <p className="foot">{t.r_ex_note}</p>
-          </div>
-        </div>
-        <div className="wrap">
-          <div className="termsline">
-            <span className="chip">70 / 30</span>
-            <b>{t.terms_label}</b>
-            <span>{t.r_terms}</span>
           </div>
         </div>
       </section>

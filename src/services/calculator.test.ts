@@ -5,6 +5,7 @@ import {
   calcHome,
   calcIndustrialDiesel,
   calcIndustrialGrid,
+  calcIndustrialOffGrid,
   kwhFromBill,
   roundedPrice,
   safeInput,
@@ -157,5 +158,29 @@ describe('invalid input handling', () => {
     expect(safeInput(-1)).toBe(0);
     expect(safeInput(Number.NaN)).toBe(0);
     expect(safeInput(5)).toBe(5);
+  });
+});
+
+describe('Industrial Facilities: on-grid / off-grid from a monthly cost in EGP', () => {
+  it('off-grid converts fuel spend to litres at the entered diesel price (no new assumption)', () => {
+    const fromCost = calcIndustrialOffGrid(615000, 30, 20.5);
+    const fromLitres = calcIndustrialDiesel(615000 / 20.5, 30, 20.5);
+    expect(fromCost).toEqual(fromLitres);
+    expect(fromCost.save).toBeCloseTo(615000 * 12 * 0.3 * 1.1);
+  });
+
+  it('off-grid rejects a zero or negative diesel price or cost', () => {
+    expect(calcIndustrialOffGrid(615000, 30, 0).ok).toBe(false);
+    expect(calcIndustrialOffGrid(-1, 30, 20.5).ok).toBe(false);
+  });
+});
+
+describe('Services Sector: grid model at the disclosed service tariff', () => {
+  it('uses RATES.service and its own note, independent of the industrial tab', () => {
+    const svc = calcIndustrialGrid(150000, 30, RATES.service.value, 'n_svc_grid');
+    expect(svc.note).toBe('n_svc_grid');
+    expect(svc.kwp).toBeCloseTo((150000 / RATES.service.value) * 12 * 0.3 / 1750, 6);
+    expect(calcIndustrialGrid(150000, 30).note).toBe('n_ind_grid');
+    expect(calcIndustrialGrid(150000, 30, 0).ok).toBe(false);
   });
 });

@@ -8,7 +8,8 @@ import { defineConfig } from '@playwright/test';
  *    a fake host that every test intercepts with page.route(), so lead
  *    delivery success/failure can be exercised without a real CRM
  *    (nothing leaves the machine); VITE_SITE_URL is a placeholder domain
- *    so canonical/hreflang output can be checked.
+ *    so canonical/hreflang output can be checked; VITE_PARTNERS_PREVIEW
+ *    shows the partners carousel with labelled placeholder tiles.
  *  - "preview-mode" (tests/e2e-preview, dist-e2e-preview, port 4180): no
  *    lead endpoint and no domain -- the state the site ships in until the
  *    client decisions are made. Verifies forms never claim delivery.
@@ -40,6 +41,8 @@ export default defineConfig({
       env: {
         VITE_LEADS_API_URL: 'https://leads.e2e.invalid/api/leads',
         VITE_SITE_URL: 'https://www.example-e2e.test',
+        // Labelled placeholder tiles, so the partners carousel can be tested before real logos exist.
+        VITE_PARTNERS_PREVIEW: 'true',
       },
     },
     {
@@ -47,7 +50,7 @@ export default defineConfig({
       url: `http://localhost:${PREVIEW_PORT}/en`,
       reuseExistingServer: false,
       timeout: 180_000,
-      env: { VITE_LEADS_API_URL: '', VITE_SITE_URL: '' },
+      env: { VITE_LEADS_API_URL: '', VITE_SITE_URL: '', VITE_PARTNERS_PREVIEW: '' },
     },
   ],
 });

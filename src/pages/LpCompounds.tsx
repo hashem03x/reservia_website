@@ -9,7 +9,6 @@ const spec: LandingPageSpec = {
   leadKey: 'lpc_lead',
   statKey: 'lpc_stat',
   statLabelKey: 'lpc_statl',
-  termsKey: 'c_terms',
   benefitKeys: ['lpc_b1', 'lpc_b2', 'lpc_b3'],
   extraLabelKey: 'lpc_x',
 };

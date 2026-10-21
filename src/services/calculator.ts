@@ -137,7 +137,7 @@ export interface CalcResult {
   cutPct: number | null;
   payback0: PaybackResult | null;
   payback5: PaybackResult | null;
-  note: 'n_home' | 'n_farm' | 'n_ind_grid' | 'n_ind_diesel' | null;
+  note: 'n_home' | 'n_farm' | 'n_ind_grid' | 'n_svc_grid' | 'n_ind_diesel' | null;
   homeCapKwp: number | null;
 }
 
@@ -165,15 +165,28 @@ export function calcFarm(pumpHp: number, hoursPerDay: number, daysPerYear: numbe
   return finish(kwp, save, price, price, litres, null, 'n_farm', null);
 }
 
-export function calcIndustrialGrid(monthlyBillEgp: number, solarSharePct: number): CalcResult {
+/**
+ * Grid-connected site (Industrial Facilities on-grid, Services Sector).
+ * The monthly bill is converted to kWh at `tariff` -- EgyptERA's 2.55
+ * medium-voltage rate for industry, and the disclosed 2.55 assumption for
+ * the services sector (RATES.service). Priced on the industrial list.
+ */
+export function calcIndustrialGrid(
+  monthlyBillEgp: number,
+  solarSharePct: number,
+  tariff: number = IND_TAR,
+  note: 'n_ind_grid' | 'n_svc_grid' = 'n_ind_grid',
+): CalcResult {
   monthlyBillEgp = safeInput(monthlyBillEgp);
+  tariff = safeInput(tariff);
+  if (!tariff) return emptyResult();
   solarSharePct = Math.min(100, safeInput(solarSharePct));
   if (!monthlyBillEgp || !solarSharePct) return emptyResult();
   const share = solarSharePct / 100;
-  const e = (monthlyBillEgp / IND_TAR) * 12 * share;
+  const e = (monthlyBillEgp / tariff) * 12 * share;
   const kwp = e / YIELD;
   const price = kwp * P_IND;
-  return finish(kwp, monthlyBillEgp * 12 * share, price, price, null, null, 'n_ind_grid', null);
+  return finish(kwp, monthlyBillEgp * 12 * share, price, price, null, null, note, null);
 }
 
 export function calcIndustrialDiesel(monthlyLitres: number, solarSharePct: number, dieselPrice: number): CalcResult {
@@ -187,6 +200,17 @@ export function calcIndustrialDiesel(monthlyLitres: number, solarSharePct: numbe
   const kwp = e / YIELD;
   const price = kwp * P_HYB;
   return finish(kwp, L * dieselPrice * GEN_OM, price, price, L, null, 'n_ind_diesel', null);
+}
+
+/**
+ * Off-grid site on diesel generators, from what it spends on fuel each
+ * month (EGP). Litres = spend / price per litre -- a plain unit conversion,
+ * no new assumption -- then the existing diesel-hybrid model applies.
+ */
+export function calcIndustrialOffGrid(monthlyFuelCostEgp: number, solarSharePct: number, dieselPrice: number): CalcResult {
+  const price = safeInput(dieselPrice);
+  if (!price) return emptyResult();
+  return calcIndustrialDiesel(safeInput(monthlyFuelCostEgp) / price, solarSharePct, price);
 }
 
 function finish(

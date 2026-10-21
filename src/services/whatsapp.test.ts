@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { waHref } from './whatsapp';
 import { WAMSG } from '../content/whatsappMessages';
 import { normalizeWhatsappNumber } from '../config/env';
-import { pageWaSegment } from '../config/navigation';
+import { offersBillWhatsapp, pageWaSegment } from '../config/navigation';
 
 // URLSearchParams.get() already percent-decodes.
 const decode = (href: string) => new URL(href).searchParams.get('text') ?? '';
@@ -58,5 +58,17 @@ describe('floating button segment by page', () => {
     ['/en/contact', 'general'],
   ])('%s -> %s', (path, segment) => {
     expect(pageWaSegment(path)).toBe(segment);
+  });
+});
+
+describe('Send-your-bill visibility rule', () => {
+  it('allows the homepage and Residential & Commercial only', () => {
+    expect(offersBillWhatsapp('general')).toBe(true);
+    expect(offersBillWhatsapp('villas')).toBe(true);
+    expect(offersBillWhatsapp('compounds')).toBe(true);
+    expect(offersBillWhatsapp('agriculture')).toBe(false);
+    expect(offersBillWhatsapp('industrial')).toBe(false);
+    expect(offersBillWhatsapp('service')).toBe(false);
+    expect(offersBillWhatsapp('calc')).toBe(false);
   });
 });
