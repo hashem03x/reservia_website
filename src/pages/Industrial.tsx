@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
 import { Pillars } from '../components/sections/Pillars';
+import { WaLink } from '../components/ui/WaLink';
 
 export default function Industrial() {
   const { t, language } = useLanguage();
@@ -17,7 +18,8 @@ export default function Industrial() {
           <p className="lead">{t.i_lead}</p>
           <div className="cta-row">
             <Link className="btn sun" to={`/${language}/calculator?tab=ind`}>{t.try_calc_ind}</Link>
-            <Link className="btn ghost" to={`/${language}/contact`}>{t.h_cta2}</Link>
+            <Link className="btn ghost" to={`/${language}/contact?type=factory`}>{t.quote}</Link>
+            <WaLink segment="industrial">{t.i_cta_wa}</WaLink>
           </div>
         </div>
       </section>

@@ -39,13 +39,19 @@
 
   /* ---- Brand + accents ---- */
   --brand: #102b46;  /* Midnight Navy -- primary brand identity, dark surfaces */
-  --teal: #087eab;   /* Electric Cyan -- secondary brand / technical accents */
-  --navy: #087eab;   /* interactive accent (links, active states, focus-adjacent borders) -- same Electric Cyan as --teal; checked at ~4.7:1 on white (passes WCAG AA for normal text), brightens in dark mode */
+  /* Deepened from #087eab (Oct 2026 accessibility pass): #087eab is only
+     ~4.0-4.2:1 on the tinted --bg/--sunken surfaces; #066a91 is >= 5.2:1 on
+     every light surface while staying in the same Electric Cyan family. */
+  --teal: #066a91;   /* Electric Cyan -- secondary brand / technical accents */
+  --navy: #066a91;   /* interactive accent (links, active states, focus-adjacent borders) -- same Electric Cyan as --teal; >= 5.2:1 on every light surface (WCAG AA), brightens in dark mode */
   --cyan-bright: #20bde5; /* Electric Blue -- reserved for glows/sparks/loader effects, not for body-text-sized links (contrast) */
   --sun: #ffb547;    /* Warm Amber -- energy highlight / primary CTA */
   --sun-ink: #102b46; /* text on amber buttons */
   --sun-text: #9a6a12; /* amber-family text, contrast-checked for light backgrounds */
-  --leaf: #16a085;   /* Grid Green -- sustainability accent, used sparingly */
+  --leaf: #16a085;   /* Grid Green -- sustainability accent, used sparingly (fills, icons) */
+  --leaf-text: #0e7a64; /* Grid Green for text: >= 4.8:1 on light surfaces (#16a085 is ~3.3:1) */
+  --on-navy: #ffffff; /* text on a solid --navy fill */
+  --brand-text: #102b46; /* brand-coloured display text; flips to light ink in dark mode */
 
   --line: #d6e1ea;   /* Cool Steel borders */
   --field: #7e93a8;
@@ -103,6 +109,9 @@
   --sun-ink: #102236;
   --sun-text: #ffc768;
   --leaf: #4fd1a5;
+  --leaf-text: #4fd1a5;
+  --on-navy: #102236;
+  --brand-text: #e8f1fa;
   --diesel: #c2a98d;
   --line: #234258;
   --field: #5e7e9a;

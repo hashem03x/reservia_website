@@ -1,7 +1,9 @@
 import { env, isLeadsApiConfigured } from '../config/env';
+import { segmentGroup, type Segment } from '../config/navigation';
 import type { UtmParams } from '../hooks/useUtmParams';
 import type { Language } from '../i18n/LanguageContext';
-import type { Segment } from '../config/navigation';
+
+export { segmentGroup };
 
 export interface LeadFormInput {
   name: string;
@@ -15,7 +17,15 @@ export interface LeadFormInput {
 }
 
 export interface LeadPayload extends LeadFormInput {
+  /**
+   * Same id as the browser `generate_lead` / Meta Pixel `Lead` event. The
+   * CRM should store it and the server-side Meta Conversions API call must
+   * send it as `event_id`, so Meta counts the browser and server events as
+   * one conversion. See docs/CLIENT_DECISIONS.md, decision 10.
+   */
   eventId: string;
+  /** Reporting group: 'industrial' for the service sector (website assumption). */
+  segmentGroup: string;
   lang: Language;
   pageUrl: string;
   utm: UtmParams;
@@ -24,19 +34,20 @@ export interface LeadPayload extends LeadFormInput {
 
 export type LeadSubmitResult = { status: 'sent' } | { status: 'mock' } | { status: 'error'; message: string };
 
+const TIMEOUT_MS = 15000;
+
 /**
  * Lead-capture service adapter.
  *
- * No CRM/lead-capture endpoint or credentials were supplied with this
- * project -- the reference template's own prototype copy says the same
- * thing ("Forms log locally; CRM and tracking connect at launch").
- * VITE_LEADS_API_URL is the single integration point: unset, this
- * adapter logs locally and returns `{ status: 'mock' }`; callers must
- * surface that as "not actually delivered." When the URL is configured,
- * this performs a real POST and only reports success on a 2xx response.
+ * VITE_LEADS_API_URL is the single integration point. Unset, this adapter
+ * delivers nothing and returns `{ status: 'mock' }`; callers must show
+ * that as "not sent". When the URL is configured, it performs a real POST
+ * and reports success only on a 2xx response -- a network failure,
+ * timeout or non-2xx response is an error, never a false success.
  *
- * No secrets or CRM tokens are included here -- authentication for the
- * real endpoint must be handled server-side (e.g. a backend proxy).
+ * Personal data goes only to this endpoint (ideally a server-side proxy
+ * in front of the CRM). It is never logged with its contents and never
+ * passed to analytics. No secrets or CRM tokens are included here.
  */
 export async function submitLead(
   input: LeadFormInput,
@@ -45,22 +56,33 @@ export async function submitLead(
   const payload: LeadPayload = {
     ...input,
     eventId: context.eventId,
+    segmentGroup: segmentGroup(input.segment),
     lang: context.lang,
-    pageUrl: window.location.href,
+    // Path only: query strings can carry campaign or personal parameters.
+    pageUrl: window.location.origin + window.location.pathname,
     utm: context.utm,
     submittedAt: new Date().toISOString(),
   };
 
   if (!isLeadsApiConfigured) {
-    console.info('[leadService] Mock mode (VITE_LEADS_API_URL not set) -- payload was NOT delivered:', payload);
+    if (import.meta.env.DEV) {
+      console.info('[leadService] Preview mode (VITE_LEADS_API_URL not set): the lead was NOT delivered.', {
+        eventId: payload.eventId,
+        segment: payload.segment,
+        source: payload.source,
+      });
+    }
     return { status: 'mock' };
   }
 
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const response = await fetch(env.leadsApiUrl!, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': payload.eventId },
       body: JSON.stringify(payload),
+      signal: controller.signal,
     });
     if (!response.ok) {
       return { status: 'error', message: `Server responded with status ${response.status}` };
@@ -68,10 +90,7 @@ export async function submitLead(
     return { status: 'sent' };
   } catch (error) {
     return { status: 'error', message: error instanceof Error ? error.message : 'Network error while submitting the enquiry' };
+  } finally {
+    window.clearTimeout(timer);
   }
-}
-
-/** Matches the template's `sgrp()`: service rolls up to industrial for analytics grouping. */
-export function segmentGroup(segment: Segment): string {
-  return segment === 'service' ? 'industrial' : segment;
 }

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useLanguage, fmt } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
-import { waHref } from '../services/whatsapp';
-import { trackWhatsappClick } from '../services/analytics';
-import { segmentGroup } from '../services/leadService';
+import { WaLink } from '../components/ui/WaLink';
+import { RATES } from '../config/tariffs';
+import type { Segment } from '../config/navigation';
 import {
   bill,
   kwhFromBill,
@@ -12,10 +12,16 @@ import {
   calcFarm,
   calcIndustrialGrid,
   calcIndustrialDiesel,
+  roundedPrice,
   type CalcResult,
 } from '../services/calculator';
 
 type Tab = 'home' | 'farm' | 'ind';
+const TABS: Tab[] = ['home', 'farm', 'ind'];
+/** Analytics segment for each tab (the WhatsApp message itself is the 'calc' summary). */
+const TAB_SEGMENT: Record<Tab, Segment> = { home: 'villas', farm: 'agriculture', ind: 'industrial' };
+/** Contact-form site type to preselect from each tab. */
+const TAB_CONTACT_TYPE: Record<Tab, string> = { home: 'home', farm: 'farm', ind: 'factory' };
 
 function useNumberFormat(lang: 'en' | 'ar', fractionDigits: 0 | 1) {
   return useMemo(
@@ -28,14 +34,20 @@ function useNumberFormat(lang: 'en' | 'ar', fractionDigits: 0 | 1) {
   );
 }
 
+/** Empty or non-numeric input becomes 0, which the calculator treats as "no estimate". */
+const toNumber = (value: string) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+};
+
 const DASH = '–';
 
 export default function Calculator() {
   const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
-  const location = useLocation();
+  const tabRefs = useRef<Record<Tab, HTMLButtonElement | null>>({ home: null, farm: null, ind: null });
   const initialTab = (searchParams.get('tab') as Tab | null) ?? 'home';
-  const [tab, setTab] = useState<Tab>(['home', 'farm', 'ind'].includes(initialTab) ? initialTab : 'home');
+  const [tab, setTab] = useState<Tab>(TABS.includes(initialTab) ? initialTab : 'home');
 
   const [hUnit, setHUnit] = useState<'kwh' | 'egp'>('kwh');
   const [hVal, setHVal] = useState(1200);
@@ -45,12 +57,12 @@ export default function Calculator() {
   const [fHp, setFHp] = useState(40);
   const [fHrs, setFHrs] = useState(8);
   const [fDays, setFDays] = useState(300);
-  const [fDp, setFDp] = useState(20.5);
+  const [fDp, setFDp] = useState<number>(RATES.diesel.value);
 
   const [iMode, setIMode] = useState<'grid' | 'diesel'>('grid');
   const [iBill, setIBill] = useState(150000);
   const [iLit, setILit] = useState(30000);
-  const [iDp, setIDp] = useState(20.5);
+  const [iDp, setIDp] = useState<number>(RATES.diesel.value);
   const [iShare, setIShare] = useState(30);
 
   const n0 = useNumberFormat(language, 0);
@@ -88,16 +100,27 @@ export default function Calculator() {
       : t[noteKey]
     : '';
 
-  const summary = useMemo(() => {
-    if (!result.ok) return '';
-    const tabName = t[`tab_${tab}`];
-    return `${tabName}: ${t.r_size} ${n1.format(result.kwp)} ${t.u_kwp}, ${t.r_price} ${n0.format(Math.round(result.price / 1000) * 1000)} ${t.u_egp}, ${t.r_save} ${n0.format(result.save)} ${t.u_egpyr}, ${t.r_pb} ${fmtYears(result.payback0)}. `;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result, t, tab, n0, n1]);
+  // Exactly the figures shown in the results panel (same formatting and
+  // rounding), so the WhatsApp message can never disagree with the screen.
+  const summary = result.ok
+    ? `${t[`tab_${tab}`]}: ${t.r_size} ${n1.format(result.kwp)} ${t.u_kwp}; ${t.r_price} ${n0.format(roundedPrice(result.price))} ${t.u_egp}; ${t.r_save} ${n0.format(result.save)} ${t.u_egpyr}; ${t.r_pb} ${fmtYears(result.payback0)}; ${t.r_pb5} ${fmtYears(result.payback5)}.`
+    : '';
 
-  useEffect(() => {
-    document.getElementById('calcPanel')?.setAttribute('aria-labelledby', `tab-${tab}`);
-  }, [tab]);
+  /** WAI-ARIA tabs pattern: Arrow keys move and activate (mirrored in RTL), Home/End jump to the ends. */
+  function onTabKeyDown(e: KeyboardEvent<HTMLButtonElement>) {
+    const i = TABS.indexOf(tab);
+    const rtl = document.documentElement.dir === 'rtl';
+    let next: number | null = null;
+    if (e.key === 'ArrowRight') next = rtl ? i - 1 : i + 1;
+    else if (e.key === 'ArrowLeft') next = rtl ? i + 1 : i - 1;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = TABS.length - 1;
+    if (next === null) return;
+    e.preventDefault();
+    const target = TABS[(next + TABS.length) % TABS.length];
+    setTab(target);
+    tabRefs.current[target]?.focus();
+  }
 
   return (
     <>
@@ -114,9 +137,13 @@ export default function Calculator() {
       <section className="band" style={{ paddingTop: 20 }}>
         <div className="wrap">
           <div className="tabs" role="tablist" aria-label={t.tabs_aria}>
-            {(['home', 'farm', 'ind'] as Tab[]).map((id) => (
+            {TABS.map((id) => (
               <button
                 key={id}
+                ref={(el) => {
+                  tabRefs.current[id] = el;
+                }}
+                type="button"
                 className="tab"
                 role="tab"
                 id={`tab-${id}`}
@@ -124,6 +151,7 @@ export default function Calculator() {
                 aria-selected={tab === id}
                 tabIndex={tab === id ? 0 : -1}
                 onClick={() => setTab(id)}
+                onKeyDown={onTabKeyDown}
               >
                 {t[`tab_${id}`]}
               </button>
@@ -131,7 +159,7 @@ export default function Calculator() {
           </div>
 
           <div className="calc">
-            <div className="panel" id="calcPanel" role="tabpanel">
+            <div className="panel" id="calcPanel" role="tabpanel" aria-labelledby={`tab-${tab}`}>
               {tab === 'home' && (
                 <div>
                   <div className="field">
@@ -143,12 +171,12 @@ export default function Calculator() {
                   </div>
                   <div className="field">
                     <label htmlFor="h_val">{t.f_val}</label>
-                    <input id="h_val" type="number" min={1} step={50} value={hVal} onChange={(e) => setHVal(Number(e.target.value) || 0)} aria-describedby="h_derived" />
+                    <input id="h_val" type="number" min={1} step={50} value={hVal} onChange={(e) => setHVal(toNumber(e.target.value))} aria-describedby="h_derived" />
                     <span className="hint" id="h_derived">{hint}</span>
                   </div>
                   <div className="field">
                     <label htmlFor="h_roof">{t.f_roof}</label>
-                    <input id="h_roof" type="number" min={10} step={10} value={hRoof} onChange={(e) => setHRoof(Number(e.target.value) || 0)} />
+                    <input id="h_roof" type="number" min={10} step={10} value={hRoof} onChange={(e) => setHRoof(toNumber(e.target.value))} />
                   </div>
                   <label className="check">
                     <input id="h_bat" type="checkbox" checked={hBat} onChange={(e) => setHBat(e.target.checked)} />
@@ -161,19 +189,19 @@ export default function Calculator() {
                 <div>
                   <div className="field">
                     <label htmlFor="f_hp">{t.f_hp}</label>
-                    <input id="f_hp" type="number" min={1} step={1} value={fHp} onChange={(e) => setFHp(Number(e.target.value) || 0)} />
+                    <input id="f_hp" type="number" min={1} step={1} value={fHp} onChange={(e) => setFHp(toNumber(e.target.value))} />
                   </div>
                   <div className="field">
                     <label htmlFor="f_hrs">{t.f_hrs}</label>
-                    <input id="f_hrs" type="number" min={1} max={14} step={1} value={fHrs} onChange={(e) => setFHrs(Number(e.target.value) || 0)} />
+                    <input id="f_hrs" type="number" min={1} max={14} step={1} value={fHrs} onChange={(e) => setFHrs(toNumber(e.target.value))} />
                   </div>
                   <div className="field">
                     <label htmlFor="f_days">{t.f_days}</label>
-                    <input id="f_days" type="number" min={30} max={365} step={5} value={fDays} onChange={(e) => setFDays(Number(e.target.value) || 0)} />
+                    <input id="f_days" type="number" min={30} max={365} step={5} value={fDays} onChange={(e) => setFDays(toNumber(e.target.value))} />
                   </div>
                   <div className="field">
                     <label htmlFor="f_dp">{t.f_dp}</label>
-                    <input id="f_dp" type="number" min={1} step={0.25} value={fDp} onChange={(e) => setFDp(Number(e.target.value) || 0)} />
+                    <input id="f_dp" type="number" min={1} step={0.25} value={fDp} onChange={(e) => setFDp(toNumber(e.target.value))} />
                   </div>
                 </div>
               )}
@@ -190,17 +218,17 @@ export default function Calculator() {
                   {iMode === 'grid' ? (
                     <div className="field">
                       <label htmlFor="i_bill">{t.f_ibill}</label>
-                      <input id="i_bill" type="number" min={5000} step={5000} value={iBill} onChange={(e) => setIBill(Number(e.target.value) || 0)} />
+                      <input id="i_bill" type="number" min={5000} step={5000} value={iBill} onChange={(e) => setIBill(toNumber(e.target.value))} />
                     </div>
                   ) : (
                     <>
                       <div className="field">
                         <label htmlFor="i_lit">{t.f_ilit}</label>
-                        <input id="i_lit" type="number" min={500} step={500} value={iLit} onChange={(e) => setILit(Number(e.target.value) || 0)} />
+                        <input id="i_lit" type="number" min={500} step={500} value={iLit} onChange={(e) => setILit(toNumber(e.target.value))} />
                       </div>
                       <div className="field">
                         <label htmlFor="i_dp">{t.f_dp}</label>
-                        <input id="i_dp" type="number" min={1} step={0.25} value={iDp} onChange={(e) => setIDp(Number(e.target.value) || 0)} />
+                        <input id="i_dp" type="number" min={1} step={0.25} value={iDp} onChange={(e) => setIDp(toNumber(e.target.value))} />
                       </div>
                     </>
                   )}
@@ -224,7 +252,8 @@ export default function Calculator() {
             </div>
 
             <div className="panel">
-              <dl className="results" aria-live="polite">
+              <h2 className="sr-only">{t.c_title}</h2>
+              <dl className="results">
                 <div><dt>{t.r_size}</dt><dd>{result.ok ? `${n1.format(result.kwp)} ${t.u_kwp}` : DASH}</dd></div>
                 <div><dt>{t.r_prod}</dt><dd>{result.ok ? `${n0.format(result.prod)} ${t.u_kwhyr}` : DASH}</dd></div>
                 {result.litres !== null && (
@@ -240,24 +269,21 @@ export default function Calculator() {
                 {result.home && (
                   <div><dt>{t.r_cut}</dt><dd>{`${n0.format(result.cutPct ?? 0)}%`}</dd></div>
                 )}
-                <div><dt>{t.r_price}</dt><dd>{result.ok ? `${n0.format(Math.round(result.price / 1000) * 1000)} ${t.u_egp}` : DASH}</dd></div>
+                <div><dt>{t.r_price}</dt><dd>{result.ok ? `${n0.format(roundedPrice(result.price))} ${t.u_egp}` : DASH}</dd></div>
                 <div className="hl"><dt>{t.r_pb}</dt><dd>{fmtYears(result.payback0)}</dd></div>
                 <div><dt>{t.r_pb5}</dt><dd>{fmtYears(result.payback5)}</dd></div>
-                <div><dt>{t.r_net}</dt><dd>{result.ok && result.payback0 ? `${n0.format(Math.round(result.payback0.net25 / 1000) * 1000)} ${t.u_egp}` : DASH}</dd></div>
+                <div><dt>{t.r_net}</dt><dd>{result.ok && result.payback0 ? `${n0.format(roundedPrice(result.payback0.net25))} ${t.u_egp}` : DASH}</dd></div>
               </dl>
+              <p className="calc-invalid" role="status">{result.ok ? '' : t.calc_invalid}</p>
               <p className="assume">{note}</p>
               <p className="assume">{t.c_assume}</p>
               <div className="cta-row" style={{ marginTop: 16 }}>
-                <Link className="btn sun" to={`/${language}/contact`}>{t.c_cta}</Link>
-                <a
-                  className="btn wa"
-                  href={waHref(language, 'calc', summary)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => trackWhatsappClick('calc', segmentGroup('calc'), location.pathname)}
-                >
-                  {t.c_wa}
-                </a>
+                <Link className="btn sun" to={`/${language}/contact?type=${TAB_CONTACT_TYPE[tab]}`}>{t.c_cta}</Link>
+                {result.ok && (
+                  <WaLink segment="calc" trackSegment={TAB_SEGMENT[tab]} extra={summary} systemSizeKwp={result.kwp}>
+                    {t.c_wa}
+                  </WaLink>
+                )}
               </div>
             </div>
           </div>

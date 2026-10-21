@@ -56,6 +56,17 @@ export const NAV_ITEMS: NavItem[] = [
 
 export type Segment = 'villas' | 'compounds' | 'agriculture' | 'industrial' | 'service' | 'general' | 'calc';
 
+/**
+ * Reporting group for a segment. The service sector (hospitals, hotels,
+ * schools, malls, offices, clubs) is priced and tracked under the
+ * industrial model on the website: segment = 'service', group =
+ * 'industrial' (client brief). Website-only assumption -- it does not
+ * touch ERP payment or accounting logic.
+ */
+export function segmentGroup(segment: Segment): string {
+  return segment === 'service' ? 'industrial' : segment;
+}
+
 export interface CampaignPage {
   path: string;
   segment: Segment;
@@ -71,3 +82,18 @@ export const CAMPAIGN_PAGES: CampaignPage[] = [
   { path: '/lp/industrial', segment: 'industrial', eyebrowKey: 'lpi_eb', calcTab: 'ind' },
   { path: '/lp/service', segment: 'service', eyebrowKey: 'lps_eb', calcTab: 'ind' },
 ];
+
+/** Ported from the template's `route()`: which WhatsApp segment the floating button/sticky bar uses, by current page. */
+export function pageWaSegment(pathname: string): Segment {
+  const p = pathname.replace(/^\/(en|ar)/, '');
+  if (p.startsWith('/lp/villas')) return 'villas';
+  if (p.startsWith('/lp/compounds')) return 'compounds';
+  if (p.startsWith('/lp/agriculture')) return 'agriculture';
+  if (p.startsWith('/lp/industrial')) return 'industrial';
+  if (p.startsWith('/lp/service')) return 'service';
+  if (p.startsWith('/residential')) return 'villas';
+  if (p.startsWith('/agriculture')) return 'agriculture';
+  if (p.startsWith('/industrial')) return 'industrial';
+  if (p.startsWith('/service')) return 'service';
+  return 'general';
+}

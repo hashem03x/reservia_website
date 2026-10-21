@@ -24,7 +24,7 @@ export default function HowWeWork() {
           <ol className="steps">
             {STEPS.map((n) => (
               <li key={n}>
-                <h3>{t[`s${n}t`]}</h3>
+                <h2 className="h3">{t[`s${n}t`]}</h2>
                 <p>{t[`s${n}d`]}</p>
               </li>
             ))}

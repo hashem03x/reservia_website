@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { CAMPAIGN_PAGES, NAV_ENTRIES } from '../../config/navigation';
-import { env } from '../../config/env';
+import { env, flags, isLeadsApiConfigured } from '../../config/env';
 import { trackCallClick, trackEmailClick } from '../../services/analytics';
 import logo from '../../assets/brand/logo.webp';
 
@@ -52,9 +52,14 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href={`mailto:${env.businessEmail}`} onClick={() => trackEmailClick(location.pathname)}>
-                  {env.businessEmail}
-                </a>
+                {/* mailto: only once Reservia confirms (client decision 8, VITE_ENABLE_MAILTO_LINKS). */}
+                {flags.mailtoLinks ? (
+                  <a href={`mailto:${env.businessEmail}`} onClick={() => trackEmailClick(location.pathname)}>
+                    {env.businessEmail}
+                  </a>
+                ) : (
+                  <span>{env.businessEmail}</span>
+                )}
               </li>
               <li>
                 <span>{t.ct_addr}</span>
@@ -68,7 +73,7 @@ export function Footer() {
 
         <div className="footerBottom">
           <span>{t.foot1}</span>
-          <span>{t.foot2}</span>
+          {!isLeadsApiConfigured && <span>{t.foot2}</span>}
           <div className="lplinks">
             <span>{t.foot_lp}</span>
             {CAMPAIGN_PAGES.map((lp) => (

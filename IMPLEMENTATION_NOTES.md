@@ -1,5 +1,14 @@
 # Implementation notes
 
+> **October 2026 update.** The client brief of 13–17 October 2026 (tariffs, calculator
+> regression, accessibility, service sector, SEO, analytics privacy) is implemented. See
+> [docs/IMPROVEMENTS_2026-10.md](docs/IMPROVEMENTS_2026-10.md),
+> [docs/TARIFFS.md](docs/TARIFFS.md) and [docs/CLIENT_DECISIONS.md](docs/CLIENT_DECISIONS.md).
+> Where this file differs from those documents, they are current. In particular:
+> - forms now report "preview mode" rather than success when no endpoint is set;
+> - lead events fire only after confirmed delivery;
+> - a real headless-browser regression suite now runs (Playwright + axe-core).
+
 This file was rewritten after a supplied HTML/CSS/JS reference template
 (`Reservia.html`) was added to the repository mid-project. That file is
 the authoritative source of truth for design, content, and section

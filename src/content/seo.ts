@@ -1,4 +1,5 @@
-import type { Language } from '../i18n/LanguageContext';
+/** Kept free of React imports: this file is also read by vite.config.ts at build time. */
+type Language = 'en' | 'ar';
 
 export type PageId =
   | 'home'
@@ -14,7 +15,8 @@ export type PageId =
   | 'lp-compounds'
   | 'lp-agriculture'
   | 'lp-service'
-  | 'lp-industrial';
+  | 'lp-industrial'
+  | 'notfound';
 
 /** Ported verbatim from the reference template's `SEO` object. [title, description] per page per language. */
 export const SEO: Record<Language, Record<PageId, [string, string]>> = {
@@ -33,6 +35,7 @@ export const SEO: Record<Language, Record<PageId, [string, string]>> = {
     'lp-agriculture': ['Stop buying diesel to pump water | Reservia', 'Stop buying diesel to pump water. Solar pumping quote from Reservia for farms in Egypt.'],
     'lp-service': ['Lower the energy bill of a hospital, hotel or school | Reservia', 'Solar and battery for buildings that run every day. Site assessment from Reservia.'],
     'lp-industrial': ['Cut diesel at remote sites and bills at the plant | Reservia', 'Hybrid solar and storage that cuts diesel at remote sites and bills at the plant. Site assessment from Reservia.'],
+    notfound: ['Page not found | Reservia', 'The page you are looking for does not exist or may have moved.'],
   },
   ar: {
     home: ['الطاقة الشمسية والتخزين في مصر | ريزيرفيا', 'تصمم ريزيرفيا وتركّب وتصون أنظمة الطاقة الشمسية والبطاريات للمنازل والمزارع ومواقع البترول والمصانع في أنحاء مصر. اطلب عرض سعر مجانيًا.'],
@@ -49,5 +52,6 @@ export const SEO: Record<Language, Record<PageId, [string, string]>> = {
     'lp-agriculture': ['توقف عن شراء الديزل لضخ المياه | ريزيرفيا', 'توقف عن شراء الديزل لضخ المياه. عرض سعر لنظام ضخ شمسي لمزرعتك في مصر من ريزيرفيا.'],
     'lp-service': ['خفّض فاتورة طاقة المستشفى أو الفندق أو المدرسة | ريزيرفيا', 'طاقة شمسية وبطاريات للمباني التي تعمل كل يوم. معاينة للموقع من ريزيرفيا.'],
     'lp-industrial': ['خفّض الديزل في المواقع النائية وفاتورة المصنع | ريزيرفيا', 'أنظمة هجينة شمسية وتخزين تخفض الديزل في المواقع النائية وفاتورة المصنع. معاينة للموقع من ريزيرفيا.'],
+    notfound: ['الصفحة غير موجودة | ريزيرفيا', 'الصفحة التي تبحث عنها غير موجودة أو ربما نُقلت.'],
   },
 };

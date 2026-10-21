@@ -1,10 +1,23 @@
+import {
+  DIESEL_LITRES_PER_KWH,
+  HOUSEHOLD_FLAT_THRESHOLD_KWH,
+  HOUSEHOLD_SLABS,
+  RATES,
+} from '../config/tariffs';
+
 /**
  * Solar savings/payback calculator, ported line-for-line from the
  * reference template's `calc()`/`homeCalc()`/`payback()`/`bill()`
- * functions (Reservia.html). Constants, formulas and rounding are kept
- * identical -- this produces the same numbers as the reference for the
- * same inputs. See `c_assume` in the translation dictionaries for the
- * assumptions disclosed to the user alongside the result.
+ * functions (Reservia.html). Formulas and rounding are kept identical;
+ * tariff and fuel figures now come from src/config/tariffs.ts so the
+ * calculator, rate board and tests share one source. See `c_assume` in
+ * the translation dictionaries for the assumptions disclosed to the user
+ * alongside the result.
+ *
+ * Regression reference (client brief): a villa using 1,200 kWh a month
+ * with 120 m2 of roof -> 6.0 kWp, EGP 183,600, about EGP 36,800 a year,
+ * payback about 5.3 years (4.8 with tariffs rising 5% a year). Covered by
+ * src/services/calculator.test.ts.
  */
 
 export const YIELD = 1750;
@@ -14,30 +27,29 @@ const INV_YR = 12;
 const INV_PCT = 0.08;
 const ROOF = 8;
 export const BAT = 120000;
-const LPK = 0.3;
+const LPK = DIESEL_LITRES_PER_KWH;
 const GEN_OM = 1.1;
-const IND_TAR = 2.55;
+/** Grid tariff for the industry/service tab: EgyptERA medium-voltage 'other users' (also the service-sector assumption). */
+export const IND_TAR = RATES.otherUsersMV.value;
 const HURDLE = 10;
-const ESC = 0.05;
+export const ESC = 0.05;
 const P_FARM = 19800;
 const P_IND = 23400;
 const P_HYB = 22500;
-const SLABS: Array<[number, number]> = [
-  [50, 0.68],
-  [50, 0.87],
-  [100, 1.06],
-  [150, 1.74],
-  [300, 2.18],
-  [350, 2.35],
-];
 
-/** Household tariff: progressive slabs up to 1,000 kWh, flat 2.89 EGP/kWh above that. */
+/** Turns any user input into a finite, non-negative number (NaN, Infinity and negatives become 0). */
+export function safeInput(value: number): number {
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+/** Household tariff: progressive slabs up to 1,000 kWh; above that the whole month is billed at the top rate. */
 export function bill(k: number): number {
+  k = safeInput(k);
   if (k <= 0) return 0;
-  if (k > 1000) return k * 2.89;
+  if (k > HOUSEHOLD_FLAT_THRESHOLD_KWH) return k * RATES.householdTop.value;
   let b = 0;
   let r = k;
-  for (const [w, p] of SLABS) {
+  for (const [w, p] of HOUSEHOLD_SLABS) {
     const u = Math.min(r, w);
     b += u * p;
     r -= u;
@@ -47,6 +59,8 @@ export function bill(k: number): number {
 }
 
 export function kwhFromBill(E: number): number {
+  E = safeInput(E);
+  if (E === 0) return 0;
   let lo = 0;
   let hi = 6000;
   for (let i = 0; i < 60; i++) {
@@ -128,6 +142,8 @@ export interface CalcResult {
 }
 
 export function calcHome(monthlyKwh: number, roofM2: number, battery: boolean): CalcResult {
+  monthlyKwh = safeInput(monthlyKwh);
+  roofM2 = safeInput(roofM2);
   if (monthlyKwh < 20 || roofM2 < 4) return emptyResult();
   const home = homeCalc(monthlyKwh, roofM2);
   const price = home.pv + (battery ? BAT : 0);
@@ -135,6 +151,11 @@ export function calcHome(monthlyKwh: number, roofM2: number, battery: boolean): 
 }
 
 export function calcFarm(pumpHp: number, hoursPerDay: number, daysPerYear: number, dieselPrice: number): CalcResult {
+  pumpHp = safeInput(pumpHp);
+  hoursPerDay = Math.min(24, safeInput(hoursPerDay));
+  daysPerYear = Math.min(366, safeInput(daysPerYear));
+  dieselPrice = safeInput(dieselPrice);
+  if (!pumpHp || !hoursPerDay || !daysPerYear || !dieselPrice) return emptyResult();
   const kw = pumpHp * 0.746;
   const e = kw * hoursPerDay * daysPerYear;
   const litres = e * LPK;
@@ -145,6 +166,9 @@ export function calcFarm(pumpHp: number, hoursPerDay: number, daysPerYear: numbe
 }
 
 export function calcIndustrialGrid(monthlyBillEgp: number, solarSharePct: number): CalcResult {
+  monthlyBillEgp = safeInput(monthlyBillEgp);
+  solarSharePct = Math.min(100, safeInput(solarSharePct));
+  if (!monthlyBillEgp || !solarSharePct) return emptyResult();
   const share = solarSharePct / 100;
   const e = (monthlyBillEgp / IND_TAR) * 12 * share;
   const kwp = e / YIELD;
@@ -153,6 +177,10 @@ export function calcIndustrialGrid(monthlyBillEgp: number, solarSharePct: number
 }
 
 export function calcIndustrialDiesel(monthlyLitres: number, solarSharePct: number, dieselPrice: number): CalcResult {
+  monthlyLitres = safeInput(monthlyLitres);
+  solarSharePct = Math.min(100, safeInput(solarSharePct));
+  dieselPrice = safeInput(dieselPrice);
+  if (!monthlyLitres || !solarSharePct || !dieselPrice) return emptyResult();
   const share = solarSharePct / 100;
   const L = monthlyLitres * 12 * share;
   const e = L / LPK;
@@ -195,4 +223,9 @@ function emptyResult(): CalcResult {
     note: null,
     homeCapKwp: null,
   };
+}
+
+/** Displayed/shared price: rounded to the nearest EGP 1,000, exactly as the results panel shows it. */
+export function roundedPrice(price: number): number {
+  return Math.round(price / 1000) * 1000;
 }

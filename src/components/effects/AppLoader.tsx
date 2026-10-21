@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import logo from '../../assets/brand/logo.webp';
 
-const MIN_VISIBLE_MS = 900;
-const MAX_WAIT_MS = 2500;
+// Shortened (was 900 / 2500 ms) so the overlay never holds content back for long;
+// with prefers-reduced-motion there is no minimum at all.
+const MIN_VISIBLE_MS = 500;
+const MAX_WAIT_MS = 1500;
 const EXIT_MS = 550;
 
 /**
@@ -44,7 +46,8 @@ export function AppLoader() {
       if (finished) return;
       window.clearTimeout(settleTimer);
       const elapsed = performance.now() - startedAt.current;
-      const remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
+      const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      const remaining = reduced ? 0 : Math.max(0, MIN_VISIBLE_MS - elapsed);
       exitTimer = window.setTimeout(() => {
         if (finished) return;
         setExiting(true);
@@ -81,7 +84,7 @@ export function AppLoader() {
       <div className="appLoaderBar" aria-hidden="true">
         <span />
       </div>
-      <span className="sr-only">Loading Reservia</span>
+      <span className="sr-only">{window.location.pathname.startsWith('/ar') ? 'جارٍ تحميل ريزيرفيا' : 'Loading Reservia'}</span>
     </div>
   );
 }

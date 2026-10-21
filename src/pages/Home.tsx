@@ -10,6 +10,7 @@ import { TrustGrid } from '../components/sections/TrustGrid';
 import { Faq, faqPairs } from '../components/sections/Faq';
 import { CtaBand } from '../components/sections/CtaBand';
 import { EnergySparks } from '../components/effects/EnergySparks';
+import { WaLink } from '../components/ui/WaLink';
 import heroBg from '../assets/brand/hero-bg.webp';
 
 const FAQ_KEYS: Array<[string, string]> = [
@@ -37,12 +38,13 @@ export default function Home() {
             <h1>{t.h_title}</h1>
             <p className="lead">{t.h_lead}</p>
             <div className="cta-row">
-              <Link className="btn sun" to={`/${language}/calculator`}>
+              <Link className="btn sun" to={`/${language}/contact`}>
+                {t.quote}
+              </Link>
+              <Link className="btn ghost" to={`/${language}/calculator`}>
                 {t.h_cta1}
               </Link>
-              <Link className="btn ghost" to={`/${language}/contact`}>
-                {t.h_cta2}
-              </Link>
+              <WaLink segment="general">{t.h_cta_wa}</WaLink>
             </div>
             <p className="micro">{t.h_micro}</p>
           </div>

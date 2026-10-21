@@ -1,10 +1,9 @@
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import { isLanguage, LanguageProvider, useLanguage, type Language } from '../i18n/LanguageContext';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { WhatsAppButton } from '../components/layout/WhatsAppButton';
-import { initAnalytics, trackPageView } from '../services/analytics';
 
 function DocumentDirection({ language }: { language: Language }) {
   useEffect(() => {
@@ -26,6 +25,15 @@ function LandingPageMode() {
   return null;
 }
 
+/** New page = start at the top. (Focus and the page_view event are handled by each page's <Seo>, once its title is known.) */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 function SkipLink() {
   const { t } = useLanguage();
   return (
@@ -37,11 +45,6 @@ function SkipLink() {
 
 export function LangLayout() {
   const { lang } = useParams();
-  const location = useLocation();
-
-  useEffect(() => {
-    initAnalytics();
-  }, []);
 
   if (!isLanguage(lang)) {
     return <Navigate to="/en" replace />;
@@ -51,24 +54,17 @@ export function LangLayout() {
     <LanguageProvider language={lang}>
       <DocumentDirection language={lang} />
       <LandingPageMode />
-      <PageViewTracker path={location.pathname} />
+      <ScrollToTop />
       <SkipLink />
       <Header />
       <main id="main" tabIndex={-1}>
-        <Outlet />
+        {/* Route chunks load on demand; the reserved height avoids the footer jumping up while one loads. */}
+        <Suspense fallback={<div style={{ minHeight: '60vh' }} aria-hidden="true" />}>
+          <Outlet />
+        </Suspense>
       </main>
       <Footer />
       <WhatsAppButton />
-      <div id="sr" className="sr-only" role="status" aria-live="polite" />
     </LanguageProvider>
   );
-}
-
-function PageViewTracker({ path }: { path: string }) {
-  const { language } = useLanguage();
-  useEffect(() => {
-    trackPageView(path, language, document.title);
-    window.scrollTo(0, 0);
-  }, [path, language]);
-  return null;
 }
