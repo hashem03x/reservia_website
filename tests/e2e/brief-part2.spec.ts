@@ -270,6 +270,41 @@ test.describe('How we work', () => {
   });
 });
 
+test.describe('How we work step images', () => {
+  for (const [lang, width] of [['en', 1280], ['ar', 400]] as const) {
+    test(`${lang} @ ${width}px: eight distinct, loaded, described 16:10 photos; credits shown`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await open(page, `/${lang}/how-we-work`);
+      const imgs = page.locator('.steps > li .step-media img');
+      await expect(imgs).toHaveCount(8);
+      const info = [];
+      for (let i = 0; i < 8; i++) {
+        const img = imgs.nth(i);
+        await img.scrollIntoViewIfNeeded();
+        await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+        info.push(
+          await img.evaluate((el: HTMLImageElement) => {
+            const frame = el.parentElement!.getBoundingClientRect();
+            return { src: el.currentSrc, alt: el.alt, loading: el.loading, ratio: frame.width / frame.height, fit: getComputedStyle(el).objectFit };
+          }),
+        );
+      }
+      expect(new Set(info.map((x) => x.src.replace(/-(480|960)\.[^.]+\.webp$|-(480|960)-[^/]+\.webp$/, ''))).size).toBe(8);
+      for (const x of info) {
+        expect(x.src).toMatch(/\.webp$/);
+        expect(x.alt.length).toBeGreaterThan(15);
+        expect(x.ratio).toBeCloseTo(1.6, 1);
+        expect(x.fit).toBe('cover');
+      }
+      if (lang === 'ar') for (const x of info) expect(x.alt).toMatch(/[؀-ۿ]/);
+      expect(info.slice(4).every((x) => x.loading === 'lazy')).toBe(true);
+      const credits = page.locator('.photo-credits li');
+      await expect(credits).toHaveCount(8);
+      await expect(page.locator('.photo-credits a[rel~="license"]').first()).toHaveAttribute('href', /creativecommons\.org/);
+    });
+  }
+});
+
 test.describe('footer', () => {
   test('LLC name, new description, WhatsApp chat, no main menu', async ({ page }) => {
     await open(page, '/en');

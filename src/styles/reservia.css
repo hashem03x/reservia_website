@@ -292,8 +292,12 @@ details p{color:var(--muted);margin-top:10px}
 
 /* steps */
 .steps{list-style:none;counter-reset:s;padding:0;margin:28px 0 0;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-.steps>li{min-width:0;counter-increment:s;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow-sm)}
-.steps>li::before{content:counter(s,decimal-leading-zero);font-family:var(--mono);color:var(--sun-text);font-weight:600;font-size:.9rem;display:block;margin-bottom:8px}
+.steps>li{min-width:0;counter-increment:s;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden;display:flex;flex-direction:column}
+/* step photo: fixed 16:10 frame (no layout shift while it loads), cropped with object-fit:cover; per-image focal point via object-position */
+.step-media{aspect-ratio:16/10;background:var(--sunken);overflow:hidden;border-bottom:1px solid var(--line)}
+.step-media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s var(--ease)}
+.step-body{padding:16px 18px 18px}
+.step-body::before{content:counter(s,decimal-leading-zero);font-family:var(--mono);color:var(--sun-text);font-weight:600;font-size:.9rem;display:block;margin-bottom:8px}
 .steps h3,.steps .h3{font-size:1rem;margin-bottom:6px}
 .steps p{color:var(--muted);font-size:.9rem}
 @media (max-width:900px){.steps{grid-template-columns:1fr 1fr}}
@@ -553,7 +557,12 @@ html[dir="rtl"] .partners-btn.next svg{transform:rotate(90deg)}
 
 /* How we work -- entrance is animated by Framer Motion (HowWeWork.tsx); hover feedback on pointer devices only. */
 .steps>li{transition:border-color var(--dur-fast) var(--ease),box-shadow var(--dur-fast) var(--ease)}
-@media (hover:hover){.steps>li:hover{border-color:var(--navy);box-shadow:var(--shadow-md)}}
+@media (hover:hover){.steps>li:hover{border-color:var(--navy);box-shadow:var(--shadow-md)}.steps>li:hover .step-media img{transform:scale(1.04)}}
+@media (prefers-reduced-motion:reduce){.step-media img{transition:none}.steps>li:hover .step-media img{transform:none}}
+.photo-credits{margin-top:28px;font-size:.8rem;color:var(--muted)}
+.photo-credits b{font-weight:600;font-size:.82rem;color:var(--ink)}
+.photo-credits ol{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:4px}
+.photo-credits a{word-break:break-word}
 
 /* calculator: on-grid / off-grid choice */
 .field.choices{border:0;padding:0;margin:0 0 16px;display:flex;flex-wrap:wrap;gap:8px;min-width:0}

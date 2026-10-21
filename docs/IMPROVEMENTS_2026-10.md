@@ -117,3 +117,37 @@ Test totals after part 2 (21 October 2026):
 - Typecheck and build: pass.
 
 How We Work now loads an 84 KB (30 KB gzip) chunk for Framer Motion's in-view animation, on that page only. The homepage bundle is unchanged apart from the slogan CSS.
+
+---
+
+# Part 3: How We Work step photos (October 2026)
+
+The brief referred to a "What We Do" section. The site has none; the matching section is the
+eight step cards on How We Work, which already had entrance animations. Each card now has its own
+photo:
+
+| Step | Photo | Licence |
+|---|---|---|
+| 1 Share your data | Smart electricity meter showing a kWh reading | Public domain (USAID) |
+| 2 Site survey | Technician in hard hat and hi-vis working on rooftop panels | CC BY 2.0 (Kristian Buus / 1010) |
+| 3 Design and proposal | Engineers reviewing technical drawings | Public domain (NAVFAC) |
+| 4 Contract and down payment | Equipment delivery by truck and crane | Public domain (U.S. DOE) |
+| 5 Permits | Distribution transformer beside farmland | CC BY-SA 4.0 (Chu86happychu) |
+| 6 Installation | Crew in hard hats mounting a rooftop array | Public domain (U.S. Navy) |
+| 7 Commissioning and handover | Inverter, meter and disconnect switch | CC0 |
+| 8 Operation and maintenance | Technician in hard hat cleaning panels | CC BY-SA 4.0 (Deo photographer) |
+
+- **Implementation.** `src/content/stepImages.ts` holds the files, focal points and credits;
+  photos are in `src/assets/steps/`. Each card has a 16:10 frame, so nothing shifts while images
+  load. Images use `object-fit: cover`, a 480/960 px WebP `srcset`, lazy loading below the first
+  row, and bilingual alt text. They animate with their cards; a slight zoom on hover is disabled
+  under reduced motion. A "Photo credits" note on the page provides the attribution the CC BY and
+  CC BY-SA licences require.
+- **Crops.** Crops remove third-party logos and branding: the USAID logo, "U.S. Navy" lettering, and
+  another installer's "designed and installed by" sticker.
+- **Reference images.** The client's two reference images were not attached and are not in the
+  project, so these photos were sourced from Wikimedia Commons following the described direction.
+  To replace one with Reservia's own photography, add files with the same names (16:10) and update
+  its credit entry.
+- **Verified by.** `How we work step images` in `brief-part2.spec.ts`, the How We Work matrix cases
+  (axe, overflow) and the production build. Browser total: **205 passed**.
