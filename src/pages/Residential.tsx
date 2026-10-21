@@ -1,10 +1,9 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
 import { Faq, faqPairs } from '../components/sections/Faq';
-import { waHref } from '../services/whatsapp';
-import { trackWhatsappClick } from '../services/analytics';
-import { segmentGroup } from '../services/leadService';
+import { BillWaLink } from '../components/ui/WaLink';
+import { CtaBand } from '../components/sections/CtaBand';
 
 const FAQ_KEYS: Array<[string, string]> = [
   ['r_q1', 'r_a1'],
@@ -18,7 +17,6 @@ const FAQ_KEYS: Array<[string, string]> = [
 
 export default function Residential() {
   const { t, language } = useLanguage();
-  const location = useLocation();
 
   return (
     <>
@@ -31,16 +29,8 @@ export default function Residential() {
           <p className="lead">{t.r_lead}</p>
           <div className="cta-row">
             <Link className="btn sun" to={`/${language}/calculator?tab=home`}>{t.try_calc}</Link>
-            <Link className="btn ghost" to={`/${language}/contact`}>{t.h_cta2}</Link>
-            <a
-              className="btn wa"
-              href={waHref(language, 'villas')}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackWhatsappClick('villas', segmentGroup('villas'), location.pathname)}
-            >
-              {t.h_cta_wa}
-            </a>
+            <Link className="btn ghost" to={`/${language}/contact?type=home`}>{t.quote}</Link>
+            <BillWaLink segment="villas" />
           </div>
         </div>
       </section>
@@ -75,18 +65,17 @@ export default function Residential() {
             <p className="foot">{t.r_ex_note}</p>
           </div>
         </div>
-        <div className="wrap">
-          <div className="termsline">
-            <span className="chip">70 / 30</span>
-            <b>{t.terms_label}</b>
-            <span>{t.r_terms}</span>
-          </div>
-        </div>
       </section>
 
       <section className="band alt">
         <div className="wrap" style={{ maxWidth: 820 }}>
           <Faq t={t} items={FAQ_KEYS} />
+        </div>
+      </section>
+
+      <section className="band">
+        <div className="wrap">
+          <CtaBand segment="villas" contactType="home" />
         </div>
       </section>
     </>

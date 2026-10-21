@@ -17,7 +17,7 @@ export default function Industrial() {
           <p className="lead">{t.i_lead}</p>
           <div className="cta-row">
             <Link className="btn sun" to={`/${language}/calculator?tab=ind`}>{t.try_calc_ind}</Link>
-            <Link className="btn ghost" to={`/${language}/contact`}>{t.h_cta2}</Link>
+            <Link className="btn ghost" to={`/${language}/contact?type=factory`}>{t.quote}</Link>
           </div>
         </div>
       </section>
@@ -55,11 +55,6 @@ export default function Industrial() {
         <div className="wrap">
           <h2>{t.i_hse_t}</h2>
           <Pillars items={[{ body: t.i_hse1 }, { body: t.i_hse2 }, { body: t.i_hse3 }, { body: t.i_hse4 }]} />
-          <div className="termsline">
-            <span className="chip">50 / 30 / 20</span>
-            <b>{t.terms_label}</b>
-            <span>{t.i_terms}</span>
-          </div>
         </div>
       </section>
     </>

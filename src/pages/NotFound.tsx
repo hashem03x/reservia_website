@@ -1,16 +1,13 @@
-import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
+import { Seo } from '../components/layout/Seo';
 
 export default function NotFound() {
   const { t, language } = useLanguage();
 
   return (
     <>
-      <Helmet>
-        <title>{t.nf_title}</title>
-        <meta name="robots" content="noindex, follow" />
-      </Helmet>
+      <Seo page="notfound" path="" noindex />
       <section className="band" style={{ textAlign: 'center' }}>
         <div className="wrap" style={{ maxWidth: 560 }}>
           <h1>{t.nf_title}</h1>

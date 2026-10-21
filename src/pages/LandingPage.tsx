@@ -12,7 +12,6 @@ export interface LandingPageSpec extends CampaignPage {
   leadKey: string;
   statKey: string;
   statLabelKey: string;
-  termsKey: string;
   benefitKeys: [string, string, string];
   extraLabelKey: string;
 }
@@ -38,7 +37,6 @@ export function LandingPage({ spec }: { spec: LandingPageSpec }) {
             <div className="trustrow">
               <span>{t.lp_tr1}</span>
               <span>{t.lp_tr2}</span>
-              <span>{t[spec.termsKey]}</span>
             </div>
             <ul className="ticks" style={{ marginTop: 22 }}>
               {spec.benefitKeys.map((k) => (

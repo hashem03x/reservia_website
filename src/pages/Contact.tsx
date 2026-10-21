@@ -1,19 +1,38 @@
-import { useRef, useState, type FormEvent } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useRef, useState } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
-import { env } from '../config/env';
-import { useUtmParams } from '../hooks/useUtmParams';
-import { waHref } from '../services/whatsapp';
-import { submitLead, segmentGroup } from '../services/leadService';
-import { trackLeadGenerated, trackWhatsappClick } from '../services/analytics';
+import { WaLink } from '../components/ui/WaLink';
+import { FieldErrorText } from '../components/forms/FieldErrorText';
+import { env, flags, isLeadsApiConfigured } from '../config/env';
+import { useLeadForm } from '../hooks/useLeadForm';
+import { trackCallClick, trackEmailClick } from '../services/analytics';
+import { validateName, validatePhone } from '../services/validation';
 import type { Segment } from '../config/navigation';
+import type { CalculatorContext } from '../services/leadService';
 
-/** index -> segment, matching the template's qform `segs` array for o1..o7. */
-const SITE_TYPE_SEGMENTS: Segment[] = ['villas', 'compounds', 'agriculture', 'industrial', 'industrial', 'service', 'general'];
-const SITE_TYPE_LABEL_KEYS = ['o1', 'o2', 'o3', 'o4', 'o5', 'o6', 'o7'];
+/** Estimate handed over by the calculator's "Get an exact quote" link (router state, never the URL). */
+function readCalcState(state: unknown): { context: CalculatorContext; summary: string } | null {
+  const calc = (state as { calc?: { context?: CalculatorContext; summary?: string } } | null)?.calc;
+  return calc && calc.context && typeof calc.summary === 'string' ? { context: calc.context, summary: calc.summary } : null;
+}
 
-function ContactRow({ id, label, value, dir }: { id: string; label: string; value: string; dir?: 'ltr' }) {
+/**
+ * Site-type options, matching the template's qform o1..o7. `id` is the
+ * value accepted by `?type=` so segment pages can preselect the right
+ * option (e.g. the service page links to /contact?type=service).
+ */
+const SITE_TYPES: Array<{ id: string; labelKey: string; segment: Segment }> = [
+  { id: 'home', labelKey: 'o1', segment: 'villas' },
+  { id: 'compound', labelKey: 'o2', segment: 'compounds' },
+  { id: 'farm', labelKey: 'o3', segment: 'agriculture' },
+  { id: 'oilgas', labelKey: 'o4', segment: 'industrial' },
+  { id: 'factory', labelKey: 'o5', segment: 'industrial' },
+  { id: 'service', labelKey: 'o6', segment: 'service' },
+  { id: 'other', labelKey: 'o7', segment: 'general' },
+];
+
+function ContactRow({ id, label, value, href, onActivate, dir }: { id: string; label: string; value: string; href?: string; onActivate?: () => void; dir?: 'ltr' }) {
   const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const valueRef = useRef<HTMLSpanElement>(null);
@@ -37,72 +56,58 @@ function ContactRow({ id, label, value, dir }: { id: string; label: string; valu
 
   return (
     <div>
-      <small>{label}</small>
-      <span className="v" id={id} ref={valueRef} dir={dir}>{value}</span>
+      <small id={`${id}-l`}>{label}</small>
+      <span className="v" id={id} ref={valueRef} dir={dir}>
+        {href ? (
+          <a href={href} onClick={onActivate} aria-describedby={`${id}-l`}>
+            {value}
+          </a>
+        ) : (
+          value
+        )}
+      </span>
       <button className="copy" type="button" onClick={handleCopy} aria-describedby={id}>
         {copied ? t.copied : t.copy}
       </button>
+      <span className="sr-only" role="status">{copied ? t.copied : ''}</span>
     </div>
   );
 }
 
+const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
+
 export default function Contact() {
-  const { t, language } = useLanguage();
-  const utm = useUtmParams();
+  const { t } = useLanguage();
   const location = useLocation();
+  const [calc, setCalc] = useState(() => readCalcState(location.state));
+  const [searchParams] = useSearchParams();
+  const preselected = Math.max(0, SITE_TYPES.findIndex((o) => o.id === searchParams.get('type')));
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [siteTypeIndex, setSiteTypeIndex] = useState(0);
+  const [siteTypeIndex, setSiteTypeIndex] = useState(preselected);
   const [gov, setGov] = useState('');
   const [note, setNote] = useState('');
-  const [nameInvalid, setNameInvalid] = useState(false);
-  const [phoneInvalid, setPhoneInvalid] = useState(false);
-  const [formStatus, setFormStatus] = useState<'idle' | 'sent' | 'mock' | 'error'>('idle');
-  const [waLink, setWaLink] = useState<string | null>(null);
-  const submittingRef = useRef(false);
+  const siteType = SITE_TYPES[siteTypeIndex] ?? SITE_TYPES[SITE_TYPES.length - 1];
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    const nameBad = !name.trim();
-    const phoneBad = (phone.match(/\d/g) || []).length < 8;
-    setNameInvalid(nameBad);
-    setPhoneInvalid(phoneBad);
-    if (nameBad || phoneBad) {
-      setFormStatus('error');
-      return;
-    }
-    if (submittingRef.current) return;
-    submittingRef.current = true;
-
-    const segment = SITE_TYPE_SEGMENTS[siteTypeIndex] ?? 'general';
-    const eventId = trackLeadGenerated({
-      segment,
-      segmentGroup: segmentGroup(segment),
+  const { errors, status, done, onSubmit, clearError } = useLeadForm({
+    fieldIds: { name: 'q_name', phone: 'q_phone' },
+    validate: () => ({ name: validateName(name), phone: validatePhone(phone) }),
+    build: () => ({
+      name: name.trim(),
+      phone: phone.trim(),
+      segment: siteType.segment,
+      governorate: gov.trim() || undefined,
+      message: note.trim() || undefined,
       source: 'contact_form',
-      page: location.pathname,
-      lang: language,
-    });
+      calculator: calc?.context,
+    }),
+  });
 
-    const result = await submitLead(
-      { name: name.trim(), phone: phone.trim(), segment, governorate: gov.trim() || undefined, message: note.trim() || undefined, source: 'contact_form' },
-      { eventId, lang: language, utm },
-    );
-    submittingRef.current = false;
-
-    setFormStatus(result.status === 'error' ? 'error' : result.status);
-    if (result.status !== 'error') {
-      const bits = [t[SITE_TYPE_LABEL_KEYS[siteTypeIndex]], gov.trim(), note.trim()].filter(Boolean).join(', ');
-      setWaLink(waHref(language, segment, `${bits} - ${name.trim()}`));
-    }
-  }
-
-  const formMessage =
-    formStatus === 'sent' || formStatus === 'mock'
-      ? { text: t.q_done, color: 'var(--leaf)' }
-      : formStatus === 'error' && (nameInvalid || phoneInvalid)
-        ? { text: nameInvalid && phoneInvalid ? t.q_err : nameInvalid ? t.q_err_name : t.q_err_phone, color: 'var(--err)' }
-        : null;
+  const hasErrors = Boolean(errors.name || errors.phone);
+  const submitting = status === 'submitting';
+  // User-initiated continuation only: what they typed goes to WhatsApp if *they* click.
+  const waDetails = '\n\n' + [t[siteType.labelKey], gov.trim(), note.trim()].filter(Boolean).join(', ');
 
   return (
     <>
@@ -119,10 +124,22 @@ export default function Contact() {
       <section className="band">
         <div className="wrap two">
           <div className="contact-list">
-            <ContactRow id="c1" label={t.ct_biz} value={env.businessEmail} />
-            <ContactRow id="c2" label={t.ct_sales} value={env.salesEmail} />
-            <ContactRow id="c3" label={t.ct_phone} value={env.mobilePhone} dir="ltr" />
-            <ContactRow id="c4" label={t.ct_land} value={env.officePhone} dir="ltr" />
+            <ContactRow
+              id="c1"
+              label={t.ct_biz}
+              value={env.businessEmail}
+              href={flags.mailtoLinks ? `mailto:${env.businessEmail}` : undefined}
+              onActivate={() => trackEmailClick(location.pathname)}
+            />
+            <ContactRow
+              id="c2"
+              label={t.ct_sales}
+              value={env.salesEmail}
+              href={flags.mailtoLinks ? `mailto:${env.salesEmail}` : undefined}
+              onActivate={() => trackEmailClick(location.pathname)}
+            />
+            <ContactRow id="c3" label={t.ct_phone} value={env.mobilePhone} href={telHref(env.mobilePhone)} onActivate={() => trackCallClick(location.pathname)} dir="ltr" />
+            <ContactRow id="c4" label={t.ct_land} value={env.officePhone} href={telHref(env.officePhone)} onActivate={() => trackCallClick(location.pathname)} dir="ltr" />
             <div>
               <small>{t.ct_addr_l}</small>
               <span className="v" style={{ fontFamily: 'var(--body)', userSelect: 'text' }}>{t.ct_addr}</span>
@@ -132,31 +149,39 @@ export default function Contact() {
               <span className="v">{env.website}</span>
             </div>
             <div style={{ borderBottom: 0 }}>
-              <a
-                className="btn wa"
-                href={waHref(language, 'general')}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackWhatsappClick('general', segmentGroup('general'), location.pathname)}
-              >
-                {t.h_cta_wa}
-              </a>
+              {/* General chat, not the bill CTA (that one is homepage + Residential & Commercial only). */}
+              <WaLink segment="general">{t.wa_chat}</WaLink>
             </div>
           </div>
 
-          <form className="panel" noValidate onSubmit={handleSubmit}>
+          <form className="panel" noValidate onSubmit={onSubmit} aria-labelledby="qform-t" aria-busy={submitting}>
+            <h2 className="fh" id="qform-t" style={{ marginBottom: 14 }}>{t.lp_form_t}</h2>
+            {calc && (
+              <div className="calc-attached">
+                <p><b>{t.ct_calc_attached}</b> {calc.summary}</p>
+                {!done && !submitting && (
+                  <button type="button" className="copy" onClick={() => setCalc(null)}>{t.ct_calc_remove}</button>
+                )}
+              </div>
+            )}
             <div className="field">
               <label htmlFor="q_name">{t.q_name}</label>
               <input
                 id="q_name"
                 type="text"
                 required
+                aria-required="true"
                 autoComplete="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                aria-invalid={nameInvalid}
-                aria-describedby="qmsg"
+                disabled={submitting || done}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  clearError('name');
+                }}
+                aria-invalid={Boolean(errors.name)}
+                aria-describedby={errors.name ? 'q_name_e' : undefined}
               />
+              <FieldErrorText id="q_name_e" field="name" error={errors.name} />
             </div>
             <div className="field">
               <label htmlFor="q_phone">{t.q_phone}</label>
@@ -164,51 +189,58 @@ export default function Contact() {
                 id="q_phone"
                 type="tel"
                 required
+                aria-required="true"
                 autoComplete="tel"
                 inputMode="tel"
+                dir="ltr"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                aria-invalid={phoneInvalid}
-                aria-describedby="q_phone_h qmsg"
+                disabled={submitting || done}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  clearError('phone');
+                }}
+                aria-invalid={Boolean(errors.phone)}
+                aria-describedby={errors.phone ? 'q_phone_e q_phone_h' : 'q_phone_h'}
               />
               <span className="hint" id="q_phone_h">{t.q_phone_h}</span>
+              <FieldErrorText id="q_phone_e" field="phone" error={errors.phone} />
             </div>
             <div className="field">
               <label htmlFor="q_type">{t.q_type}</label>
-              <select id="q_type" value={siteTypeIndex} onChange={(e) => setSiteTypeIndex(Number(e.target.value))}>
-                {SITE_TYPE_LABEL_KEYS.map((key, i) => (
-                  <option key={key} value={i}>{t[key]}</option>
+              <select id="q_type" value={siteTypeIndex} disabled={submitting || done} onChange={(e) => setSiteTypeIndex(Number(e.target.value))}>
+                {SITE_TYPES.map((o, i) => (
+                  <option key={o.id} value={i}>{t[o.labelKey]}</option>
                 ))}
               </select>
             </div>
             <div className="field">
               <label htmlFor="q_gov"><span>{t.q_gov}</span> <span className="opt">{t.q_opt}</span></label>
-              <input id="q_gov" type="text" autoComplete="address-level1" value={gov} onChange={(e) => setGov(e.target.value)} />
+              <input id="q_gov" type="text" autoComplete="address-level2" value={gov} disabled={submitting || done} onChange={(e) => setGov(e.target.value)} />
             </div>
             <div className="field">
               <label htmlFor="q_note"><span>{t.q_msg}</span> <span className="opt">{t.q_opt}</span></label>
-              <textarea id="q_note" rows={3} value={note} onChange={(e) => setNote(e.target.value)} />
+              <textarea id="q_note" rows={3} value={note} disabled={submitting || done} onChange={(e) => setNote(e.target.value)} />
             </div>
-            <button className="btn sun" type="submit" style={{ width: '100%' }}>
-              {t.q_send}
-            </button>
-            {formMessage && (
-              <p className="formmsg" id="qmsg" role="status" style={{ color: formMessage.color }}>
-                {formMessage.text}
-              </p>
+            {!done && (
+              <button className="btn sun" type="submit" style={{ width: '100%' }} disabled={submitting}>
+                {submitting ? t.q_sending : t.q_send}
+              </button>
             )}
-            {waLink && (
-              <a
-                className="btn wa qwa"
-                href={waLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => trackWhatsappClick(SITE_TYPE_SEGMENTS[siteTypeIndex], segmentGroup(SITE_TYPE_SEGMENTS[siteTypeIndex]), location.pathname)}
-              >
+
+            <div role="status" aria-live="polite" className="formstatus">
+              {hasErrors && <p className="formmsg err">{t.q_err_summary}</p>}
+              {status === 'sent' && <p className="formmsg ok">{t.q_sent}</p>}
+              {status === 'mock' && <p className="formmsg warn">{t.q_done}</p>}
+            </div>
+            {status === 'error' && (
+              <p className="formmsg err" role="alert">{t.q_fail}</p>
+            )}
+            {(done || status === 'error') && (
+              <WaLink segment={siteType.segment} extra={waDetails} className="btn wa qwa">
                 {t.lp_wa}
-              </a>
+              </WaLink>
             )}
-            <p className="lp-priv">{t.q_priv}</p>
+            <p className="lp-priv">{isLeadsApiConfigured ? t.q_priv_live : t.q_priv}</p>
           </form>
         </div>
       </section>

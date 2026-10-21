@@ -10,6 +10,8 @@
  * variables; see .env.example.
  */
 
+import { CONTACT_DEFAULTS } from './contactDefaults';
+
 const rawEnv = import.meta.env;
 
 function readOr(value: string | undefined, fallback: string): string {
@@ -18,18 +20,44 @@ function readOr(value: string | undefined, fallback: string): string {
 
 export const env = {
   leadsApiUrl: rawEnv.VITE_LEADS_API_URL as string | undefined,
-  whatsappNumber: readOr(rawEnv.VITE_WHATSAPP_NUMBER as string | undefined, '201211892995'),
-  businessEmail: readOr(rawEnv.VITE_BUSINESS_EMAIL as string | undefined, 'Business_info@reservia-energy.com'),
-  salesEmail: readOr(rawEnv.VITE_SALES_EMAIL as string | undefined, 'Reservia_Sales@reservia-energy.com'),
-  mobilePhone: readOr(rawEnv.VITE_MOBILE_PHONE as string | undefined, '+20 121 189 2995'),
-  officePhone: readOr(rawEnv.VITE_OFFICE_PHONE as string | undefined, '+20 2 2522 2814'),
-  website: readOr(rawEnv.VITE_WEBSITE_HOST as string | undefined, 'reservia-energy.com'),
+  whatsappNumber: readOr(rawEnv.VITE_WHATSAPP_NUMBER as string | undefined, CONTACT_DEFAULTS.whatsappNumber),
+  businessEmail: readOr(rawEnv.VITE_BUSINESS_EMAIL as string | undefined, CONTACT_DEFAULTS.businessEmail),
+  salesEmail: readOr(rawEnv.VITE_SALES_EMAIL as string | undefined, CONTACT_DEFAULTS.salesEmail),
+  mobilePhone: readOr(rawEnv.VITE_MOBILE_PHONE as string | undefined, CONTACT_DEFAULTS.mobilePhone),
+  officePhone: readOr(rawEnv.VITE_OFFICE_PHONE as string | undefined, CONTACT_DEFAULTS.officePhone),
+  website: readOr(rawEnv.VITE_WEBSITE_HOST as string | undefined, CONTACT_DEFAULTS.website),
   siteUrl: (rawEnv.VITE_SITE_URL as string | undefined) ?? '',
   ga4MeasurementId: rawEnv.VITE_GA4_MEASUREMENT_ID as string | undefined,
   gtmContainerId: rawEnv.VITE_GTM_CONTAINER_ID as string | undefined,
   metaPixelId: rawEnv.VITE_META_PIXEL_ID as string | undefined,
   googleAdsConversionId: rawEnv.VITE_GOOGLE_ADS_CONVERSION_ID as string | undefined,
 };
+
+function readFlag(value: string | undefined): boolean {
+  return value === 'true' || value === '1';
+}
+
+/**
+ * Client-decision switches (docs/CLIENT_DECISIONS.md). Both default to
+ * off until Reservia confirms:
+ *  - decision 8: whether displayed emails become clickable mailto: links;
+ *  - decision 9: whether the legal name / phones / emails are published in
+ *    Organization structured data.
+ */
+export const flags = {
+  mailtoLinks: readFlag(rawEnv.VITE_ENABLE_MAILTO_LINKS as string | undefined),
+  publishOrgContacts: readFlag(rawEnv.VITE_PUBLISH_ORG_CONTACTS as string | undefined),
+};
+
+/** E.164 without '+': country code + subscriber number, 8-15 digits in total. */
+export function normalizeWhatsappNumber(value: string): string | null {
+  const digits = value.replace(/[^\d]/g, '');
+  return /^[1-9]\d{7,14}$/.test(digits) ? digits : null;
+}
+
+/** Validated wa.me destination, or null when the configured number is malformed (WhatsApp links are then hidden). */
+export const whatsappDestination = normalizeWhatsappNumber(env.whatsappNumber);
+export const isWhatsappConfigured = whatsappDestination !== null;
 
 export const isLeadsApiConfigured = Boolean(env.leadsApiUrl && env.leadsApiUrl.trim().length > 0);
 export const isGa4Configured = Boolean(env.ga4MeasurementId);

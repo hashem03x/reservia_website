@@ -32,7 +32,7 @@ export default function About() {
             <p style={{ color: 'var(--muted)' }}>Clean &middot; Smart &middot; Safe &middot; Affordable</p>
           </div>
           <div className="stack">
-            <h3>{t.ab_src_t}</h3>
+            <h2 className="h3">{t.ab_src_t}</h2>
             <ol className="sources">
               {ABOUT_SOURCES.map((source) => (
                 <li key={source.href}>

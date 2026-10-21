@@ -5,11 +5,13 @@ import { RateBoard } from '../components/sections/RateBoard';
 import { SegmentPicker } from '../components/sections/SegmentPicker';
 import { EgyptMap } from '../components/sections/EgyptMap';
 import { Pillars } from '../components/sections/Pillars';
-import { TermsTable } from '../components/sections/TermsTable';
+import { PartnersCarousel } from '../components/sections/PartnersCarousel';
 import { TrustGrid } from '../components/sections/TrustGrid';
 import { Faq, faqPairs } from '../components/sections/Faq';
 import { CtaBand } from '../components/sections/CtaBand';
+import { AnimatedSlogan } from '../components/sections/AnimatedSlogan';
 import { EnergySparks } from '../components/effects/EnergySparks';
+import { BillWaLink } from '../components/ui/WaLink';
 import heroBg from '../assets/brand/hero-bg.webp';
 
 const FAQ_KEYS: Array<[string, string]> = [
@@ -35,6 +37,7 @@ export default function Home() {
           <div>
             <span className="eyebrow">{t.h_eyebrow}</span>
             <h1>{t.h_title}</h1>
+            <AnimatedSlogan />
             <p className="lead">{t.h_lead}</p>
             <div className="cta-row">
               <Link className="btn sun" to={`/${language}/calculator`}>
@@ -43,6 +46,7 @@ export default function Home() {
               <Link className="btn ghost" to={`/${language}/contact`}>
                 {t.h_cta2}
               </Link>
+              <BillWaLink segment="general" />
             </div>
             <p className="micro">{t.h_micro}</p>
           </div>
@@ -95,15 +99,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="band">
-        <div className="wrap">
-          <h2>{t.pay_title}</h2>
-          <p className="lead" style={{ marginTop: 10 }}>{t.pay_lead}</p>
-          <div style={{ marginTop: 22 }}>
-            <TermsTable t={t} />
-          </div>
-        </div>
-      </section>
+      {/* Replaces the former "Payment terms by project type" section. Renders nothing until partner logos are added. */}
+      <PartnersCarousel />
 
       <section className="band alt">
         <div className="wrap">

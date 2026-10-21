@@ -37,8 +37,9 @@ export function Header() {
   }, [open]);
 
   function switchLanguage() {
-    trackLanguageChange(location.pathname, nextLang);
-    navigate(buildPath(nextLang, location.pathname));
+    trackLanguageChange(location.pathname, language, nextLang);
+    // Keep the query (e.g. ?tab=farm) so the visitor stays on the same view.
+    navigate(buildPath(nextLang, location.pathname) + location.search);
   }
 
   function toggleMobileGroup(label: string) {
@@ -53,11 +54,12 @@ export function Header() {
   return (
     <header className="top">
       <div className="wrap">
-        <Link className="brand" to={`/${language}`} aria-label={t.home_aria}>
+        {/* Accessible name = the visible brand text plus ", Home" (label-in-name, WCAG 2.5.3). */}
+        <Link className="brand" to={`/${language}`}>
           <img src={logo} alt="" width={40} height={42} decoding="async" />
           <span>
-            <b>{t.brand}</b>
-            <small>{t.brand_sub}</small>
+            <b>{t.brand}</b> <small>{t.brand_sub}</small>
+            <span className="sr-only">, {t.nav_home}</span>
           </span>
         </Link>
 
@@ -126,8 +128,10 @@ export function Header() {
             {env.mobilePhone}
           </a>
           <ThemeToggle />
-          <button className="lang" type="button" lang={nextLang} onClick={switchLanguage}>
-            {language === 'ar' ? 'English' : 'عربي'}
+          {/* Visible text is the target language's own name; the accessible name adds what the button does, in the current language. */}
+          <button className="lang" type="button" onClick={switchLanguage}>
+            <span lang={nextLang}>{language === 'ar' ? 'English' : 'عربي'}</span>
+            <span className="sr-only">: {t.lang_switch_sr}</span>
           </button>
           <Link className="btn sun" to={`/${language}/contact`}>
             {t.quote}

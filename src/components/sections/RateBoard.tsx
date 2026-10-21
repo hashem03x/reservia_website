@@ -1,66 +1,65 @@
 import { useLanguage } from '../../i18n/LanguageContext';
+import { RATE_BOARD, RATES, SOLAR_COST_PER_KWH_25Y, pctChange } from '../../config/tariffs';
 
-/** Ported from the template's "rate board" ledger (hero aside). Rates/deltas are fixed, dated figures from the reference, not computed. */
+const fmt2 = (n: number) => n.toFixed(2);
+
+/**
+ * The template's "rate board" ledger (hero aside). Every figure comes from
+ * src/config/tariffs.ts, so the board, the calculator and the tests can
+ * never disagree. Dated assumptions, not live prices.
+ */
 export function RateBoard() {
   const { t } = useLanguage();
+  const resCmp = t.l_res_cmp
+    .replace('{now}', fmt2(RATES.householdTop.value))
+    .replace('{prev}', fmt2(RATES.householdTopOct2025.value))
+    .replace('{pct}', pctChange(RATES.householdTopOct2025.value, RATES.householdTop.value).toFixed(1));
 
   return (
     <aside className="ledger board" aria-labelledby="ledgerT">
       <div className="bd-head">
         <h2 id="ledgerT">{t.ledger_title}</h2>
         <span className="bd-asof">
-          <i />
+          <i aria-hidden="true" />
           <span>{t.l_asof}</span>
         </span>
       </div>
       <div className="unit">{t.l_unit}</div>
-      <div className="bd-cols">
+      <div className="bd-cols" aria-hidden="true">
         <span>&nbsp;</span>
         <span>{t.bh_s}</span>
         <span>EGP</span>
         <span>{t.bh_c}</span>
       </div>
-      <div className="bd-row">
-        <span className="bd-sym" aria-hidden="true">DSL</span>
-        <span className="bd-lab">{t.lb_dsl}</span>
-        <span className="bd-p">6.15</span>
-        <span className="bd-c up">
-          <span aria-hidden="true">&#9650;</span> 17.1%<span className="sr-only"> {t.sr_up}</span>
-        </span>
-      </div>
-      <div className="bd-row">
-        <span className="bd-sym" aria-hidden="true">RES</span>
-        <span className="bd-lab">{t.lb_res}</span>
-        <span className="bd-p">2.89</span>
-        <span className="bd-c up">
-          <span aria-hidden="true">&#9650;</span> 29.6%<span className="sr-only"> {t.sr_up}</span>
-        </span>
-      </div>
-      <div className="bd-row">
-        <span className="bd-sym" aria-hidden="true">COM</span>
-        <span className="bd-lab">{t.lb_com}</span>
-        <span className="bd-p">2.79</span>
-        <span className="bd-c up">
-          <span aria-hidden="true">&#9650;</span> 19.7%<span className="sr-only"> {t.sr_up}</span>
-        </span>
-      </div>
-      <div className="bd-row">
-        <span className="bd-sym" aria-hidden="true">IND</span>
-        <span className="bd-lab">{t.lb_ind}</span>
-        <span className="bd-p">2.55</span>
-        <span className="bd-c up">
-          <span aria-hidden="true">&#9650;</span> 31.4%<span className="sr-only"> {t.sr_up}</span>
-        </span>
-      </div>
-      <div className="bd-row" style={{ borderBottom: 0 }}>
-        <span className="bd-sym" style={{ color: 'var(--leaf)' }} aria-hidden="true">SOL</span>
-        <span className="bd-lab">{t.lb_sol}</span>
-        <span className="bd-p" style={{ color: 'var(--leaf)' }}>0.99</span>
-        <span className="bd-c flat">
-          <span aria-hidden="true">&#9644;</span> {t.l_fixed}
-        </span>
-      </div>
-      <p className="note">{t.ledger_note}</p>
+      <ul className="bd-list">
+        {RATE_BOARD.map((row) => (
+          <li className="bd-row" key={row.sym}>
+            <span className="bd-sym" aria-hidden="true">{row.sym}</span>
+            <span className="bd-lab">{t[row.labelKey]}</span>
+            <span className="bd-p">
+              <span className="sr-only">EGP </span>
+              {fmt2(row.value)}
+            </span>
+            <span className="bd-c up">
+              <span aria-hidden="true">&#9650;</span> {row.changePct.toFixed(1)}%
+              <span className="sr-only"> {t.sr_up}, {t.bh_c}</span>
+            </span>
+          </li>
+        ))}
+        <li className="bd-row" style={{ borderBottom: 0 }}>
+          <span className="bd-sym" style={{ color: 'var(--leaf)' }} aria-hidden="true">SOL</span>
+          <span className="bd-lab">{t.lb_sol}</span>
+          <span className="bd-p" style={{ color: 'var(--leaf)' }}>
+            <span className="sr-only">EGP </span>
+            {fmt2(SOLAR_COST_PER_KWH_25Y)}
+          </span>
+          <span className="bd-c flat">
+            <span aria-hidden="true">&#9644;</span> {t.l_fixed}
+          </span>
+        </li>
+      </ul>
+      <p className="note">{resCmp}</p>
+      <p className="note">{t.ledger_note} {t.l_dsl_warn}</p>
     </aside>
   );
 }

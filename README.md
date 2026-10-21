@@ -39,10 +39,19 @@ npm run dev
 Other scripts:
 
 ```bash
-npm run build     # type-check (tsc -b) + production build
+npm run build     # type-check (tsc -b) + production build (+ static per-route HTML)
 npm run preview   # preview the production build locally
-npm run lint       # oxlint
+npm run lint      # oxlint
+npm run typecheck # tsc -b
+npm test          # unit tests (Vitest): tariffs, calculator, validation, analytics privacy, SEO
+npm run test:e2e  # browser regression (Playwright + axe-core, uses the installed Google Chrome)
+npm run test:all  # all of the above
 ```
+
+See [`docs/IMPROVEMENTS_2026-10.md`](docs/IMPROVEMENTS_2026-10.md) for the October 2026
+improvement checklist, [`docs/TARIFFS.md`](docs/TARIFFS.md) for tariff sources and open
+discrepancies, and [`docs/CLIENT_DECISIONS.md`](docs/CLIENT_DECISIONS.md) for the ten open
+client decisions and their safe defaults.
 
 ## Project structure
 
@@ -77,9 +86,11 @@ unset, never a false "it's live" claim:
 
 | Variable | Effect when unset |
 |---|---|
-| `VITE_LEADS_API_URL` | Contact form and campaign-page forms run in mock mode (logs the payload locally, UI shows the template's own "this is a prototype, nothing was sent" copy) |
+| `VITE_LEADS_API_URL` | Contact and campaign forms run in preview mode: nothing is delivered, the UI says so, and no lead event fires |
 | `VITE_WHATSAPP_NUMBER`, `VITE_BUSINESS_EMAIL`, `VITE_SALES_EMAIL`, `VITE_MOBILE_PHONE`, `VITE_OFFICE_PHONE`, `VITE_WEBSITE_HOST` | Default to the real values from the reference template |
-| `VITE_SITE_URL` | Canonical/hreflang/OG URL tags are omitted |
+| `VITE_SITE_URL` | Canonical/hreflang/og:url tags and sitemap.xml are omitted (client decision 7) |
+| `VITE_ENABLE_MAILTO_LINKS` | Emails render as text with a Copy button (decision 8) |
+| `VITE_PUBLISH_ORG_CONTACTS` | Organization JSON-LD omits phones/emails (decision 9) |
 | `VITE_GA4_MEASUREMENT_ID`, `VITE_GTM_CONTAINER_ID`, `VITE_META_PIXEL_ID`, `VITE_GOOGLE_ADS_CONVERSION_ID` | Matching script never loads; dataLayer events still push (inspectable in devtools) but reach no provider |
 
 None of these are secrets -- do not put CRM API keys/tokens here. Lead

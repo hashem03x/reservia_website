@@ -1,23 +1,27 @@
+import { lazy } from 'react';
 import { MotionConfig } from 'framer-motion';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { LangLayout } from './layouts/LangLayout';
 import { DEFAULT_LANGUAGE, type Language } from './i18n/LanguageContext';
-import { OrganizationJsonLd } from './components/layout/Seo';
 import Home from './pages/Home';
-import Residential from './pages/Residential';
-import Agriculture from './pages/Agriculture';
-import Industrial from './pages/Industrial';
-import Service from './pages/Service';
-import Calculator from './pages/Calculator';
-import HowWeWork from './pages/HowWeWork';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import LpVillas from './pages/LpVillas';
-import LpCompounds from './pages/LpCompounds';
-import LpAgriculture from './pages/LpAgriculture';
-import LpIndustrial from './pages/LpIndustrial';
-import LpService from './pages/LpService';
-import NotFound from './pages/NotFound';
+
+// The home page ships in the main bundle (most visits start there); every
+// other route is its own chunk, loaded on first visit. Organization JSON-LD
+// is in the static HTML <head> (vite.config.ts), not rendered here.
+const Residential = lazy(() => import('./pages/Residential'));
+const Agriculture = lazy(() => import('./pages/Agriculture'));
+const Industrial = lazy(() => import('./pages/Industrial'));
+const Service = lazy(() => import('./pages/Service'));
+const Calculator = lazy(() => import('./pages/Calculator'));
+const HowWeWork = lazy(() => import('./pages/HowWeWork'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const LpVillas = lazy(() => import('./pages/LpVillas'));
+const LpCompounds = lazy(() => import('./pages/LpCompounds'));
+const LpAgriculture = lazy(() => import('./pages/LpAgriculture'));
+const LpIndustrial = lazy(() => import('./pages/LpIndustrial'));
+const LpService = lazy(() => import('./pages/LpService'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 function detectInitialLanguage(): Language {
   if (typeof navigator !== 'undefined' && navigator.language?.toLowerCase().startsWith('ar')) {
@@ -31,7 +35,6 @@ export default function App() {
 
   return (
     <MotionConfig reducedMotion="user">
-      <OrganizationJsonLd />
       <Routes>
         <Route path="/" element={<Navigate to={`/${initialLanguage}`} replace />} />
         <Route path="/:lang" element={<LangLayout />}>

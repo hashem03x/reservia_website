@@ -24,7 +24,7 @@ export default function Agriculture() {
           <p className="lead">{t.a_lead}</p>
           <div className="cta-row">
             <Link className="btn sun" to={`/${language}/calculator?tab=farm`}>{t.try_calc_farm}</Link>
-            <Link className="btn ghost" to={`/${language}/contact`}>{t.h_cta2}</Link>
+            <Link className="btn ghost" to={`/${language}/contact?type=farm`}>{t.quote}</Link>
           </div>
         </div>
       </section>
@@ -83,13 +83,6 @@ export default function Agriculture() {
               <div><dt>{t.ex_payback}</dt><dd>{t.a_ex5}</dd></div>
             </dl>
             <p className="foot">{t.a_ex_note}</p>
-          </div>
-        </div>
-        <div className="wrap">
-          <div className="termsline">
-            <span className="chip">80 / 20</span>
-            <b>{t.terms_label}</b>
-            <span>{t.a_terms}</span>
           </div>
         </div>
       </section>

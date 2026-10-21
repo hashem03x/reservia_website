@@ -1,14 +1,43 @@
+import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { env } from '../../config/env';
 import { SEO, type PageId } from '../../content/seo';
+import { faqJsonLd, pageUrls } from '../../content/seoHead';
+import { jsonLdString } from '../../content/organization';
+import { trackPageView } from '../../services/analytics';
+
+let firstPageRendered = false;
 
 /**
- * Per-page SEO head management, driven by the SEO content ported from
- * the reference template. `path` is the language-agnostic route path
- * (e.g. "/residential", or "" for home); canonical/hreflang/OG URLs are
- * only emitted once VITE_SITE_URL is configured (no production domain
- * was supplied, so we don't guess one).
+ * After a client-side navigation, move keyboard/screen-reader focus to
+ * the new page's <h1> (or <main>), so assistive technology announces the
+ * new page instead of staying on the link that was clicked. Skipped on
+ * the very first page load, where the browser's default focus is right.
+ */
+function focusNewPage() {
+  if (!firstPageRendered) {
+    firstPageRendered = true;
+    return;
+  }
+  const target = (document.querySelector('main h1') as HTMLElement | null) ?? document.getElementById('main');
+  if (!target) return;
+  if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+  target.focus({ preventScroll: true });
+}
+
+/**
+ * Per-page head management (title, description, Open Graph, canonical,
+ * hreflang, robots, FAQPage JSON-LD) plus the page lifecycle hooks that
+ * need the final title: the page_view event and focus management.
+ *
+ * Canonical / hreflang / og:url are emitted only once VITE_SITE_URL (the
+ * production domain) is configured -- no domain is guessed (client
+ * decision 7). noindex pages (campaign pages, 404) get no canonical or
+ * hreflang, so they never compete with or point at indexable URLs.
+ * The same data feeds the static per-route HTML generated at build time
+ * (see vite.config.ts), for crawlers that do not run JavaScript.
  */
 export function Seo({
   page,
@@ -18,79 +47,42 @@ export function Seo({
 }: {
   page: PageId;
   path: string;
-  /** [question, answer] pairs visible on this page, for FAQPage structured data (mirrors the template's dynamic FAQ JSON-LD). */
+  /** [question, answer] pairs visible on this page; FAQPage JSON-LD is built from exactly these strings. */
   faq?: Array<[string, string]>;
-  /** Campaign landing pages are intentionally excluded from indexing, per the template's own SEO note. */
   noindex?: boolean;
 }) {
   const { language } = useLanguage();
+  const location = useLocation();
   const [title, description] = SEO[language][page];
-  const base = env.siteUrl.replace(/\/$/, '');
   const dir = language === 'ar' ? 'rtl' : 'ltr';
+  const urls = noindex ? null : pageUrls(env.siteUrl, language, path);
+  const faqData = faq && faq.length > 0 ? faqJsonLd(language, faq) : null;
 
-  const faqJsonLd =
-    faq && faq.length > 0
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'FAQPage',
-          inLanguage: language,
-          mainEntity: faq.map(([q, a]) => ({
-            '@type': 'Question',
-            name: q,
-            acceptedAnswer: { '@type': 'Answer', text: a },
-          })),
-        }
-      : null;
+  useEffect(() => {
+    trackPageView(location.pathname, language, title);
+    focusNewPage();
+  }, [location.pathname, language, title]);
 
   return (
     <Helmet htmlAttributes={{ lang: language, dir }}>
       <title>{title}</title>
       <meta name="description" content={description} />
-      {noindex && <meta name="robots" content="noindex, follow" />}
-      {base && <link rel="canonical" href={`${base}/${language}${path}`} />}
-      {base && <link rel="alternate" hrefLang="en" href={`${base}/en${path}`} />}
-      {base && <link rel="alternate" hrefLang="ar" href={`${base}/ar${path}`} />}
-      {base && <link rel="alternate" hrefLang="x-default" href={`${base}/en${path}`} />}
+      <meta name="robots" content={noindex ? 'noindex, follow' : 'index, follow'} />
+      {urls && <link rel="canonical" href={urls.canonical} />}
+      {urls && <link rel="alternate" hrefLang="en" href={urls.en} />}
+      {urls && <link rel="alternate" hrefLang="ar" href={urls.ar} />}
+      {urls && <link rel="alternate" hrefLang="x-default" href={urls.en} />}
       <meta property="og:site_name" content="Reservia Integrated Energy Solutions" />
       <meta property="og:type" content="website" />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:locale" content={language === 'ar' ? 'ar_EG' : 'en_US'} />
-      {base && <meta property="og:url" content={`${base}/${language}${path}`} />}
+      <meta property="og:locale:alternate" content={language === 'ar' ? 'en_US' : 'ar_EG'} />
+      {urls && <meta property="og:url" content={urls.canonical} />}
       <meta name="twitter:card" content="summary" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
-      {faqJsonLd && <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>}
-    </Helmet>
-  );
-}
-
-/** Organization structured data, ported verbatim from the template's `#ldOrg` script. Rendered once at the app root. */
-export function OrganizationJsonLd() {
-  const data = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Reservia Integrated Energy Solutions',
-    alternateName: 'Reservia',
-    description: 'Egyptian solar and storage EPC company based in Maadi, Cairo.',
-    address: { '@type': 'PostalAddress', addressLocality: 'Maadi, Cairo', addressCountry: 'EG' },
-    areaServed: 'EG',
-    email: env.businessEmail,
-    telephone: env.officePhone,
-    contactPoint: [
-      {
-        '@type': 'ContactPoint',
-        contactType: 'sales',
-        email: env.salesEmail,
-        telephone: env.mobilePhone,
-        availableLanguage: ['en', 'ar'],
-      },
-    ],
-  };
-
-  return (
-    <Helmet>
-      <script type="application/ld+json">{JSON.stringify(data)}</script>
+      {faqData && <script type="application/ld+json">{jsonLdString(faqData)}</script>}
     </Helmet>
   );
 }
