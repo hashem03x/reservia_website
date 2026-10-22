@@ -189,7 +189,8 @@ s6_img:"Installers in hard hats mounting solar panels on a building roof",
 s7_img:"Installed solar inverter next to an electricity meter and a disconnect switch",
 s8_img:"Technician in a hard hat cleaning solar panels with a long-handled brush",
 photo_credits:"Photo credits",
-photo_cropped:"cropped and resized"
+photo_cropped:"cropped and resized",
+totop:"Back to top"
 };
 
 export default en;

@@ -317,3 +317,44 @@ test.describe('footer', () => {
     await expect(footer.locator('.footerCol')).toHaveCount(1);
   });
 });
+
+test.describe('back to top button', () => {
+  test('hidden at the top, appears after scrolling, returns to the top and moves focus up', async ({ page }) => {
+    await page.setViewportSize({ width: 400, height: 800 });
+    await open(page, '/en');
+    const btn = page.locator('button.totop');
+    await expect(btn).toBeHidden();
+    await page.mouse.wheel(0, 2500);
+    await expect(btn).toBeVisible();
+    await expect(btn).toHaveAccessibleName('Back to top');
+    expect(Number(await btn.evaluate((el) => getComputedStyle(el).getPropertyValue('--p')))).toBeGreaterThan(0);
+    await btn.click();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(page.locator('header .brand')).toBeFocused();
+    await expect(btn).toBeHidden();
+  });
+
+  test('Arabic label; no overlap with the WhatsApp button', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await open(page, '/ar/about');
+    await page.mouse.wheel(0, 3000);
+    const btn = page.locator('button.totop');
+    await expect(btn).toHaveAccessibleName('العودة إلى الأعلى');
+    const a = (await btn.boundingBox())!;
+    const b = (await page.locator('a.wafab').boundingBox())!;
+    expect(a.y + a.height).toBeLessThanOrEqual(b.y);
+  });
+});
+
+test.describe('back to top, reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' });
+  test('jumps instantly without animation', async ({ page }) => {
+    await open(page, '/en/how-we-work');
+    await page.mouse.wheel(0, 2500);
+    const btn = page.locator('button.totop');
+    await expect(btn).toBeVisible();
+    expect(await btn.locator('.totop-arrow').evaluate((el) => getComputedStyle(el).animationName)).toBe('none');
+    await btn.click();
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+  });
+});
