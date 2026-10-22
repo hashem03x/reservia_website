@@ -7,20 +7,46 @@
   "redirects": [
     {
       "source": "/",
-      "has": [{ "type": "header", "key": "accept-language", "value": "^ar.*" }],
+      "has": [
+        {
+          "type": "header",
+          "key": "accept-language",
+          "value": "^ar.*"
+        }
+      ],
       "destination": "/ar",
       "permanent": false
     },
-    { "source": "/", "destination": "/en", "permanent": false }
+    {
+      "source": "/",
+      "destination": "/en",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/assets/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
       "source": "/(sitemap.xml|robots.txt)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
     }
   ]
 }
