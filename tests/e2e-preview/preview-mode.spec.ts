@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { expect, test } from '@playwright/test';
 import { events, open } from '../e2e/helpers';
 
@@ -34,7 +35,7 @@ test.describe('preview mode (no lead endpoint, no domain)', () => {
   test('static HTML per route has its own head and no guessed canonical URL', async ({ request }) => {
     const ar = await (await request.get('/ar/service')).text();
     expect(ar).toContain('<html lang="ar" dir="rtl">');
-    expect(ar).toContain('<title>طاقة شمسية للمستشفيات والفنادق والمدارس في مصر | ريزيرفيا</title>');
+    expect(ar).toMatch(/<title[^>]*>طاقة شمسية للمستشفيات والفنادق والمدارس في مصر \| ريزيرفيا<\/title>/);
     expect(ar).not.toContain('rel="canonical"');
     expect(ar).not.toMatch(/"telephone"|"email"/);
     const lp = await (await request.get('/en/lp/service')).text();
@@ -42,4 +43,10 @@ test.describe('preview mode (no lead endpoint, no domain)', () => {
     // No sitemap is generated without a domain (the server answers with the SPA fallback instead).
     expect(await (await request.get('/sitemap.xml')).text()).not.toContain('<urlset');
   });
+});
+
+test('site checker passes with no production origin (no absolute URLs, no sitemap)', () => {
+  const base = test.info().project.use.baseURL!;
+  const out = execFileSync('node', ['scripts/check-site.mjs', base], { encoding: 'utf8' });
+  expect(out).toContain('All checks passed');
 });

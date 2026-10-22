@@ -16,10 +16,17 @@ export type PageId =
   | 'lp-agriculture'
   | 'lp-service'
   | 'lp-industrial'
-  | 'notfound';
+  | 'notfound'
+  | 'oilgas'
+  | 'irrigation';
 
-/** Ported verbatim from the reference template's `SEO` object. [title, description] per page per language. */
-export const SEO: Record<Language, Record<PageId, [string, string]>> = {
+/**
+ * [title, description] per page per language. Original entries ported
+ * verbatim from the reference template's `SEO` object. A page that exists
+ * in only one language (the Arabic irrigation guide) has no entry in the
+ * other -- no metadata is invented for a page that does not exist.
+ */
+export const SEO: Record<Language, Partial<Record<PageId, [string, string]>>> = {
   en: {
     home: ['Solar and storage EPC in Egypt | Reservia', 'Reservia designs, installs and maintains solar and battery systems for homes, farms, oil and gas sites and factories across Egypt. Ask for a free quote.'],
     residential: ['Home solar systems in Egypt | Reservia', 'Rooftop solar for Egyptian homes, sized to your bill and your roof. See the savings and how payback is worked out, then ask for a free quote.'],
@@ -36,6 +43,7 @@ export const SEO: Record<Language, Record<PageId, [string, string]>> = {
     'lp-service': ['Lower the energy bill of a hospital, hotel or school | Reservia', 'Solar and battery for buildings that run every day. Site assessment from Reservia.'],
     'lp-industrial': ['Cut diesel at remote sites and bills at the plant | Reservia', 'Hybrid solar and storage that cuts diesel at remote sites and bills at the plant. Site assessment from Reservia.'],
     notfound: ['Page not found | Reservia', 'The page you are looking for does not exist or may have moved.'],
+    oilgas: ['Solar hybrid systems for oil and gas sites in Egypt | Reservia', 'Solar, battery and generator hybrid systems for remote oil and gas sites in Egypt: how they cut diesel use, how a site is assessed and sized, and how to request an engineering assessment.'],
   },
   ar: {
     home: ['الطاقة الشمسية والتخزين في مصر | ريزيرفيا', 'تصمم ريزيرفيا وتركّب وتصون أنظمة الطاقة الشمسية والبطاريات للمنازل والمزارع ومواقع البترول والمصانع في أنحاء مصر. اطلب عرض سعر مجانيًا.'],
@@ -53,5 +61,14 @@ export const SEO: Record<Language, Record<PageId, [string, string]>> = {
     'lp-service': ['خفّض فاتورة طاقة المستشفى أو الفندق أو المدرسة | ريزيرفيا', 'طاقة شمسية وبطاريات للمباني التي تعمل كل يوم. معاينة للموقع من ريزيرفيا.'],
     'lp-industrial': ['خفّض الديزل في المواقع النائية وفاتورة المصنع | ريزيرفيا', 'أنظمة هجينة شمسية وتخزين تخفض الديزل في المواقع النائية وفاتورة المصنع. معاينة للموقع من ريزيرفيا.'],
     notfound: ['الصفحة غير موجودة | ريزيرفيا', 'الصفحة التي تبحث عنها غير موجودة أو ربما نُقلت.'],
+    oilgas: ['أنظمة طاقة شمسية هجينة لمواقع البترول والغاز في مصر | ريزيرفيا', 'أنظمة هجينة تجمع الطاقة الشمسية والبطاريات والمولدات لمواقع البترول والغاز النائية في مصر: كيف تقلل استهلاك الديزل، وكيف نقيّم الموقع ونحدد حجم النظام، وكيف تطلب تقييمًا هندسيًا.'],
+    irrigation: ['دليل الري بالطاقة الشمسية للمزارع في مصر | ريزيرفيا', 'كيف يعمل الري بالطاقة الشمسية، وكيف تختار حجم الطلمبة، ومقارنة تكلفة الضخ بالطاقة الشمسية والديزل، وكيف تتحقق من برامج التمويل المتاحة. أمثلة بافتراضات واضحة.'],
   },
 };
+
+/** Title and description for a page in a language; throws if the page does not exist in that language. */
+export function seoText(lang: Language, page: PageId): [string, string] {
+  const entry = SEO[lang][page];
+  if (!entry) throw new Error(`No SEO entry for page "${page}" in "${lang}"`);
+  return entry;
+}

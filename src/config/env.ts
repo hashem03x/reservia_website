@@ -59,6 +59,13 @@ export function normalizeWhatsappNumber(value: string): string | null {
 export const whatsappDestination = normalizeWhatsappNumber(env.whatsappNumber);
 export const isWhatsappConfigured = whatsappDestination !== null;
 
+/**
+ * True on Vercel preview deployments (VERCEL_ENV=preview, injected at build
+ * time by vite.config.ts). Preview builds are noindex and their robots.txt
+ * disallows crawling, so they can never compete with production.
+ */
+export const isPreviewDeployment = rawEnv.VITE_DEPLOY_ENV === 'preview';
+
 export const isLeadsApiConfigured = Boolean(env.leadsApiUrl && env.leadsApiUrl.trim().length > 0);
 export const isGa4Configured = Boolean(env.ga4MeasurementId);
 export const isGtmConfigured = Boolean(env.gtmContainerId);

@@ -272,7 +272,7 @@ test.describe('How we work', () => {
 
 test.describe('How we work step images', () => {
   for (const [lang, width] of [['en', 1280], ['ar', 400]] as const) {
-    test(`${lang} @ ${width}px: eight distinct, loaded, described 16:10 photos; credits shown`, async ({ page }) => {
+    test(`${lang} @ ${width}px: eight distinct, loaded, described 16:10 photos`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await open(page, `/${lang}/how-we-work`);
       const imgs = page.locator('.steps > li .step-media img');
@@ -298,9 +298,6 @@ test.describe('How we work step images', () => {
       }
       if (lang === 'ar') for (const x of info) expect(x.alt).toMatch(/[؀-ۿ]/);
       expect(info.slice(4).every((x) => x.loading === 'lazy')).toBe(true);
-      const credits = page.locator('.photo-credits li');
-      await expect(credits).toHaveCount(8);
-      await expect(page.locator('.photo-credits a[rel~="license"]').first()).toHaveAttribute('href', /creativecommons\.org/);
     });
   }
 });

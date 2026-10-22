@@ -19,3 +19,18 @@ export function Faq({ t, items }: { t: Dictionary; items: Array<[string, string]
 export function faqPairs(t: Dictionary, keys: Array<[string, string]>): Array<[string, string]> {
   return keys.map(([q, a]) => [t[q], t[a]]);
 }
+
+/** Same FAQ pattern for copy that is not in the dictionaries (long-form pages); pass the same pairs to <Seo faq>. */
+export function FaqText({ title, items }: { title: string; items: Array<[string, string]> }) {
+  return (
+    <>
+      <h2>{title}</h2>
+      {items.map(([q, a]) => (
+        <details key={q}>
+          <summary>{q}</summary>
+          <p>{a}</p>
+        </details>
+      ))}
+    </>
+  );
+}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { NAV_ENTRIES } from '../../config/navigation';
+import { findRoute, routeLangs, splitPath } from '../../content/seoHead';
 import { env } from '../../config/env';
 import { trackCallClick, trackLanguageChange } from '../../services/analytics';
 import { NavDropdown } from './NavDropdown';
@@ -38,8 +39,12 @@ export function Header() {
 
   function switchLanguage() {
     trackLanguageChange(location.pathname, language, nextLang);
-    // Keep the query (e.g. ?tab=farm) so the visitor stays on the same view.
-    navigate(buildPath(nextLang, location.pathname) + location.search);
+    // Keep the query (e.g. ?tab=farm) so the visitor stays on the same view. A page that does
+    // not exist in the other language (the Arabic irrigation guide) falls back to its parent.
+    const { path } = splitPath(location.pathname);
+    const route = findRoute(path);
+    const target = route && !routeLangs(route).includes(nextLang) ? (route.parent ?? '') : path;
+    navigate(buildPath(nextLang, '/' + nextLang + target) + location.search);
   }
 
   function toggleMobileGroup(label: string) {
@@ -56,7 +61,7 @@ export function Header() {
       <div className="wrap">
         {/* Accessible name = the visible brand text plus ", Home" (label-in-name, WCAG 2.5.3). */}
         <Link className="brand" to={`/${language}`}>
-          <img src={logo} alt="" width={40} height={42} decoding="async" />
+          <img src={logo} alt="" width={40} height={40} decoding="async" />
           <span>
             <b>{t.brand}</b> <small>{t.brand_sub}</small>
             <span className="sr-only">, {t.nav_home}</span>

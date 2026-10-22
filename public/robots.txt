@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-
-# A Sitemap: line and absolute canonical URLs will be added once VITE_SITE_URL
-# (the production domain) is known -- see .env.example and IMPLEMENTATION_NOTES.md.

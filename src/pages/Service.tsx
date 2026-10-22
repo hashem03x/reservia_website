@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
+import { Breadcrumbs } from '../components/layout/Breadcrumbs';
 import { Pillars } from '../components/sections/Pillars';
 import { Faq, faqPairs } from '../components/sections/Faq';
 import { CtaBand } from '../components/sections/CtaBand';
@@ -35,6 +36,7 @@ export default function Service() {
 
       <section className="page-hero">
         <div className="wrap">
+          <Breadcrumbs path="/service" />
           <span className="eyebrow">{t.s_eyebrow}</span>
           <h1>{t.s_title}</h1>
           <p className="lead">{t.s_lead}</p>

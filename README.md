@@ -39,7 +39,8 @@ npm run dev
 Other scripts:
 
 ```bash
-npm run build     # type-check (tsc -b) + production build (+ static per-route HTML)
+npm run build     # type-check + client build + SSR build + prerender of every route (dist/<lang><path>.html)
+npm run check:site -- <url> [--expect-origin=https://...] [--strict-404]   # technical SEO check of a running copy
 npm run preview   # preview the production build locally
 npm run lint      # oxlint
 npm run typecheck # tsc -b
@@ -88,7 +89,7 @@ unset, never a false "it's live" claim:
 |---|---|
 | `VITE_LEADS_API_URL` | Contact and campaign forms run in preview mode: nothing is delivered, the UI says so, and no lead event fires |
 | `VITE_WHATSAPP_NUMBER`, `VITE_BUSINESS_EMAIL`, `VITE_SALES_EMAIL`, `VITE_MOBILE_PHONE`, `VITE_OFFICE_PHONE`, `VITE_WEBSITE_HOST` | Default to the real values from the reference template |
-| `VITE_SITE_URL` | Canonical/hreflang/og:url tags and sitemap.xml are omitted (client decision 7) |
+| `VITE_SITE_URL` | Canonical/hreflang/og:url/og:image tags, JSON-LD ids and sitemap.xml are omitted (client decision 7; see docs/SEO_LAUNCH.md) |
 | `VITE_ENABLE_MAILTO_LINKS` | Emails render as text with a Copy button (decision 8) |
 | `VITE_PUBLISH_ORG_CONTACTS` | Organization JSON-LD omits phones/emails (decision 9) |
 | `VITE_GA4_MEASUREMENT_ID`, `VITE_GTM_CONTAINER_ID`, `VITE_META_PIXEL_ID`, `VITE_GOOGLE_ADS_CONVERSION_ID` | Matching script never loads; dataLayer events still push (inspectable in devtools) but reach no provider |

@@ -21,7 +21,13 @@
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#102B46" />
-    <link rel="icon" type="image/webp" href="/src/assets/brand/logo.webp" />
+    <!-- Icons generated from the brand logo emblem (public/favicon.ico, public/icons/). -->
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <!-- Visitors without JavaScript see the prerendered page: no boot overlay, no entrance offsets. -->
+    <noscript><style>.appLoader{display:none!important}.steps>li{opacity:1!important;transform:none!important}</style></noscript>
     <!--
       Replaced at build time (and by the dev server) with the route's
       static title, description, robots, Open Graph, canonical/hreflang
@@ -40,10 +46,28 @@
     -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Loaded without blocking first paint (the prerendered page shows in the
+      fallback system fonts, then swaps -- display=swap, as before). The
+      noscript copy keeps the fonts for visitors without JavaScript.
+    -->
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Readex+Pro:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap"
-      rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Readex+Pro:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Readex+Pro:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap"
+      />
+    </noscript>
     <!-- Avoids a white flash before the stylesheet/React mount -- matches the app loader's background. -->
     <style>html,body{background:#091725;margin:0}</style>
   </head>
