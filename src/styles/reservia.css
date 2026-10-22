@@ -292,8 +292,12 @@ details p{color:var(--muted);margin-top:10px}
 
 /* steps */
 .steps{list-style:none;counter-reset:s;padding:0;margin:28px 0 0;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-.steps>li{min-width:0;counter-increment:s;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow-sm)}
-.steps>li::before{content:counter(s,decimal-leading-zero);font-family:var(--mono);color:var(--sun-text);font-weight:600;font-size:.9rem;display:block;margin-bottom:8px}
+.steps>li{min-width:0;counter-increment:s;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm);overflow:hidden;display:flex;flex-direction:column}
+/* step photo: fixed 16:10 frame (no layout shift while it loads), cropped with object-fit:cover; per-image focal point via object-position */
+.step-media{aspect-ratio:16/10;background:var(--sunken);overflow:hidden;border-bottom:1px solid var(--line)}
+.step-media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s var(--ease)}
+.step-body{padding:16px 18px 18px}
+.step-body::before{content:counter(s,decimal-leading-zero);font-family:var(--mono);color:var(--sun-text);font-weight:600;font-size:.9rem;display:block;margin-bottom:8px}
 .steps h3,.steps .h3{font-size:1rem;margin-bottom:6px}
 .steps p{color:var(--muted);font-size:.9rem}
 @media (max-width:900px){.steps{grid-template-columns:1fr 1fr}}
@@ -553,7 +557,12 @@ html[dir="rtl"] .partners-btn.next svg{transform:rotate(90deg)}
 
 /* How we work -- entrance is animated by Framer Motion (HowWeWork.tsx); hover feedback on pointer devices only. */
 .steps>li{transition:border-color var(--dur-fast) var(--ease),box-shadow var(--dur-fast) var(--ease)}
-@media (hover:hover){.steps>li:hover{border-color:var(--navy);box-shadow:var(--shadow-md)}}
+@media (hover:hover){.steps>li:hover{border-color:var(--navy);box-shadow:var(--shadow-md)}.steps>li:hover .step-media img{transform:scale(1.04)}}
+@media (prefers-reduced-motion:reduce){.step-media img{transition:none}.steps>li:hover .step-media img{transform:none}}
+.photo-credits{margin-top:28px;font-size:.8rem;color:var(--muted)}
+.photo-credits b{font-weight:600;font-size:.82rem;color:var(--ink)}
+.photo-credits ol{margin:10px 0 0;padding-inline-start:20px;display:grid;gap:4px}
+.photo-credits a{word-break:break-word}
 
 /* calculator: on-grid / off-grid choice */
 .field.choices{border:0;padding:0;margin:0 0 16px;display:flex;flex-wrap:wrap;gap:8px;min-width:0}
@@ -571,3 +580,47 @@ html[dir="rtl"] .partners-btn.next svg{transform:rotate(90deg)}
 /* footer WhatsApp chat button */
 .footerWa{margin-top:18px}
 .footerWa svg{width:20px;height:20px;fill:#fff;flex-shrink:0}
+
+/* ============================================================
+   "Back to top" button (ScrollTopButton.tsx). Stacked above the
+   WhatsApp button, same inline-end edge and centre line. Scroll
+   progress arrives as --p (0..1) and fills the gradient ring.
+   ============================================================ */
+.totop{--p:0;position:fixed;inset-inline-end:22px;bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:39;width:48px;height:48px;padding:0;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;color:#fff;background:radial-gradient(circle at 50% 35%,var(--surface-deep),var(--bg-deep) 75%);box-shadow:var(--shadow-lg);opacity:0;visibility:hidden;transform:translateY(18px) scale(.55);transition:opacity .25s var(--ease),transform .5s cubic-bezier(.34,1.56,.64,1),box-shadow .25s var(--ease),visibility 0s linear .5s}
+.totop.show{opacity:1;visibility:visible;transform:none;transition-delay:0s}
+.totop:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.totop-ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}
+.totop-ring circle{fill:none;stroke-width:3}
+.totop-track{stroke:color-mix(in srgb,var(--ink-on-deep) 16%,transparent)}
+.totop-progress{stroke-linecap:round;stroke-dasharray:138.23;stroke-dashoffset:calc(138.23 * (1 - var(--p)));transition:stroke-dashoffset .15s linear}
+.totop-arrow{width:20px;height:20px;position:relative;z-index:1;filter:drop-shadow(0 0 4px color-mix(in srgb,var(--cyan-bright) 60%,transparent))}
+.totop.show .totop-arrow{animation:totopNudge 2.4s ease-in-out infinite}
+/* one-off energy ping when the button arrives */
+.totop::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:2px solid var(--cyan-bright);opacity:0;pointer-events:none}
+.totop.show::after{animation:totopPing 1.1s ease-out 1}
+@media (hover:hover){
+  .totop:hover{box-shadow:var(--shadow-lg),0 0 0 4px color-mix(in srgb,var(--cyan-bright) 22%,transparent),0 0 24px color-mix(in srgb,var(--cyan-bright) 45%,transparent)}
+  .totop.show:hover .totop-arrow{animation:totopBounce .7s ease-in-out infinite}
+}
+/* click: the arrow launches up and re-enters from below, with a spark burst */
+.totop.launch .totop-arrow{animation:totopLaunch .65s cubic-bezier(.5,0,.2,1) 1}
+.totop-sparks{position:absolute;inset:0;pointer-events:none}
+.totop-sparks i{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:radial-gradient(circle,#fff,var(--sun) 60%,transparent 75%);opacity:0}
+.totop.launch .totop-sparks i{animation:totopSpark .6s ease-out 1}
+.totop-sparks i:nth-child(1){--dx:0px;--dy:-34px}
+.totop-sparks i:nth-child(2){--dx:-26px;--dy:-20px;background:radial-gradient(circle,#fff,var(--cyan-bright) 60%,transparent 75%)}
+.totop-sparks i:nth-child(3){--dx:26px;--dy:-20px;background:radial-gradient(circle,#fff,var(--cyan-bright) 60%,transparent 75%)}
+.totop-sparks i:nth-child(4){--dx:-18px;--dy:-32px}
+.totop-sparks i:nth-child(5){--dx:18px;--dy:-32px}
+@keyframes totopNudge{0%,55%,100%{transform:none}30%{transform:translateY(-4px)}42%{transform:translateY(1px)}}
+@keyframes totopBounce{0%,100%{transform:none}50%{transform:translateY(-5px)}}
+@keyframes totopPing{0%{opacity:.9;transform:scale(.9)}100%{opacity:0;transform:scale(1.7)}}
+@keyframes totopLaunch{0%{transform:none;opacity:1}40%{transform:translateY(-26px);opacity:0}41%{transform:translateY(22px);opacity:0}100%{transform:none;opacity:1}}
+@keyframes totopSpark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)}}
+@media (prefers-reduced-motion:reduce){
+  .totop{transition:opacity .2s ease,visibility 0s linear .2s;transform:none}
+  .totop.show{transition-delay:0s}
+  .totop .totop-arrow,.totop::after,.totop-sparks i{animation:none!important}
+  .totop-progress{transition:none}
+}
+@media print{.totop{display:none}}

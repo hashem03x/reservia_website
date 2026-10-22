@@ -179,7 +179,18 @@ f_crop:"Main crop or activity",
 f_tree:"Type of tree",
 h_crop:"Optional. Our engineers use it to plan your irrigation; it does not change this estimate.",
 ct_calc_attached:"Your calculator estimate will be sent with this request:",
-ct_calc_remove:"Remove"
+ct_calc_remove:"Remove",
+s1_img:"Close-up of a smart electricity meter showing a kWh reading",
+s2_img:"Technician in a hard hat and high-visibility vest working on rooftop solar panels",
+s3_img:"Engineers reviewing technical drawings together at a table",
+s4_img:"Crew and a crane unloading equipment from a delivery truck on site",
+s5_img:"Three-phase distribution transformer on a pole beside farmland",
+s6_img:"Installers in hard hats mounting solar panels on a building roof",
+s7_img:"Installed solar inverter next to an electricity meter and a disconnect switch",
+s8_img:"Technician in a hard hat cleaning solar panels with a long-handled brush",
+photo_credits:"Photo credits",
+photo_cropped:"cropped and resized",
+totop:"Back to top"
 };
 
 export default en;

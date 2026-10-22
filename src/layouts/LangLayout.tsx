@@ -4,6 +4,7 @@ import { isLanguage, LanguageProvider, useLanguage, type Language } from '../i18
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { WhatsAppButton } from '../components/layout/WhatsAppButton';
+import { ScrollTopButton } from '../components/layout/ScrollTopButton';
 
 function DocumentDirection({ language }: { language: Language }) {
   useEffect(() => {
@@ -64,6 +65,7 @@ export function LangLayout() {
         </Suspense>
       </main>
       <Footer />
+      <ScrollTopButton />
       <WhatsAppButton />
     </LanguageProvider>
   );

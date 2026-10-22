@@ -270,6 +270,41 @@ test.describe('How we work', () => {
   });
 });
 
+test.describe('How we work step images', () => {
+  for (const [lang, width] of [['en', 1280], ['ar', 400]] as const) {
+    test(`${lang} @ ${width}px: eight distinct, loaded, described 16:10 photos; credits shown`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await open(page, `/${lang}/how-we-work`);
+      const imgs = page.locator('.steps > li .step-media img');
+      await expect(imgs).toHaveCount(8);
+      const info = [];
+      for (let i = 0; i < 8; i++) {
+        const img = imgs.nth(i);
+        await img.scrollIntoViewIfNeeded();
+        await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+        info.push(
+          await img.evaluate((el: HTMLImageElement) => {
+            const frame = el.parentElement!.getBoundingClientRect();
+            return { src: el.currentSrc, alt: el.alt, loading: el.loading, ratio: frame.width / frame.height, fit: getComputedStyle(el).objectFit };
+          }),
+        );
+      }
+      expect(new Set(info.map((x) => x.src.replace(/-(480|960)\.[^.]+\.webp$|-(480|960)-[^/]+\.webp$/, ''))).size).toBe(8);
+      for (const x of info) {
+        expect(x.src).toMatch(/\.webp$/);
+        expect(x.alt.length).toBeGreaterThan(15);
+        expect(x.ratio).toBeCloseTo(1.6, 1);
+        expect(x.fit).toBe('cover');
+      }
+      if (lang === 'ar') for (const x of info) expect(x.alt).toMatch(/[؀-ۿ]/);
+      expect(info.slice(4).every((x) => x.loading === 'lazy')).toBe(true);
+      const credits = page.locator('.photo-credits li');
+      await expect(credits).toHaveCount(8);
+      await expect(page.locator('.photo-credits a[rel~="license"]').first()).toHaveAttribute('href', /creativecommons\.org/);
+    });
+  }
+});
+
 test.describe('footer', () => {
   test('LLC name, new description, WhatsApp chat, no main menu', async ({ page }) => {
     await open(page, '/en');
@@ -280,5 +315,46 @@ test.describe('footer', () => {
     await expect(footer.locator('a.footerWa')).toHaveAccessibleName(/Chat with us on WhatsApp/);
     await expect(footer.locator('a[href="/en/residential"], a[href="/en/how-we-work"], a[href="/en/about"]')).toHaveCount(0);
     await expect(footer.locator('.footerCol')).toHaveCount(1);
+  });
+});
+
+test.describe('back to top button', () => {
+  test('hidden at the top, appears after scrolling, returns to the top and moves focus up', async ({ page }) => {
+    await page.setViewportSize({ width: 400, height: 800 });
+    await open(page, '/en');
+    const btn = page.locator('button.totop');
+    await expect(btn).toBeHidden();
+    await page.mouse.wheel(0, 2500);
+    await expect(btn).toBeVisible();
+    await expect(btn).toHaveAccessibleName('Back to top');
+    expect(Number(await btn.evaluate((el) => getComputedStyle(el).getPropertyValue('--p')))).toBeGreaterThan(0);
+    await btn.click();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(page.locator('header .brand')).toBeFocused();
+    await expect(btn).toBeHidden();
+  });
+
+  test('Arabic label; no overlap with the WhatsApp button', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await open(page, '/ar/about');
+    await page.mouse.wheel(0, 3000);
+    const btn = page.locator('button.totop');
+    await expect(btn).toHaveAccessibleName('العودة إلى الأعلى');
+    const a = (await btn.boundingBox())!;
+    const b = (await page.locator('a.wafab').boundingBox())!;
+    expect(a.y + a.height).toBeLessThanOrEqual(b.y);
+  });
+});
+
+test.describe('back to top, reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' });
+  test('jumps instantly without animation', async ({ page }) => {
+    await open(page, '/en/how-we-work');
+    await page.mouse.wheel(0, 2500);
+    const btn = page.locator('button.totop');
+    await expect(btn).toBeVisible();
+    expect(await btn.locator('.totop-arrow').evaluate((el) => getComputedStyle(el).animationName)).toBe('none');
+    await btn.click();
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
   });
 });
