@@ -62,28 +62,6 @@ export default function HowWeWork() {
             </ol>
           </LazyMotion>
 
-          {/* Required attribution for the licensed photos (CC BY / CC BY-SA); public-domain sources are credited too. */}
-          {STEP_IMAGES.some(Boolean) && (
-            <aside className="photo-credits" aria-labelledby="photo-credits-t">
-              <b id="photo-credits-t">{t.photo_credits}</b>
-              <ol>
-                {STEP_IMAGES.map((img, i) =>
-                  img ? (
-                    <li key={img.credit.source}>
-                      {t[`s${i + 1}t`]}: {img.credit.author} ·{' '}
-                      <a href={img.credit.source} target="_blank" rel="noopener noreferrer">{img.credit.title}</a> ·{' '}
-                      {img.credit.licenseUrl ? (
-                        <a href={img.credit.licenseUrl} target="_blank" rel="noopener noreferrer license">{img.credit.license}</a>
-                      ) : (
-                        img.credit.license
-                      )}
-                      {` · ${t.photo_cropped}`}
-                    </li>
-                  ) : null,
-                )}
-              </ol>
-            </aside>
-          )}
         </div>
       </section>
     </>
