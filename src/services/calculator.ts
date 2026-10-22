@@ -253,3 +253,9 @@ function emptyResult(): CalcResult {
 export function roundedPrice(price: number): number {
   return Math.round(price / 1000) * 1000;
 }
+
+/** Indicative price of a home system of `kwp` (without battery), from the same price list the calculator uses. */
+export function homeSystemPrice(kwp: number): number {
+  const s = safeInput(kwp);
+  return s * pHome(s);
+}

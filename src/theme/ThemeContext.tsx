@@ -1,21 +1,37 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useSyncExternalStore, type ReactNode } from 'react';
 
 export type Theme = 'light' | 'dark';
 
 const STORAGE_KEY = 'rsv_theme';
 
 /**
- * Reads the theme already applied to <html> by the inline pre-paint
- * script in index.html (see that file), so React's initial state always
- * matches what's already on screen -- no mismatch, no second flash.
- * Falls back to 'light' if, for any reason, that attribute isn't set.
+ * The theme lives on <html data-theme>, set before first paint by the
+ * inline script in index.html. This tiny store reads and writes that
+ * attribute; React subscribes with useSyncExternalStore, whose server
+ * snapshot ('light') is what prerendered HTML contains. During hydration
+ * React uses that same snapshot, then immediately re-renders with the real
+ * theme -- so a returning dark-mode visitor gets no hydration mismatch
+ * and no flash (the page colours already come from the attribute).
  */
-function getInitialTheme(): Theme {
-  if (typeof document !== 'undefined') {
-    const attr = document.documentElement.getAttribute('data-theme');
-    if (attr === 'dark') return 'dark';
+const listeners = new Set<() => void>();
+
+function readTheme(): Theme {
+  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+}
+
+function writeTheme(theme: Theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  try {
+    localStorage.setItem(STORAGE_KEY, theme);
+  } catch {
+    // localStorage unavailable (private mode, etc.) -- theme still works for this session
   }
-  return 'light';
+  listeners.forEach((l) => l());
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
 }
 
 interface ThemeContextValue {
@@ -32,19 +48,10 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
  * then persisted to localStorage and restored on later visits.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    try {
-      localStorage.setItem(STORAGE_KEY, theme);
-    } catch {
-      // localStorage unavailable (private mode, etc.) -- theme still works for this session
-    }
-  }, [theme]);
+  const theme = useSyncExternalStore<Theme>(subscribe, readTheme, () => 'light');
 
   function toggleTheme() {
-    setTheme((current) => (current === 'dark' ? 'light' : 'dark'));
+    writeTheme(readTheme() === 'dark' ? 'light' : 'dark');
   }
 
   return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;

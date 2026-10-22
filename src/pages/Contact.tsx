@@ -2,10 +2,12 @@ import { useRef, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
+import { Breadcrumbs } from '../components/layout/Breadcrumbs';
 import { WaLink } from '../components/ui/WaLink';
 import { FieldErrorText } from '../components/forms/FieldErrorText';
 import { env, flags, isLeadsApiConfigured } from '../config/env';
 import { useLeadForm } from '../hooks/useLeadForm';
+import { useIsClient } from '../hooks/useIsClient';
 import { trackCallClick, trackEmailClick } from '../services/analytics';
 import { validateName, validatePhone } from '../services/validation';
 import type { Segment } from '../config/navigation';
@@ -79,13 +81,18 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
 export default function Contact() {
   const { t } = useLanguage();
   const location = useLocation();
-  const [calc, setCalc] = useState(() => readCalcState(location.state));
+  // The query (?type=) and router state (calculator estimate) only exist in the browser: they
+  // apply once hydrated (useIsClient), so the prerendered HTML and first client render match.
+  const isClient = useIsClient();
   const [searchParams] = useSearchParams();
   const preselected = Math.max(0, SITE_TYPES.findIndex((o) => o.id === searchParams.get('type')));
+  const [calcRemoved, setCalcRemoved] = useState(false);
+  const calc = isClient && !calcRemoved ? readCalcState(location.state) : null;
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [siteTypeIndex, setSiteTypeIndex] = useState(preselected);
+  const [chosenType, setSiteTypeIndex] = useState<number | null>(null);
+  const siteTypeIndex = chosenType ?? (isClient ? preselected : 0);
   const [gov, setGov] = useState('');
   const [note, setNote] = useState('');
   const siteType = SITE_TYPES[siteTypeIndex] ?? SITE_TYPES[SITE_TYPES.length - 1];
@@ -115,6 +122,7 @@ export default function Contact() {
 
       <section className="page-hero">
         <div className="wrap">
+          <Breadcrumbs path="/contact" />
           <span className="eyebrow">{t.ct_eyebrow}</span>
           <h1>{t.ct_title}</h1>
           <p className="lead">{t.ct_lead}</p>
@@ -160,7 +168,7 @@ export default function Contact() {
               <div className="calc-attached">
                 <p><b>{t.ct_calc_attached}</b> {calc.summary}</p>
                 {!done && !submitting && (
-                  <button type="button" className="copy" onClick={() => setCalc(null)}>{t.ct_calc_remove}</button>
+                  <button type="button" className="copy" onClick={() => setCalcRemoved(true)}>{t.ct_calc_remove}</button>
                 )}
               </div>
             )}

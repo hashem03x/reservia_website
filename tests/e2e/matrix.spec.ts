@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { SEO } from '../../src/content/seo';
-import { ROUTES } from '../../src/content/seoHead';
+import { seoText } from '../../src/content/seo';
+import { ROUTES, routeLangs } from '../../src/content/seoHead';
 import { dataLayer, open, setTheme, watchErrors } from './helpers';
 
 const SITE = 'https://www.example-e2e.test';
@@ -16,7 +16,7 @@ const WIDTHS = [400, 1280] as const;
  * order and an axe-core WCAG 2.x A/AA scan (including colour contrast).
  */
 for (const route of ROUTES) {
-  for (const lang of LANGS) {
+  for (const lang of LANGS.filter((l) => routeLangs(route).includes(l))) {
     for (const theme of THEMES) {
       for (const width of WIDTHS) {
         const path = `/${lang}${route.path}`;
@@ -32,7 +32,7 @@ for (const route of ROUTES) {
           await expect(page.locator('html')).toHaveAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
 
           // Route metadata (one of each, matching the SEO table)
-          const [title, description] = SEO[lang][route.page];
+          const [title, description] = seoText(lang, route.page);
           await expect(page).toHaveTitle(title);
           await expect(page.locator('meta[name="description"]')).toHaveCount(1);
           await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', description);
@@ -44,9 +44,16 @@ for (const route of ROUTES) {
           } else {
             await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
             await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${SITE}${path}`);
-            await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', `${SITE}/en${route.path}`);
-            await expect(page.locator('link[rel="alternate"][hreflang="ar"]')).toHaveAttribute('href', `${SITE}/ar${route.path}`);
-            await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute('href', `${SITE}/en${route.path}`);
+            if (routeLangs(route).length > 1) {
+              await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(3);
+              await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', `${SITE}/en${route.path}`);
+              await expect(page.locator('link[rel="alternate"][hreflang="ar"]')).toHaveAttribute('href', `${SITE}/ar${route.path}`);
+              await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute('href', `${SITE}/en${route.path}`);
+            } else {
+              // Single-language page (Arabic irrigation guide): no hreflang pair is claimed.
+              await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0);
+            }
+            await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
           }
 
           // Structured data: valid JSON, one Organization, FAQ == visible FAQ

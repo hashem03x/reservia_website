@@ -30,5 +30,7 @@ dist-ssr
 
 # Test output
 dist-e2e*
+dist-check*
+dist-ssr*
 test-results
 playwright-report

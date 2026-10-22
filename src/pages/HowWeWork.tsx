@@ -1,12 +1,11 @@
-import { LazyMotion, domAnimation, m, useReducedMotion } from 'framer-motion';
+import { LazyMotion, domAnimation, m } from 'framer-motion';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
+import { Breadcrumbs } from '../components/layout/Breadcrumbs';
 import { STEP_IMAGES, STEP_IMAGE_SIZES } from '../content/stepImages';
 
 export default function HowWeWork() {
   const { t } = useLanguage();
-  // Reduced motion: cards render in place, no entrance animation.
-  const reduce = useReducedMotion();
 
   return (
     <>
@@ -14,6 +13,7 @@ export default function HowWeWork() {
 
       <section className="page-hero">
         <div className="wrap">
+          <Breadcrumbs path="/how-we-work" />
           <span className="eyebrow">{t.how_eyebrow}</span>
           <h1>{t.how_title}</h1>
           <p className="lead">{t.how_lead}</p>
@@ -31,8 +31,10 @@ export default function HowWeWork() {
                 return (
                   <m.li
                     key={n}
-                    initial={reduce ? false : { opacity: 0, y: 18 }}
-                    whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+                    // Same initial style in the prerendered HTML and the first client render. Reduced
+                    // motion (and no-JS) is handled in CSS, which overrides these inline styles.
+                    initial={{ opacity: 0, y: 18 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.3 }}
                     transition={{ duration: 0.45, ease: [0.2, 0.7, 0.2, 1], delay: (i % 4) * 0.08 }}
                   >

@@ -34,7 +34,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `npx vite build --outDir dist-e2e --emptyOutDir && npx vite preview --outDir dist-e2e --port ${SITE_PORT} --strictPort`,
+      command: `node scripts/build-site.mjs dist-e2e && npx vite preview --outDir dist-e2e --port ${SITE_PORT} --strictPort`,
       url: `http://localhost:${SITE_PORT}/en`,
       reuseExistingServer: false,
       timeout: 180_000,
@@ -46,7 +46,7 @@ export default defineConfig({
       },
     },
     {
-      command: `npx vite build --outDir dist-e2e-preview --emptyOutDir && npx vite preview --outDir dist-e2e-preview --port ${PREVIEW_PORT} --strictPort`,
+      command: `node scripts/build-site.mjs dist-e2e-preview && npx vite preview --outDir dist-e2e-preview --port ${PREVIEW_PORT} --strictPort`,
       url: `http://localhost:${PREVIEW_PORT}/en`,
       reuseExistingServer: false,
       timeout: 180_000,

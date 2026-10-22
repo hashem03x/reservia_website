@@ -43,7 +43,7 @@ main:focus,h1:focus{outline:none}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .top .wrap{display:flex;align-items:center;gap:14px;min-height:68px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);flex-shrink:1;min-width:0}
-.brand img{width:40px;height:42px;flex-shrink:0;background:#fff;border-radius:50%;padding:2px}
+.brand img{width:40px;height:40px;flex-shrink:0;background:#fff;border-radius:50%;padding:2px}
 .brand span{min-width:0;overflow:hidden}
 .brand b{font-family:var(--display);font-size:1.4rem;font-weight:400;letter-spacing:.02em;display:block;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand small{display:block;font-size:.68rem;color:var(--muted);letter-spacing:.04em;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -336,7 +336,7 @@ footer a:hover{color:var(--cyan-bright)}
 .footerGrid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:40px;padding-bottom:32px;border-bottom:1px solid var(--line-deep)}
 .footerBrand p{margin-top:14px;max-width:38ch;line-height:1.6}
 .footerBrandMark{display:flex;align-items:center;gap:10px}
-.footerBrandMark img{width:34px;height:36px;flex-shrink:0}
+.footerBrandMark img{width:34px;height:34px;flex-shrink:0}
 .footerBrandMark b{display:block;font-family:var(--display);font-weight:400;font-size:1.25rem;letter-spacing:.02em;color:var(--ink-on-deep);line-height:1.2}
 .footerBrandMark small{display:block;font-size:.72rem;color:var(--muted-on-deep);margin-top:2px}
 @media (max-width:860px){.footerGrid{grid-template-columns:1fr;gap:32px}}
@@ -624,3 +624,31 @@ html[dir="rtl"] .partners-btn.next svg{transform:rotate(90deg)}
   .totop-progress{transition:none}
 }
 @media print{.totop{display:none}}
+
+/* How we work: cards appear in place for reduced-motion visitors (overrides Framer Motion's inline entrance styles). */
+@media (prefers-reduced-motion:reduce){.steps>li{opacity:1!important;transform:none!important}}
+
+/* breadcrumbs (subpage heroes) */
+.crumbs{margin-bottom:12px;font-size:.82rem}
+.crumbs ol{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;color:var(--muted)}
+.crumbs li{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.crumbs li+li::before{content:"/";color:var(--line);font-weight:600}
+.crumbs a{color:var(--navy);text-decoration:none}
+.crumbs a:hover{text-decoration:underline}
+.crumbs [aria-current]{color:var(--muted)}
+
+/* long-form pages (oil and gas, irrigation guide): numbered steps and readable measure */
+.numbered{list-style:none;counter-reset:n;margin:18px 0 0;padding:0;display:grid;gap:12px}
+.numbered li{counter-increment:n;display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:start}
+.numbered li::before{content:counter(n);width:30px;height:30px;border-radius:50%;background:var(--sunken);color:var(--navy);font:600 .9rem var(--mono);display:grid;place-items:center}
+.longform .stack p{max-width:70ch}
+.longform .stack h2{margin-top:6px}
+.note-src{font-size:.85rem;color:var(--muted)}
+
+/* residential indicative price table */
+.pricetable{width:100%;border-collapse:collapse;font-size:.95rem;margin-top:18px}
+.pricetable caption{text-align:start;font-weight:600;padding-bottom:8px;color:var(--ink)}
+.pricetable th,.pricetable td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:start}
+.pricetable th{font-size:.82rem;color:var(--muted);font-weight:600}
+.pricetable td.num{font-weight:600;direction:ltr;unicode-bidi:isolate}
+.btn.btn-wrap{white-space:normal;text-align:center}

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
 import { Faq, faqPairs } from '../components/sections/Faq';
+import { Breadcrumbs } from '../components/layout/Breadcrumbs';
 
 const FAQ_KEYS: Array<[string, string]> = [
   ['a_q1', 'a_a1'],
@@ -19,6 +20,7 @@ export default function Agriculture() {
 
       <section className="page-hero">
         <div className="wrap">
+          <Breadcrumbs path="/agriculture" />
           <span className="eyebrow">{t.a_eyebrow}</span>
           <h1>{t.a_title}</h1>
           <p className="lead">{t.a_lead}</p>
@@ -83,6 +85,25 @@ export default function Agriculture() {
               <div><dt>{t.ex_payback}</dt><dd>{t.a_ex5}</dd></div>
             </dl>
             <p className="foot">{t.a_ex_note}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="band" style={{ paddingTop: 0 }}>
+        <div className="wrap" style={{ maxWidth: 860 }}>
+          <h2>{t.a_size_t}</h2>
+          <ol className="numbered">
+            <li>{t.a_size_1}</li>
+            <li>{t.a_size_2}</li>
+            <li>{t.a_size_3}</li>
+            <li>{t.a_size_4}</li>
+          </ol>
+          <div className="cta-row">
+            <Link className="btn sun" to={`/${language}/calculator?tab=farm`}>{t.try_calc_farm}</Link>
+            {/* The guide exists in Arabic only; the English page links to it and says so. */}
+            <Link className="btn ghost btn-wrap" to="/ar/solar-irrigation-guide" hrefLang="ar" lang={language === 'ar' ? undefined : 'en'}>
+              {t.a_guide_link}
+            </Link>
           </div>
         </div>
       </section>

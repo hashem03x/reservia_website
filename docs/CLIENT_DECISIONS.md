@@ -113,6 +113,12 @@ small, local change. The **Change when answered** column says exactly where.
   (default on Netlify, Cloudflare Pages and GitHub Pages; nginx needs
   `try_files $uri $uri.html /index.html`), with `/index.html` as the SPA fallback.
 
+- **Update (22 October 2026, SEO audit).** `reservia-energy.com` and `www.reservia-energy.com`
+  currently serve a Namecheap parking page, so the website is not on the company domain yet. Every
+  page is now prerendered, and `vercel.json` handles clean URLs and 404s. Once the domain points to
+  Vercel, setting `VITE_SITE_URL` for Production switches on canonicals, hreflang, `og:image` and the
+  sitemap. See [`SEO_LAUNCH.md`](SEO_LAUNCH.md) §4 for the exact steps.
+
 ## 8. Clickable emails
 
 - **Current state.** Both emails are shown as text with a Copy button. The footer email was a

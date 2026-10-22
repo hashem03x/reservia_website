@@ -2,6 +2,8 @@ import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useLanguage, fmt } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
+import { useIsClient } from '../hooks/useIsClient';
+import { Breadcrumbs } from '../components/layout/Breadcrumbs';
 import { BillWaLink } from '../components/ui/WaLink';
 import { RATES } from '../config/tariffs';
 import type { CalcTab } from '../config/navigation';
@@ -52,8 +54,12 @@ export default function Calculator() {
   const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const tabRefs = useRef<Record<CalcTab, HTMLButtonElement | null>>({ home: null, farm: null, ind: null, svc: null });
-  const initialTab = (searchParams.get('tab') as CalcTab | null) ?? 'home';
-  const [tab, setTab] = useState<CalcTab>(TABS.includes(initialTab) ? initialTab : 'home');
+  // The prerendered HTML shows the default tab; ?tab= applies once hydrated (useIsClient), so
+  // server HTML and the first client render match. A tab the visitor picks always wins.
+  const isClient = useIsClient();
+  const queryTab = searchParams.get('tab') as CalcTab | null;
+  const [chosenTab, setTab] = useState<CalcTab | null>(null);
+  const tab: CalcTab = chosenTab ?? (isClient && queryTab && TABS.includes(queryTab) ? queryTab : 'home');
 
   // Residential & Commercial
   const [hUnit, setHUnit] = useState<'kwh' | 'egp'>('kwh');
@@ -198,9 +204,11 @@ export default function Calculator() {
 
       <section className="page-hero">
         <div className="wrap">
+          <Breadcrumbs path="/calculator" />
           <span className="eyebrow">{t.c_eyebrow}</span>
           <h1>{t.c_title}</h1>
           <p className="lead">{t.c_lead}</p>
+          <p className="micro" style={{ color: 'var(--muted)', maxWidth: '70ch' }}>{t.c_intro}</p>
         </div>
       </section>
 
@@ -353,7 +361,7 @@ export default function Calculator() {
             </div>
 
             <div className="panel">
-              <h2 className="sr-only">{t.c_title}</h2>
+              <h2 className="sr-only">{t.c_results}</h2>
               <dl className="results">
                 <div><dt>{t.r_size}</dt><dd>{result.ok ? `${n1.format(result.kwp)} ${t.u_kwp}` : DASH}</dd></div>
                 <div><dt>{t.r_prod}</dt><dd>{result.ok ? `${n0.format(result.prod)} ${t.u_kwhyr}` : DASH}</dd></div>
@@ -378,6 +386,11 @@ export default function Calculator() {
               <p className="calc-invalid" role="status">{result.ok ? '' : t.calc_invalid}</p>
               <p className="assume">{note}</p>
               <p className="assume">{t.c_assume}</p>
+              <p className="assume">
+                {t.c_related}{' '}
+                <Link to={`/${language}/residential`}>{t.nav_res}</Link> · <Link to={`/${language}/agriculture`}>{t.nav_agri}</Link> ·{' '}
+                <Link to={`/${language}/industrial`}>{t.nav_ind}</Link> · <Link to={`/${language}/service`}>{t.nav_svc}</Link>
+              </p>
               <div className="cta-row" style={{ marginTop: 16 }}>
                 <Link
                   className="btn sun"

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useIsClient } from '../../hooks/useIsClient';
 import logo from '../../assets/brand/logo.webp';
 
 // Shortened (was 900 / 2500 ms) so the overlay never holds content back for long;
@@ -25,6 +26,9 @@ const EXIT_MS = 550;
 export function AppLoader() {
   const [visible, setVisible] = useState(true);
   const [exiting, setExiting] = useState(false);
+  // Empty in the prerendered HTML and during hydration; the localized label once hydrated.
+  const isClient = useIsClient();
+  const label = !isClient ? '' : document.documentElement.lang === 'ar' ? 'جارٍ تحميل ريزيرفيا' : 'Loading Reservia';
   const startedAt = useRef<number>(0);
 
   useEffect(() => {
@@ -84,7 +88,7 @@ export function AppLoader() {
       <div className="appLoaderBar" aria-hidden="true">
         <span />
       </div>
-      <span className="sr-only">{window.location.pathname.startsWith('/ar') ? 'جارٍ تحميل ريزيرفيا' : 'Loading Reservia'}</span>
+      <span className="sr-only">{label}</span>
     </div>
   );
 }

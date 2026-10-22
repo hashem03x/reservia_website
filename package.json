@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && node scripts/build-site.mjs dist",
     "lint": "oxlint",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "test:all": "npm run lint && npm run typecheck && npm test && npm run build && npm run test:e2e"
+    "test:all": "npm run lint && npm run typecheck && npm test && npm run build && npm run test:e2e",
+    "check:site": "node scripts/check-site.mjs"
   },
   "dependencies": {
     "framer-motion": "^14.3.0",

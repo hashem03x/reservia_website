@@ -30,6 +30,8 @@ export function organizationJsonLd(options: { siteUrl?: string; contacts?: OrgCo
   if (base) {
     data['@id'] = `${base}/#organization`;
     data.url = `${base}/`;
+    // The full Reservia logo (emblem + wordmark), generated from src/assets/brand/logo.webp.
+    data.logo = { '@type': 'ImageObject', url: `${base}/icons/reservia-logo-512.png`, width: 512, height: 512 };
   }
   const c = options.contacts;
   if (c) {

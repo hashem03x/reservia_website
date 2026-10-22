@@ -12,6 +12,8 @@ const Residential = lazy(() => import('./pages/Residential'));
 const Agriculture = lazy(() => import('./pages/Agriculture'));
 const Industrial = lazy(() => import('./pages/Industrial'));
 const Service = lazy(() => import('./pages/Service'));
+const OilGas = lazy(() => import('./pages/OilGas'));
+const IrrigationGuide = lazy(() => import('./pages/IrrigationGuide'));
 const Calculator = lazy(() => import('./pages/Calculator'));
 const HowWeWork = lazy(() => import('./pages/HowWeWork'));
 const About = lazy(() => import('./pages/About'));
@@ -43,6 +45,9 @@ export default function App() {
           <Route path="agriculture" element={<Agriculture />} />
           <Route path="industrial" element={<Industrial />} />
           <Route path="service" element={<Service />} />
+          <Route path="oil-gas" element={<OilGas />} />
+          {/* Arabic only: the page renders the not-found page for /en/... */}
+          <Route path="solar-irrigation-guide" element={<IrrigationGuide />} />
           <Route path="calculator" element={<Calculator />} />
           <Route path="how-we-work" element={<HowWeWork />} />
           <Route path="about" element={<About />} />

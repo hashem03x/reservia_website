@@ -1,5 +1,6 @@
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
+import { Breadcrumbs } from '../components/layout/Breadcrumbs';
 import { ABOUT_SOURCES } from '../content/aboutSources';
 import banner from '../assets/brand/about-banner.webp';
 
@@ -12,6 +13,7 @@ export default function About() {
 
       <section className="page-hero">
         <div className="wrap">
+          <Breadcrumbs path="/about" />
           <span className="eyebrow">{t.ab_eyebrow}</span>
           <h1>{t.ab_title}</h1>
           <p className="lead">{t.ab_lead}</p>

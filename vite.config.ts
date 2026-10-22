@@ -1,33 +1,37 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { CONTACT_DEFAULTS } from './src/config/contactDefaults.ts';
 import { organizationJsonLd } from './src/content/organization.ts';
-import { LANGS, ROUTES, sitemapXml, staticHead, type Lang, type RouteDef } from './src/content/seoHead.ts';
+import { normalizeSiteUrl, robotsTxt, sitemapXml, staticHead } from './src/content/seoHead.ts';
 
 const MARKER = '<!--static-head-->';
 
 /**
- * Static SEO fallback for crawlers and link previews that do not run
- * JavaScript. The SPA is unchanged; this only writes HTML entry files:
+ * Build-time SEO files. Per-route HTML is written by scripts/prerender.mjs
+ * (real React output for every page); this plugin handles the rest:
  *
- *  - dist/index.html            English home head (also the SPA fallback)
- *  - dist/<lang><path>.html     one per route and language, with that
- *    page's title, description, lang/dir, Open Graph, robots and (when
- *    VITE_SITE_URL is set) canonical + hreflang
- *  - dist/sitemap.xml + robots.txt Sitemap line, only when VITE_SITE_URL is set
+ *  - index.html: static head for the root URL / dev server (English home)
+ *    plus Organization JSON-LD -- the template the prerender fills in;
+ *  - robots.txt: always regenerated; Sitemap line only with a valid
+ *    production origin; preview deployments disallow all crawling;
+ *  - sitemap.xml: only with a valid production origin (VITE_SITE_URL).
  *
- * Organization JSON-LD is written into every file from the same
- * definition the app uses (src/content/organization.ts).
+ * VITE_SITE_URL is the single source of truth for the public origin. When
+ * it is missing or invalid, no absolute URL is emitted anywhere (canonical,
+ * hreflang, og:url, og:image, sitemap) -- the build warns instead of
+ * guessing a domain.
  */
-function staticSeo(mode: string): Plugin {
+function staticSeo(mode: string, deployEnv: string): Plugin {
   const fileEnv = loadEnv(mode, process.cwd(), 'VITE_');
   const siteUrl = (fileEnv.VITE_SITE_URL ?? '').trim();
+  const base = normalizeSiteUrl(siteUrl);
+  const preview = deployEnv === 'preview';
   const publishContacts = fileEnv.VITE_PUBLISH_ORG_CONTACTS === 'true' || fileEnv.VITE_PUBLISH_ORG_CONTACTS === '1';
   const pick = (key: string, fallback: string) => (fileEnv[key] && fileEnv[key].trim()) || fallback;
   const org = organizationJsonLd({
-    siteUrl,
+    siteUrl: base ?? '',
     contacts: publishContacts
       ? {
           businessEmail: pick('VITE_BUSINESS_EMAIL', CONTACT_DEFAULTS.businessEmail),
@@ -38,56 +42,45 @@ function staticSeo(mode: string): Plugin {
       : null,
   });
 
-  const render = (html: string, lang: Lang, route: RouteDef) =>
-    html
-      .replace(/<html[^>]*>/, `<html lang="${lang}" dir="${lang === 'ar' ? 'rtl' : 'ltr'}">`)
-      .replace(MARKER, staticHead({ lang, route, siteUrl, orgJsonLd: org }));
-
   let outDir = 'dist';
+  let isSsrBuild = false;
   return {
     name: 'reservia-static-seo',
     configResolved(config) {
       outDir = resolve(config.root, config.build.outDir);
+      isSsrBuild = Boolean(config.build.ssr);
+      if (!isSsrBuild && config.command === 'build') {
+        if (siteUrl && !base) console.warn(`\n[seo] VITE_SITE_URL "${siteUrl}" is not a bare https:// origin; canonical/hreflang/sitemap are disabled.\n`);
+        if (!siteUrl && deployEnv === 'production') console.warn('\n[seo] VITE_SITE_URL is not set for a production build: no canonical, hreflang, og:url, og:image or sitemap will be emitted.\n');
+        if (base?.endsWith('.vercel.app')) console.warn(`\n[seo] VITE_SITE_URL points at a vercel.app host (${base}); set the custom domain once it is connected.\n`);
+      }
     },
     transformIndexHtml: {
       order: 'post',
       handler(html) {
-        return render(html, 'en', ROUTES[0]);
+        return html.replace(MARKER, staticHead({ lang: 'en', page: 'home', siteUrl: base ?? '', orgJsonLd: org, ogImage: base ? `${base}/og-image.jpg` : null }));
       },
     },
     closeBundle() {
-      // index.html already carries the English home head (transformIndexHtml).
-      let template: string;
+      if (isSsrBuild) return;
       try {
-        template = readFileSync(resolve(outDir, 'index.html'), 'utf8');
+        readFileSync(resolve(outDir, 'index.html'));
       } catch {
-        return; // not a client build (e.g. dev server)
+        return; // not a client build output
       }
-      // Rebuild each route's head from a clean template.
-      const clean = template.replace(/<title>[\s\S]*?<script type="application\/ld\+json" id="ld-org">[\s\S]*?<\/script>/, MARKER);
-      // <lang><path>.html (e.g. ar/service.html, en.html) matches the app's
-      // no-trailing-slash URLs (/ar/service). Served for /ar/service by
-      // default on sirv/vite preview, Netlify, Cloudflare Pages and GitHub
-      // Pages; nginx needs `try_files $uri $uri.html /index.html`.
-      for (const lang of LANGS) {
-        for (const route of ROUTES) {
-          const file = resolve(outDir, `${lang}${route.path}.html`);
-          mkdirSync(dirname(file), { recursive: true });
-          writeFileSync(file, render(clean, lang, route));
-        }
-      }
-      const sitemap = sitemapXml(siteUrl);
-      if (sitemap) {
-        writeFileSync(resolve(outDir, 'sitemap.xml'), sitemap);
-        const robotsPath = resolve(outDir, 'robots.txt');
-        const robots = readFileSync(robotsPath, 'utf8');
-        writeFileSync(robotsPath, `${robots.trimEnd()}\n\nSitemap: ${siteUrl.replace(/\/$/, '')}/sitemap.xml\n`);
-      }
+      writeFileSync(resolve(outDir, 'robots.txt'), robotsTxt(base ?? '', preview));
+      const sitemap = !preview && base ? sitemapXml(base) : null;
+      if (sitemap) writeFileSync(resolve(outDir, 'sitemap.xml'), sitemap);
     },
   };
 }
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
-  plugins: [react(), staticSeo(mode)],
-}));
+export default defineConfig(({ mode }) => {
+  // Vercel sets VERCEL_ENV to 'production' | 'preview' | 'development'; empty elsewhere.
+  const deployEnv = process.env.VERCEL_ENV ?? '';
+  return {
+    plugins: [react(), staticSeo(mode, deployEnv)],
+    define: { 'import.meta.env.VITE_DEPLOY_ENV': JSON.stringify(deployEnv) },
+  };
+});
