@@ -248,7 +248,7 @@ export default function Contact() {
                 {t.lp_wa}
               </WaLink>
             )}
-            <p className="lp-priv">{isLeadsApiConfigured ? t.q_priv_live : t.q_priv}</p>
+            {/* <p className="lp-priv">{isLeadsApiConfigured ? t.q_priv_live : t.q_priv}</p> */}
           </form>
         </div>
       </section>
