@@ -12,6 +12,7 @@ import type { CalcTab } from '../config/navigation';
 import { CROPS, TREES, cropNeedsTree, optionLabel } from '../content/farmCrops';
 import { monthlyValue } from '../content/whatsappMessages';
 import type { CalculatorContext } from '../services/leadService';
+import { usePublishWaPrefill } from '../services/waPrefill';
 import {
   bill,
   kwhFromBill,
@@ -186,6 +187,8 @@ export default function Calculator() {
   const farmMonthly = fMode === 'litres' ? monthlyValue(language, fLitres, 'dieselLitres') : fMode === 'egp' ? monthlyValue(language, fEgp, 'dieselEgp') : '';
   const monthly =
     tab === 'home' ? monthlyValue(language, hVal, hUnit === 'kwh' ? 'kwh' : 'billEgp') : tab === 'farm' ? farmMonthly : siteMonthly(language, site);
+  // Every category's figure also reaches the floating WhatsApp button (the in-page bill button is Residential-only).
+  usePublishWaPrefill('', monthly);
 
   /** Context of the ACTIVE tab only -- inputs from other tabs (or other modes) are never included. */
   const context: CalculatorContext | null = useMemo(() => {
@@ -293,13 +296,17 @@ export default function Calculator() {
             <div className="panel" id="calcPanel" role="tabpanel" aria-labelledby={`tab-${tab}`}>
               {tab === 'home' && (
                 <div>
-                  <div className="field">
-                    <label htmlFor="h_unit">{t.f_unit}</label>
-                    <select id="h_unit" value={hUnit} onChange={(e) => onUnitChange(e.target.value as 'kwh' | 'egp')}>
-                      <option value="kwh">{t.opt_kwh}</option>
-                      <option value="egp">{t.opt_egp}</option>
-                    </select>
-                  </div>
+                  <ChoiceGroup
+                    name="h_unit"
+                    legend={t.f_gunit}
+                    variant="tabs"
+                    value={hUnit}
+                    options={[
+                      { value: 'egp', label: t.opt_gbill },
+                      { value: 'kwh', label: t.opt_gkwh },
+                    ]}
+                    onChange={onUnitChange}
+                  />
                   <div className="field">
                     <label htmlFor="h_val">{t.f_val}</label>
                     <input id="h_val" type="number" min={1} step={50} value={hVal} onChange={(e) => setHVal(toNumber(e.target.value))} aria-describedby="h_derived" />

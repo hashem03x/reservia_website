@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useIsClient } from '../../hooks/useIsClient';
 import logo from '../../assets/brand/logo.webp';
+import wordmark from '../../assets/brand/wordmark-dark.webp';
 
 // Shortened (was 900 / 2500 ms) so the overlay never holds content back for long;
 // with prefers-reduced-motion there is no minimum at all.
@@ -83,7 +84,9 @@ export function AppLoader() {
         <img src={logo} alt="" className="appLoaderLogo" />
         <span className="appLoaderSweep" aria-hidden="true" />
       </div>
-      <div className="appLoaderBrand">Reservia</div>
+      <div className="appLoaderBrand">
+        <img src={wordmark} alt="Reservia" width={539} height={96} />
+      </div>
       <div className="appLoaderSub">Integrated Energy Solutions</div>
       <div className="appLoaderBar" aria-hidden="true">
         <span />

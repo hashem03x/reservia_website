@@ -65,6 +65,12 @@ export function Footer() {
                 </a>
               </li>
               <li>
+                <small>{t.foot_bemail}</small>
+                <a href={`mailto:${env.businessEmail}`} dir="ltr" onClick={() => trackEmailClick(location.pathname)}>
+                  {env.businessEmail}
+                </a>
+              </li>
+              <li>
                 <small>{t.foot_mobile}</small>
                 <a href={`tel:${env.mobilePhone.replace(/[^\d+]/g, '')}`} dir="ltr" onClick={() => trackCallClick(location.pathname)}>
                   {env.mobilePhone}

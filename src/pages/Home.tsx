@@ -12,7 +12,12 @@ import { CtaBand } from '../components/sections/CtaBand';
 import { AnimatedSlogan } from '../components/sections/AnimatedSlogan';
 import { EnergySparks } from '../components/effects/EnergySparks';
 import { BillWaLink } from '../components/ui/WaLink';
-import heroBg from '../assets/brand/hero-bg.webp';
+import type { CSSProperties } from 'react';
+// Hero background: the company-profile cover (pyramids, storage and solar field), 960 / 1920 px.
+import heroSm from '../assets/brand/hero-pyramids-960.webp';
+import heroLg from '../assets/brand/hero-pyramids-1920.webp';
+
+const heroBgStyle = { '--hero-sm': `url(${heroSm})`, '--hero-lg': `url(${heroLg})` } as CSSProperties;
 
 const FAQ_KEYS: Array<[string, string]> = [
   ['q_net', 'a_net'],
@@ -30,7 +35,7 @@ export default function Home() {
       <Seo page="home" path="" faq={faqPairs(t, FAQ_KEYS)} />
 
       <section className="hero">
-        <div className="hero-bg" aria-hidden="true" style={{ backgroundImage: `url(${heroBg})` }} />
+        <div className="hero-bg" aria-hidden="true" style={heroBgStyle} />
         <EnergySparks count={6} />
         <div className="heroEnergyLine" aria-hidden="true" />
         <div className="wrap hero-grid">

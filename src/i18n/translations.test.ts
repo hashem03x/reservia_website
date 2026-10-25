@@ -128,8 +128,18 @@ describe('October 2026 brief, part 4', () => {
     }
   });
 
-  it('has the new About description (two paragraphs)', () => {
+  it('has the approved About description (two paragraphs, final revision)', () => {
+    expect(en.ab_lead).toBe(
+      'Reservia is an integrated energy partner helping Egyptian homes, farms, industrial facilities and the services sector ensure business continuity and reduce electricity costs through tailored engineered solar systems, intelligent energy management and flexible financing.',
+    );
     expect(en.ab_lead).toBe(en.h_lead);
-    expect(en.ab_lead2).toBe('We design, install, maintain and facilitate financing for tailored energy solutions that deliver cost-efficient, reliable and sustainable power.');
+    expect(en.ab_lead2).toBe('We design, install and maintain energy solutions for clean, safe, reliable and sustainable power.');
+    expect(ar.ab_lead2).toMatch(/نظيفة وآمنة وموثوقة ومستدامة/);
+  });
+
+  it('labels the EGP / kWh choice the same way in every calculator category', () => {
+    expect(en.opt_gbill).toBe('Monthly bill (EGP)');
+    expect(en.opt_gkwh).toBe('Consumption (kWh)');
+    expect(ar.opt_gbill).toBe('الفاتورة الشهرية (جنيه)');
   });
 });

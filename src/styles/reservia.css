@@ -43,9 +43,14 @@ main:focus,h1:focus{outline:none}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .top .wrap{display:flex;align-items:center;gap:14px;min-height:76px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);flex-shrink:1;min-width:0}
-.brand img{width:52px;height:52px;flex-shrink:0;background:#fff;border-radius:50%;padding:2px}
+.brand>img{width:52px;height:52px;flex-shrink:0;background:#fff;border-radius:50%;padding:2px}
 .brand span{min-width:0;overflow:hidden}
-.brand b{font-family:var(--display);font-size:1.8rem;font-weight:400;letter-spacing:.02em;display:block;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Brand name = the official wordmark image from the company profile (battery "i", round "a"); light variant in dark mode. */
+.brand b{display:block;line-height:0}
+.brand .wordmark{display:block;height:32px;width:auto}
+.brand .wm-dark{display:none}
+:root[data-theme='dark'] .brand .wm-light{display:none}
+:root[data-theme='dark'] .brand .wm-dark{display:block}
 .brand small{display:block;font-size:.74rem;color:var(--muted);letter-spacing:.04em;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* primary nav: one line only above the compact breakpoint, no wrapping */
@@ -87,7 +92,10 @@ body[data-lp="1"] .lp-phone{display:inline-flex!important}
 body[data-lp="1"] .wafab{display:none}
 @media (max-width:420px){.brand small{display:none}}
 /* larger brand (Oct 2026): step down on narrow phones so the header never wraps */
-@media (max-width:480px){.brand img{width:44px;height:44px}.brand b{font-size:1.55rem}}
+@media (max-width:480px){.brand>img{width:44px;height:44px}.brand .wordmark{height:26px}}
+/* Narrow phones: the header also holds the menu, theme and language buttons, so the wordmark steps down (never squashed or clipped). */
+@media (max-width:420px){.brand .wordmark{height:22px}}
+@media (max-width:380px){.top .wrap{padding-inline:16px}.brand{gap:8px}.brand .wordmark{height:17px}}
 @media (max-width:440px){.top .wrap{gap:8px}.tools{gap:6px}.menu-btn{padding-inline:14px}}
 
 /* compact (tablet + mobile) navigation: single hamburger-driven drawer.
@@ -132,12 +140,13 @@ section.band.alt{background:var(--surface);border-block:1px solid var(--line)}
 .hero .btn.ghost:hover{border-color:var(--cyan-bright);color:var(--cyan-bright)}
 .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
 @media (max-width:900px){.hero-grid{grid-template-columns:1fr}}
-.hero-bg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:right center}
-.hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to right,var(--bg-deep) 34%,color-mix(in srgb,var(--bg-deep) 74%,transparent) 56%,color-mix(in srgb,var(--bg-deep) 32%,transparent) 80%,color-mix(in srgb,var(--bg-deep) 14%,transparent))}
-html[dir="rtl"] .hero-bg{background-position:left center}
-html[dir="rtl"] .hero-bg::after{background:linear-gradient(to left,var(--bg-deep) 34%,color-mix(in srgb,var(--bg-deep) 74%,transparent) 56%,color-mix(in srgb,var(--bg-deep) 32%,transparent) 80%,color-mix(in srgb,var(--bg-deep) 14%,transparent))}
-@media (max-width:900px){.hero-bg::after,html[dir="rtl"] .hero-bg::after{background:linear-gradient(color-mix(in srgb,var(--bg-deep) 88%,transparent),var(--bg-deep) 96%)}}
-.brandband{width:100%;height:auto;border-radius:var(--r);border:1px solid var(--line);display:block}
+/* Company-profile cover as the hero background: its green wave sits behind the copy, the pyramids /
+   storage / solar field show towards the far edge. Mirrored in Arabic so the copy is always on the green side. */
+.hero-bg{position:absolute;inset:0;z-index:0;background-image:var(--hero-sm);background-size:cover;background-position:right 40%}
+@media (min-width:961px){.hero-bg{background-image:var(--hero-lg)}}
+.hero-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to right,color-mix(in srgb,var(--bg-deep) 92%,transparent) 26%,color-mix(in srgb,var(--bg-deep) 62%,transparent) 50%,color-mix(in srgb,var(--bg-deep) 18%,transparent) 76%,transparent)}
+html[dir="rtl"] .hero-bg{transform:scaleX(-1)}
+@media (max-width:900px){.hero-bg{background-position:72% top}.hero-bg::after{background:linear-gradient(color-mix(in srgb,var(--bg-deep) 80%,transparent),color-mix(in srgb,var(--bg-deep) 90%,transparent) 45%,var(--bg-deep) 92%)}}
 
 /* page hero (every other page): light, editorial, restrained -- the dark
    treatment above stays a homepage-only statement. */
@@ -441,8 +450,8 @@ body[data-lp="1"] .lpbar{position:fixed;left:0;right:0;bottom:0;display:flex;gap
 .seg:hover,.seg:focus-visible{box-shadow:0 14px 32px color-mix(in srgb,var(--navy) 20%,transparent)}
 
 /* header logo: a soft cyan halo on hover, no movement or distortion of the mark itself */
-.brand img{transition:box-shadow .3s ease}
-.brand:hover img,.brand:focus-visible img{box-shadow:0 0 0 6px color-mix(in srgb,var(--cyan-bright) 16%,transparent),0 0 16px color-mix(in srgb,var(--cyan-bright) 40%,transparent)}
+.brand>img{transition:box-shadow .3s ease}
+.brand:hover>img,.brand:focus-visible>img{box-shadow:0 0 0 6px color-mix(in srgb,var(--cyan-bright) 16%,transparent),0 0 16px color-mix(in srgb,var(--cyan-bright) 40%,transparent)}
 
 /* CTA band: an occasional light sweep across the dark surface -- mostly off
    screen, crosses briefly, then waits, so it reads as "occasional" not constant. */
@@ -459,7 +468,7 @@ body[data-lp="1"] .lpbar{position:fixed;left:0;right:0;bottom:0;display:flex;gap
 @media (prefers-reduced-motion:reduce){
   .spark,.heroEnergyLine,.board,.cta-band::after,.btn.sun:hover,.seg::before{animation:none!important}
   .seg::before{transition:none!important;opacity:0!important}
-  .brand img{transition:none!important}
+  .brand>img{transition:none!important}
 }
 
 /* ============================================================
@@ -484,7 +493,8 @@ body[data-lp="1"] .lpbar{position:fixed;left:0;right:0;bottom:0;display:flex;gap
 .appLoaderSweep{position:absolute;top:0;bottom:0;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.9),transparent);transform:translateX(-160%);animation:loaderSweep 1.3s .4s var(--ease) 1}
 @keyframes loaderSweep{from{transform:translateX(-160%)}to{transform:translateX(220%)}}
 
-.appLoaderBrand{font-family:var(--display);font-size:1.6rem;letter-spacing:.03em;color:var(--ink-on-deep);opacity:0;animation:loaderTextIn .5s .55s var(--ease) both}
+.appLoaderBrand{opacity:0;animation:loaderTextIn .5s .55s var(--ease) both}
+.appLoaderBrand img{display:block;height:30px;width:auto}
 .appLoaderSub{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-on-deep);opacity:0;animation:loaderTextIn .5s .65s var(--ease) both}
 @keyframes loaderTextIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
@@ -502,7 +512,7 @@ body[data-lp="1"] .lpbar{position:fixed;left:0;right:0;bottom:0;display:flex;gap
 @media (max-width:480px){
   .appLoaderMark{width:76px;height:76px}
   .appLoaderLogo{width:52px}
-  .appLoaderBrand{font-size:1.4rem}
+  .appLoaderBrand img{height:26px}
   .appLoaderBar{width:130px}
 }
 
@@ -542,6 +552,7 @@ html[dir="rtl"] .slogan-bar{transform-origin:right;background:linear-gradient(27
 .partners-btn:hover:not(:disabled){border-color:var(--navy);color:var(--navy)}
 .partners-btn:disabled{opacity:.4;cursor:default}
 .partners-btn svg{width:14px;height:10px}
+.partners-btn.slides-play svg{height:14px}
 .partners-btn.prev svg{transform:rotate(90deg)}
 .partners-btn.next svg{transform:rotate(-90deg)}
 html[dir="rtl"] .partners-btn.prev svg{transform:rotate(-90deg)}
@@ -574,6 +585,13 @@ html[dir="rtl"] .partners-btn.next svg{transform:rotate(90deg)}
 .choice:has(input:focus-visible){outline:3px solid var(--focus);outline-offset:2px}
 .choice input{accent-color:var(--navy);width:16px;height:16px;margin:0}
 .choice input:focus-visible{outline:none}
+/* EGP / kWh choice as a segmented control in the category-tab style (.tab / .tab[aria-selected]):
+   still a native radio group, the radio itself is visually hidden. */
+.seg-tabs{gap:6px}
+.seg-tabs .choice{position:relative;flex:1 1 auto;justify-content:center;font-weight:600;background:var(--surface);border-color:var(--line);color:var(--ink);padding:9px 18px}
+.seg-tabs .choice input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:pointer}
+.seg-tabs .choice:has(input:checked){background:var(--navy);border-color:var(--navy);color:var(--on-navy);box-shadow:none}
+.seg-tabs .choice:hover:not(:has(input:checked)){border-color:var(--navy)}
 
 /* contact: estimate carried over from the calculator */
 .calc-attached{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;background:var(--sunken);border-radius:var(--r);padding:12px 14px;margin-bottom:16px;font-size:.88rem}
@@ -664,12 +682,14 @@ html[dir="rtl"] .footerContacts small{letter-spacing:0}
 .btn.btn-wrap{white-space:normal;text-align:center}
 
 /* hero rate board: nudged slightly towards the outer edge on desktop (mirrors in RTL) */
-@media (min-width:901px){.hero-grid>.board{position:relative;inset-inline-start:20px}}
+/* Rate board nudged towards the outer edge: ~46px at 1280px, up to 80px on wide screens, never closer
+   than ~16px to the viewport edge (4px minimum just above the 900px stacking breakpoint). Mirrored in RTL. */
+@media (min-width:901px){.hero-grid>.board{position:relative;inset-inline-start:clamp(4px,calc((100vw - var(--wrap)) / 2 - 4px),80px)}}
 
 /* About: larger, more readable company description (Oct 2026) */
 .about-copy{display:grid;gap:16px;max-width:68ch;margin-top:8px}
 .about-copy p{font-size:clamp(1.12rem,1.6vw,1.32rem);line-height:1.75;color:var(--ink)}
-.about-copy p:first-child{font-weight:500}
+.about-lead p{font-weight:700}
 .about-copy-secondary p{font-size:clamp(1.05rem,1.4vw,1.18rem);font-weight:400}
 .about-copy-secondary .about-values{color:var(--muted);font-family:var(--mono);font-size:.95rem;letter-spacing:.04em}
 

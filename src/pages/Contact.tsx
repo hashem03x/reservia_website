@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { usePublishWaPrefill } from '../services/waPrefill';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
@@ -115,6 +116,7 @@ export default function Contact() {
   const submitting = status === 'submitting';
   // User-initiated continuation only: what they typed goes to WhatsApp if *they* click.
   const waFields = { location: gov.trim(), extra: [t[siteType.labelKey], note.trim(), calc?.summary].filter(Boolean).join('\n') };
+  usePublishWaPrefill(waFields.location);
 
   return (
     <>

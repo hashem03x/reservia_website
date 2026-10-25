@@ -270,7 +270,8 @@ test.describe('contact form', () => {
     expect(await events(page, 'click_call')).toHaveLength(1);
     await expect(page.locator('.contact-list a[href^="mailto:"]')).toHaveCount(0);
     // Footer sales email is a mailto: link at the client's request (October 2026), address verbatim.
-    await expect(page.locator('footer a[href^="mailto:"]')).toHaveAttribute('href', 'mailto:Resrevia_sales@reservia-energy.com');
+    await expect(page.locator('footer a[href^="mailto:"]')).toHaveCount(2); // sales + business email
+    await expect(page.locator('footer a[href^="mailto:"]').first()).toHaveAttribute('href', 'mailto:Resrevia_sales@reservia-energy.com');
   });
 
   test('no response-time promise anywhere on the contact page', async ({ page }) => {

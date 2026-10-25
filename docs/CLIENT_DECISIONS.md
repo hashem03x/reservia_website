@@ -256,3 +256,64 @@ small, local change. The **Change when answered** column says exactly where.
   already writes a real `404.html` for this case. Removing the `rewrites` block restores proper 404
   status codes, and every real page is prerendered, so no route depends on the rewrite. This was
   left unchanged pending your decision.
+
+## 14. Final revisions (October 2026, part 5)
+
+- **Header wordmark.** The client noted that the "i" and "a" in "Reservia" did not reflect the brand.
+  The header now uses the official wordmark image from the company profile
+  (`ppt/media/image192.png`: battery-shaped "i", round single-storey "a") instead of typed text. It
+  was trimmed and exported as `src/assets/brand/wordmark.webp`.
+  - **Dark mode:** `wordmark-dark.webp` is the same artwork with the green letters recoloured to the
+    dark theme's text colour. The orange battery is unchanged.
+  - **Loading screen:** uses the same artwork.
+  - **Narrow phones:** the wordmark steps down in size (26 px at 480 px wide, 22 px at 420 px,
+    17 px at 380 px) so the menu, theme and language buttons still fit. It is never squashed.
+- **Homepage background.** The hero now uses the company-profile cover background
+  (`ppt/media/image2.jpeg`: green wave, pyramids, storage units and solar field), exported at 1920
+  and 960 px. It is mirrored on Arabic pages so the text always sits on the green side.
+  - **Open point:** on most desktop and laptop screens (up to about 1,800 px wide) the rate
+    board covers the pyramids, which are near the right edge of the photo. They show beside the
+    board only on very wide screens. On phones and tablets the photo sits under a dark overlay
+    behind the text. Options, if the pyramids must always be visible:
+    1. A wider version of the cover image with the pyramids further from the edge.
+    2. Showing the pyramids scene as a separate band above or below the hero.
+    3. Making the rate board narrower.
+- **Rate board.** Its offset towards the outer edge is now fluid: about 46 px at 1280 px wide, up to
+  80 px on wide screens, and never closer than about 16 px to the screen edge. It is mirrored in
+  Arabic. Below 900 px it stacks under the text as before.
+- **About page.**
+  - The earlier brand banner image was removed (`about-banner.webp` deleted). The slideshow is now
+    the page's company visual.
+  - Both description paragraphs are bold. The second paragraph is the client's final copy: "We
+    design, install and maintain energy solutions for clean, safe, reliable and sustainable power."
+    The first paragraph was already the approved text.
+  - The Managing Director names and the source references stay removed.
+- **Slideshow autoplay.**
+  - Advances every 5 seconds and loops from the last slide to the first.
+  - Pauses while the visitor hovers, uses the keyboard inside it or touches it, and while it is
+    off-screen.
+  - Manual navigation restarts the countdown instead of being overridden.
+  - Has a Pause/Play button, which WCAG 2.2.2 requires for anything that moves automatically for
+    more than 5 seconds.
+  - Starts paused for visitors who ask their device for reduced motion.
+  - Screen-reader slide announcements are muted while it plays.
+- **Footer business email.** The client asked for "Business_info@reservia". The full address,
+  **Business_info@reservia-energy.com**, was already in the site configuration and is printed on
+  the company profile's contact slide, so the verified full address is used rather than the
+  truncated text. The footer lists the sales email, business email, mobile and landline. Emails
+  are `mailto:` links and phones are `tel:` links.
+- **Calculator EGP / kWh choice.** The dropdown is replaced by tab-style buttons that look like the
+  calculator's category tabs. They are still a native radio group, so keyboard and screen-reader
+  use is unchanged.
+  - **Where they appear:** Residential & Commercial, and the on-grid part of Industrial Facilities
+    and Services Sector. Farms and off-grid diesel inputs are unchanged.
+  - **Labels:** "Monthly bill (EGP)" and "Consumption (kWh)", in sentence case to match the rest of
+    the site.
+- **WhatsApp prefill on every CTA.**
+  - **Approved message:** unchanged.
+  - **Floating button and campaign sticky bar:** now fill in whatever the visitor has entered on the
+    current page. That covers the calculator figure for any category, the contact-page location,
+    and the campaign-form location and monthly figure.
+  - **Clean-up:** the values are cleared when the visitor leaves the page.
+  - **Calculator's own button:** "Send your bill to WhatsApp" stays Residential & Commercial only,
+    following the earlier client rule.

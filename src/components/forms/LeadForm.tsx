@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { usePublishWaPrefill } from '../../services/waPrefill';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { isLeadsApiConfigured } from '../../config/env';
 import { useLeadForm } from '../../hooks/useLeadForm';
@@ -58,6 +59,7 @@ export function LeadForm({
     monthly: extraKind === 'pumpHp' ? '' : monthlyValue(language, parsedExtra, extraKind),
     extra: extraKind === 'pumpHp' && parsedExtra !== undefined ? `${extraLabel}: ${parsedExtra}` : '',
   };
+  usePublishWaPrefill(waFields.location, waFields.monthly);
 
   return (
     <form className="panel lpform" data-seg={segment} noValidate onSubmit={onSubmit} aria-labelledby={id('t')} aria-busy={submitting}>

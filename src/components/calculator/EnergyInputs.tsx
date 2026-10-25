@@ -3,22 +3,29 @@ import type { Dictionary } from '../../i18n/translations/en';
 import { toNumber } from './numbers';
 
 
-/** Accessible radio group in the calculator's pill style (the same control everywhere). */
+/**
+ * Accessible radio group in the calculator's pill style (the same control everywhere).
+ * `variant="tabs"` renders it as a segmented control styled like the calculator's category
+ * tabs (used for the EGP / kWh input choice); it stays a native radio group for keyboard and
+ * screen-reader use.
+ */
 export function ChoiceGroup<T extends string>({
   name,
   legend,
   value,
   options,
   onChange,
+  variant = 'pills',
 }: {
   name: string;
   legend: string;
   value: T;
   options: Array<{ value: T; label: string }>;
   onChange: (value: T) => void;
+  variant?: 'pills' | 'tabs';
 }) {
   return (
-    <fieldset className="field choices">
+    <fieldset className={variant === 'tabs' ? 'field choices seg-tabs' : 'field choices'}>
       <legend>{legend}</legend>
       {options.map((o) => (
         <label key={o.value} className="choice">
@@ -100,6 +107,7 @@ export function SiteEnergyInputs({ prefix, value, onChange, tariff }: { prefix: 
           <ChoiceGroup
             name={`${prefix}_gunit`}
             legend={t.f_gunit}
+            variant="tabs"
             value={v.gridInput}
             options={[
               { value: 'bill', label: t.opt_gbill },

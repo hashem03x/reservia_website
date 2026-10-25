@@ -9,6 +9,8 @@ import { NavDropdown } from './NavDropdown';
 import { ThemeToggle } from './ThemeToggle';
 import { ChevronIcon } from '../icons/ChevronIcon';
 import logo from '../../assets/brand/logo.webp';
+import wordmark from '../../assets/brand/wordmark.webp';
+import wordmarkDark from '../../assets/brand/wordmark-dark.webp';
 
 export function Header() {
   const { language, t, buildPath } = useLanguage();
@@ -59,11 +61,16 @@ export function Header() {
   return (
     <header className="top">
       <div className="wrap">
-        {/* Accessible name = the visible brand text plus ", Home" (label-in-name, WCAG 2.5.3). */}
+        {/* Accessible name = the brand name plus ", Home" (label-in-name, WCAG 2.5.3). The name is the
+            official wordmark from the company profile (battery "i", round "a"), with a light variant for dark mode. */}
         <Link className="brand" to={`/${language}`}>
           <img src={logo} alt="" width={52} height={52} decoding="async" />
           <span>
-            <b>{t.brand}</b> <small>{t.brand_sub}</small>
+            <b>
+              <img className="wordmark wm-light" src={wordmark} alt={t.brand} width={539} height={96} decoding="async" />
+              <img className="wordmark wm-dark" src={wordmarkDark} alt={t.brand} width={539} height={96} decoding="async" />
+            </b>{' '}
+            <small>{t.brand_sub}</small>
             <span className="sr-only">, {t.nav_home}</span>
           </span>
         </Link>
