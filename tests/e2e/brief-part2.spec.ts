@@ -23,7 +23,7 @@ test.describe('WhatsApp bill CTA visibility rules', () => {
         await open(page, path);
         if (shows) await expect(billLinks(page, lang).first()).toBeVisible();
         else await expect(billLinks(page, lang)).toHaveCount(0);
-        const footerWa = page.locator('footer a.footerWa');
+        const footerWa = page.locator('footer a.btn.wa.footerCta');
         await expect(footerWa).toBeVisible();
         await expect(footerWa).toHaveAttribute('href', /^https:\/\/wa\.me\/201211892995\?text=/);
       });
@@ -114,10 +114,10 @@ test.describe('savings calculator, four categories', () => {
     await expect(page.getByLabel('Monthly electricity cost (EGP)')).toHaveValue('150000');
     await expect(page.locator('#i_dp')).toHaveCount(0);
     await offGrid.check();
-    await expect(page.getByLabel('Monthly electricity cost (EGP)')).toHaveValue('615000');
+    await expect(page.getByLabel('Monthly diesel consumption (litres)')).toHaveValue('30000');
     await expect(page.locator('#i_dp')).toBeVisible();
     await expect(page.locator('.results')).toContainText('litres/yr');
-    await page.getByLabel('Monthly electricity cost (EGP)').fill('-100');
+    await page.getByLabel('Monthly diesel consumption (litres)').fill('-100');
     await expect(page.locator('.calc-invalid')).not.toHaveText('');
     await onGrid.check();
     await expect(page.getByLabel('Monthly electricity cost (EGP)')).toHaveValue('150000');
@@ -155,7 +155,8 @@ test.describe('savings calculator, four categories', () => {
     await page.locator('form button[type="submit"]').click();
     await expect(page.locator('form .formmsg.ok')).toBeVisible();
     const calc = bodies[0].calculator as Record<string, unknown>;
-    expect(calc).toMatchObject({ category: 'industrial_facilities', siteConfig: 'off-grid', monthlyElectricityCostEgp: 615000, dieselPriceEgp: 20.5 });
+    expect(calc).toMatchObject({ category: 'industrial_facilities', siteConfig: 'off-grid', dieselInput: 'litres', monthlyDieselLitres: 30000, dieselPriceEgp: 20.5 });
+    expect(calc).not.toHaveProperty('monthlyElectricityCostEgp');
     expect(calc).not.toHaveProperty('crop');
     expect(calc).not.toHaveProperty('tree');
     expect(typeof calc.systemSizeKwp).toBe('number');
@@ -309,7 +310,7 @@ test.describe('footer', () => {
     await expect(footer.locator('.footerBrandMark small')).toHaveText('Reservia Integrated Energy Solutions LLC');
     await expect(footer).toContainText('© 2026 Reservia Integrated Energy Solutions LLC');
     await expect(footer.locator('.footerBrand p')).toHaveText(/designs, finances, installs and maintains tailored energy solutions/);
-    await expect(footer.locator('a.footerWa')).toHaveAccessibleName(/Chat with us on WhatsApp/);
+    await expect(footer.locator('a.btn.wa.footerCta')).toHaveAccessibleName(/Chat with us on WhatsApp/);
     await expect(footer.locator('a[href="/en/residential"], a[href="/en/how-we-work"], a[href="/en/about"]')).toHaveCount(0);
     await expect(footer.locator('.footerCol')).toHaveCount(1);
   });

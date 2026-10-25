@@ -86,9 +86,7 @@ export default function IrrigationGuide() {
             <ul className="ticks">
               {g.financing.ticks.map((x) => <li key={x}>{x}</li>)}
             </ul>
-            <p className="note-src">
-              <a href={g.financing.sourceUrl} target="_blank" rel="noopener noreferrer" hrefLang="en">{g.financing.sourceLabel}</a>
-            </p>
+            {/* The visible source link was removed at the client's request (Oct 2026); the source is kept in content/pages/irrigationGuide.ts. */}
           </div>
           <p style={{ marginTop: 22 }}>
             <Link to="/ar/agriculture">{g.backLink}</Link>

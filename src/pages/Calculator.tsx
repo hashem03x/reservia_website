@@ -1,21 +1,28 @@
 import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { useLanguage, fmt } from '../i18n/LanguageContext';
+import { useLanguage, fmt, type Language } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
 import { useIsClient } from '../hooks/useIsClient';
 import { Breadcrumbs } from '../components/layout/Breadcrumbs';
 import { BillWaLink } from '../components/ui/WaLink';
+import { ChoiceGroup, DieselInputs, NumberField, SiteEnergyInputs, type SiteEnergy } from '../components/calculator/EnergyInputs';
+import { toNumber } from '../components/calculator/numbers';
 import { RATES } from '../config/tariffs';
 import type { CalcTab } from '../config/navigation';
 import { CROPS, TREES, cropNeedsTree, optionLabel } from '../content/farmCrops';
+import { monthlyValue } from '../content/whatsappMessages';
 import type { CalculatorContext } from '../services/leadService';
 import {
   bill,
   kwhFromBill,
   calcHome,
   calcFarm,
+  calcFarmFromDiesel,
+  calcGridFromKwh,
+  calcIndustrialDiesel,
   calcIndustrialGrid,
   calcIndustrialOffGrid,
+  IND_TAR,
   roundedPrice,
   type CalcResult,
 } from '../services/calculator';
@@ -29,7 +36,53 @@ const TAB_CATEGORY: Record<CalcTab, CalculatorContext['category']> = {
   svc: 'services_sector',
 };
 const FACILITY_TYPES = ['hospital', 'hotel', 'school', 'mall'] as const;
-type SiteConfig = 'on-grid' | 'off-grid';
+type FarmMode = 'hours' | 'litres' | 'egp';
+
+/** Defaults for both site categories (the industrial on-grid figures are the long-standing defaults). */
+const SITE_DEFAULTS: SiteEnergy = {
+  config: 'on-grid',
+  gridInput: 'bill',
+  bill: 150000,
+  kwh: 58800,
+  dieselInput: 'litres',
+  litres: 30000,
+  dieselEgp: 615000,
+  dieselPrice: RATES.diesel.value,
+  share: 30,
+};
+
+/** Estimate for an Industrial Facilities or Services Sector site, through the path matching its inputs. */
+function siteResult(s: SiteEnergy, tariff: number, note: 'n_ind_grid' | 'n_svc_grid'): CalcResult {
+  if (s.config === 'on-grid') {
+    return s.gridInput === 'bill' ? calcIndustrialGrid(s.bill, s.share, tariff, note) : calcGridFromKwh(s.kwh, s.share, tariff, note);
+  }
+  return s.dieselInput === 'litres' ? calcIndustrialDiesel(s.litres, s.share, s.dieselPrice) : calcIndustrialOffGrid(s.dieselEgp, s.share, s.dieselPrice);
+}
+
+/** The site's monthly figure with its real unit (for the WhatsApp message and the attached estimate). */
+function siteMonthly(lang: Language, s: SiteEnergy): string {
+  if (s.config === 'on-grid') return s.gridInput === 'bill' ? monthlyValue(lang, s.bill, 'billEgp') : monthlyValue(lang, s.kwh, 'kwh');
+  return s.dieselInput === 'litres' ? monthlyValue(lang, s.litres, 'dieselLitres') : monthlyValue(lang, s.dieselEgp, 'dieselEgp');
+}
+
+/** Context fields for a site: only the inputs of the selected connection and unit. */
+function siteContext(s: SiteEnergy): Partial<CalculatorContext> {
+  if (s.config === 'on-grid') {
+    return {
+      siteConfig: 'on-grid',
+      gridInput: s.gridInput,
+      ...(s.gridInput === 'bill' ? { monthlyElectricityCostEgp: s.bill } : { monthlyKwh: s.kwh }),
+      solarSharePct: s.share,
+    };
+  }
+  return {
+    siteConfig: 'off-grid',
+    dieselInput: s.dieselInput,
+    ...(s.dieselInput === 'litres' ? { monthlyDieselLitres: s.litres } : { monthlyDieselCostEgp: s.dieselEgp }),
+    dieselPriceEgp: s.dieselPrice,
+    solarSharePct: s.share,
+  };
+}
 
 function useNumberFormat(lang: 'en' | 'ar', fractionDigits: 0 | 1) {
   return useMemo(
@@ -41,12 +94,6 @@ function useNumberFormat(lang: 'en' | 'ar', fractionDigits: 0 | 1) {
     [lang, fractionDigits],
   );
 }
-
-/** Empty or non-numeric input becomes 0, which the calculator treats as "no estimate". */
-const toNumber = (value: string) => {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : 0;
-};
 
 const DASH = '–';
 
@@ -61,31 +108,28 @@ export default function Calculator() {
   const [chosenTab, setTab] = useState<CalcTab | null>(null);
   const tab: CalcTab = chosenTab ?? (isClient && queryTab && TABS.includes(queryTab) ? queryTab : 'home');
 
-  // Residential & Commercial
+  // Residential & Commercial (hShare null = the recommended, best-payback size)
   const [hUnit, setHUnit] = useState<'kwh' | 'egp'>('kwh');
   const [hVal, setHVal] = useState(1200);
   const [hRoof, setHRoof] = useState(120);
   const [hBat, setHBat] = useState(false);
+  const [hShare, setHShare] = useState<number | null>(null);
 
-  // Agricultural Farms
+  // Agricultural Farms (each way of describing diesel use keeps its own value)
   const [fHp, setFHp] = useState(40);
+  const [fMode, setFMode] = useState<FarmMode>('hours');
   const [fHrs, setFHrs] = useState(8);
   const [fDays, setFDays] = useState(300);
+  const [fLitres, setFLitres] = useState(1800);
+  const [fEgp, setFEgp] = useState(36900);
   const [fDp, setFDp] = useState<number>(RATES.diesel.value);
   const [fCrop, setFCrop] = useState('');
   const [fTree, setFTree] = useState('');
 
-  // Industrial Facilities (each configuration keeps its own cost, so switching never reuses the other's figure)
-  const [iConfig, setIConfig] = useState<SiteConfig>('on-grid');
-  const [iGridCost, setIGridCost] = useState(150000);
-  const [iFuelCost, setIFuelCost] = useState(615000);
-  const [iDp, setIDp] = useState<number>(RATES.diesel.value);
-  const [iShare, setIShare] = useState(30);
-
-  // Services Sector
+  // Industrial Facilities and Services Sector share the same energy inputs
+  const [ind, setInd] = useState<SiteEnergy>(SITE_DEFAULTS);
+  const [svc, setSvc] = useState<SiteEnergy>(SITE_DEFAULTS);
   const [sType, setSType] = useState('');
-  const [sCost, setSCost] = useState(150000);
-  const [sShare, setSShare] = useState(30);
 
   const n0 = useNumberFormat(language, 0);
   const n1 = useNumberFormat(language, 1);
@@ -111,11 +155,18 @@ export default function Calculator() {
   }
 
   const result: CalcResult = useMemo(() => {
-    if (tab === 'home') return calcHome(hKwh, hRoof, hBat);
-    if (tab === 'farm') return calcFarm(fHp, fHrs, fDays, fDp);
-    if (tab === 'svc') return calcIndustrialGrid(sCost, sShare, RATES.service.value, 'n_svc_grid');
-    return iConfig === 'on-grid' ? calcIndustrialGrid(iGridCost, iShare) : calcIndustrialOffGrid(iFuelCost, iShare, iDp);
-  }, [tab, hKwh, hRoof, hBat, fHp, fHrs, fDays, fDp, sCost, sShare, iConfig, iGridCost, iFuelCost, iDp, iShare]);
+    if (tab === 'home') return calcHome(hKwh, hRoof, hBat, hShare ?? undefined);
+    if (tab === 'farm') {
+      if (fMode === 'hours') return calcFarm(fHp, fHrs, fDays, fDp);
+      return calcFarmFromDiesel(fHp, fMode === 'litres' ? fLitres : fDp > 0 ? fEgp / fDp : 0, fDp);
+    }
+    if (tab === 'svc') return siteResult(svc, RATES.service.value, 'n_svc_grid');
+    return siteResult(ind, IND_TAR, 'n_ind_grid');
+  }, [tab, hKwh, hRoof, hBat, hShare, fMode, fHp, fHrs, fDays, fLitres, fEgp, fDp, ind, svc]);
+
+  // Slider position: the visitor's choice, or the recommended share (to the nearest 5%).
+  const recommendedShare = result.home ? Math.min(100, Math.max(10, Math.round(result.home.recommendedSharePct / 5) * 5)) : 70;
+  const shareShown = hShare ?? recommendedShare;
 
   function fmtYears(p: CalcResult['payback0']) {
     if (p && p.yrs !== null) return `${n1.format(p.yrs)} ${t.u_yr}`;
@@ -123,13 +174,20 @@ export default function Calculator() {
   }
 
   const noteKey = result.note;
-  const note = noteKey
-    ? noteKey === 'n_home' && result.homeCapKwp !== null
+  const note = !noteKey
+    ? ''
+    : noteKey === 'n_home' && result.homeCapKwp !== null
       ? fmt(t.n_home, 'cap', n1.format(result.homeCapKwp))
-      : t[noteKey]
-    : '';
+      : noteKey === 'n_home_share' && result.home
+        ? t.n_home_share.replace('{n}', n0.format(result.home.sharePct)).replace('{cap}', n1.format(result.home.cap))
+        : t[noteKey];
 
-  /** Context of the ACTIVE tab only -- inputs from other tabs are never included. */
+  const site = tab === 'svc' ? svc : ind;
+  const farmMonthly = fMode === 'litres' ? monthlyValue(language, fLitres, 'dieselLitres') : fMode === 'egp' ? monthlyValue(language, fEgp, 'dieselEgp') : '';
+  const monthly =
+    tab === 'home' ? monthlyValue(language, hVal, hUnit === 'kwh' ? 'kwh' : 'billEgp') : tab === 'farm' ? farmMonthly : siteMonthly(language, site);
+
+  /** Context of the ACTIVE tab only -- inputs from other tabs (or other modes) are never included. */
   const context: CalculatorContext | null = useMemo(() => {
     if (!result.ok) return null;
     const base = {
@@ -139,25 +197,29 @@ export default function Calculator() {
       yearlySavingEgp: Math.round(result.save),
       paybackYears: result.payback0?.yrs != null ? Math.round(result.payback0.yrs * 10) / 10 : null,
     };
-    if (tab === 'home') return { ...base, monthlyKwh: Math.round(hKwh), roofM2: hRoof, battery: hBat };
-    if (tab === 'farm')
-      return { ...base, pumpHp: fHp, crop: fCrop || undefined, tree: showTree && fTree ? fTree : undefined, dieselPriceEgp: fDp };
-    if (tab === 'svc') return { ...base, facilityType: sType || undefined, monthlyElectricityCostEgp: sCost, solarSharePct: sShare };
-    return {
-      ...base,
-      siteConfig: iConfig,
-      monthlyElectricityCostEgp: iConfig === 'on-grid' ? iGridCost : iFuelCost,
-      solarSharePct: iShare,
-      dieselPriceEgp: iConfig === 'off-grid' ? iDp : undefined,
-    };
-  }, [result, tab, hKwh, hRoof, hBat, fHp, fCrop, fTree, showTree, fDp, sType, sCost, sShare, iConfig, iGridCost, iFuelCost, iShare, iDp]);
+    if (tab === 'home') return { ...base, monthlyKwh: Math.round(hKwh), roofM2: hRoof, battery: hBat, solarSharePct: hShare ?? undefined };
+    if (tab === 'farm') {
+      return {
+        ...base,
+        pumpHp: fHp,
+        crop: fCrop || undefined,
+        tree: showTree && fTree ? fTree : undefined,
+        dieselInput: fMode === 'hours' ? ('pump-hours' as const) : fMode,
+        ...(fMode === 'litres' ? { monthlyDieselLitres: fLitres } : fMode === 'egp' ? { monthlyDieselCostEgp: fEgp } : {}),
+        dieselPriceEgp: fDp,
+      };
+    }
+    if (tab === 'svc') return { ...base, facilityType: sType || undefined, ...siteContext(svc) };
+    return { ...base, ...siteContext(ind) };
+  }, [result, tab, hKwh, hRoof, hBat, hShare, fHp, fCrop, fTree, showTree, fMode, fLitres, fEgp, fDp, sType, svc, ind]);
 
   // Exactly the figures shown in the results panel (same formatting and
   // rounding), so WhatsApp and the contact form never disagree with the screen.
   const details = [
+    monthly,
     tab === 'farm' && fCrop ? `${t.f_crop}: ${optionLabel(CROPS, fCrop, language)}` : '',
     tab === 'farm' && showTree && fTree ? `${t.f_tree}: ${optionLabel(TREES, fTree, language)}` : '',
-    tab === 'ind' ? `${t.f_imode}: ${iConfig === 'on-grid' ? t.opt_grid : t.opt_diesel}` : '',
+    tab === 'ind' || tab === 'svc' ? `${t.f_imode}: ${site.config === 'on-grid' ? t.opt_grid : t.opt_diesel}` : '',
     tab === 'svc' && sType ? `${t.f_stype}: ${t[`st_${sType}`]}` : '',
   ].filter(Boolean);
   const summary = result.ok
@@ -171,7 +233,7 @@ export default function Calculator() {
       ].join('; ') + '.'
     : '';
 
-  const contactType = tab === 'home' ? 'home' : tab === 'farm' ? 'farm' : tab === 'svc' ? 'service' : iConfig === 'off-grid' ? 'oilgas' : 'factory';
+  const contactType = tab === 'home' ? 'home' : tab === 'farm' ? 'farm' : tab === 'svc' ? 'service' : ind.config === 'off-grid' ? 'oilgas' : 'factory';
 
   /** WAI-ARIA tabs pattern: Arrow keys move and activate (mirrored in RTL), Home/End jump to the ends. */
   function onTabKeyDown(e: KeyboardEvent<HTMLButtonElement>) {
@@ -188,15 +250,6 @@ export default function Calculator() {
     setTab(target);
     tabRefs.current[target]?.focus();
   }
-
-  const shareField = (id: string, value: number, set: (n: number) => void) => (
-    <div className="field">
-      <label htmlFor={id}>
-        <span>{t.f_ishare}</span> <span className="rv">{value}%</span>
-      </label>
-      <input id={id} type="range" min={10} max={80} step={5} value={value} aria-valuetext={`${value}%`} onChange={(e) => set(Number(e.target.value))} />
-    </div>
-  );
 
   return (
     <>
@@ -260,6 +313,31 @@ export default function Calculator() {
                     <input id="h_bat" type="checkbox" checked={hBat} onChange={(e) => setHBat(e.target.checked)} />
                     <span>{t.f_bat}</span>
                   </label>
+                  {/* Share to supply from solar: starts at the recommended (best-payback) share; moving it sizes the system to the chosen share. */}
+                  <div className="field share-field">
+                    <label htmlFor="h_share">
+                      <span>{t.f_hshare}</span> <span className="rv">{shareShown}%</span>
+                    </label>
+                    <input
+                      id="h_share"
+                      type="range"
+                      min={10}
+                      max={100}
+                      step={5}
+                      value={shareShown}
+                      aria-valuetext={`${shareShown}%`}
+                      aria-describedby="h_share_h"
+                      onChange={(e) => setHShare(Number(e.target.value))}
+                    />
+                    <span className="hint" id="h_share_h">
+                      {hShare === null ? t.hshare_rec.replace('{n}', String(recommendedShare)) : t.hshare_set.replace('{n}', String(hShare))}
+                    </span>
+                    {hShare !== null && (
+                      <button type="button" className="linkbtn" onClick={() => setHShare(null)}>
+                        {t.hshare_reset}
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -286,56 +364,47 @@ export default function Calculator() {
                       </select>
                     </div>
                   )}
-                  <div className="field">
-                    <label htmlFor="f_hp">{t.f_hp}</label>
-                    <input id="f_hp" type="number" min={1} step={1} value={fHp} onChange={(e) => setFHp(toNumber(e.target.value))} />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="f_hrs">{t.f_hrs}</label>
-                    <input id="f_hrs" type="number" min={1} max={14} step={1} value={fHrs} onChange={(e) => setFHrs(toNumber(e.target.value))} />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="f_days">{t.f_days}</label>
-                    <input id="f_days" type="number" min={30} max={365} step={5} value={fDays} onChange={(e) => setFDays(toNumber(e.target.value))} />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="f_dp">{t.f_dp}</label>
-                    <input id="f_dp" type="number" min={1} step={0.25} value={fDp} onChange={(e) => setFDp(toNumber(e.target.value))} />
-                  </div>
+                  <NumberField id="f_hp" label={t.f_hp} value={fHp} step={1} min={1} onChange={setFHp} />
+                  <ChoiceGroup<FarmMode>
+                    name="f_mode"
+                    legend={t.f_fmode}
+                    value={fMode}
+                    options={[
+                      { value: 'hours', label: t.opt_fhours },
+                      { value: 'litres', label: t.opt_dlitres },
+                      { value: 'egp', label: t.opt_degp },
+                    ]}
+                    onChange={setFMode}
+                  />
+                  {fMode === 'hours' ? (
+                    <>
+                      <NumberField id="f_hrs" label={t.f_hrs} value={fHrs} step={1} min={1} onChange={setFHrs} />
+                      <NumberField id="f_days" label={t.f_days} value={fDays} step={5} min={30} onChange={setFDays} />
+                      <NumberField id="f_dp" label={t.f_dp} value={fDp} step={0.25} min={1} onChange={setFDp} />
+                    </>
+                  ) : (
+                    <DieselInputs
+                      prefix="f"
+                      t={t}
+                      input={fMode}
+                      litres={fLitres}
+                      egp={fEgp}
+                      price={fDp}
+                      litresHint={t.h_dlitres_farm}
+                      onChange={(p) => {
+                        if (p.dieselInput) setFMode(p.dieselInput);
+                        if (p.litres !== undefined) setFLitres(p.litres);
+                        if (p.dieselEgp !== undefined) setFEgp(p.dieselEgp);
+                        if (p.dieselPrice !== undefined) setFDp(p.dieselPrice);
+                      }}
+                    />
+                  )}
                 </div>
               )}
 
               {tab === 'ind' && (
                 <div>
-                  <fieldset className="field choices">
-                    <legend>{t.f_imode}</legend>
-                    {(['on-grid', 'off-grid'] as const).map((c) => (
-                      <label key={c} className="choice">
-                        <input type="radio" name="i_config" value={c} checked={iConfig === c} onChange={() => setIConfig(c)} />
-                        <span>{c === 'on-grid' ? t.opt_grid : t.opt_diesel}</span>
-                      </label>
-                    ))}
-                  </fieldset>
-                  <div className="field">
-                    <label htmlFor="i_cost">{t.f_icost}</label>
-                    <input
-                      id="i_cost"
-                      type="number"
-                      min={0}
-                      step={5000}
-                      value={iConfig === 'on-grid' ? iGridCost : iFuelCost}
-                      onChange={(e) => (iConfig === 'on-grid' ? setIGridCost : setIFuelCost)(toNumber(e.target.value))}
-                      aria-describedby="i_cost_h"
-                    />
-                    <span className="hint" id="i_cost_h">{iConfig === 'on-grid' ? t.h_icost_grid : t.h_icost_off}</span>
-                  </div>
-                  {iConfig === 'off-grid' && (
-                    <div className="field">
-                      <label htmlFor="i_dp">{t.f_dp}</label>
-                      <input id="i_dp" type="number" min={1} step={0.25} value={iDp} onChange={(e) => setIDp(toNumber(e.target.value))} />
-                    </div>
-                  )}
-                  {shareField('i_share', iShare, setIShare)}
+                  <SiteEnergyInputs prefix="i" value={ind} tariff={IND_TAR} onChange={(p) => setInd((s) => ({ ...s, ...p }))} />
                 </div>
               )}
 
@@ -350,12 +419,7 @@ export default function Calculator() {
                       ))}
                     </select>
                   </div>
-                  <div className="field">
-                    <label htmlFor="s_cost">{t.f_icost}</label>
-                    <input id="s_cost" type="number" min={0} step={5000} value={sCost} onChange={(e) => setSCost(toNumber(e.target.value))} aria-describedby="s_cost_h" />
-                    <span className="hint" id="s_cost_h">{t.h_icost_grid}</span>
-                  </div>
-                  {shareField('s_share', sShare, setSShare)}
+                  <SiteEnergyInputs prefix="s" value={svc} tariff={RATES.service.value} onChange={(p) => setSvc((s) => ({ ...s, ...p }))} />
                 </div>
               )}
             </div>
@@ -401,7 +465,7 @@ export default function Calculator() {
                 </Link>
                 {/* Residential & Commercial only (client rule) -- BillWaLink enforces it. */}
                 {result.ok && tab === 'home' && (
-                  <BillWaLink segment="calc" trackSegment="villas" extra={summary} systemSizeKwp={result.kwp} />
+                  <BillWaLink segment="calc" trackSegment="villas" fields={{ monthly, extra: summary }} systemSizeKwp={result.kwp} />
                 )}
               </div>
             </div>

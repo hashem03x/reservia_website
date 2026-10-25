@@ -11,6 +11,7 @@ const spec: LandingPageSpec = {
   statLabelKey: 'lps_statl',
   benefitKeys: ['lps_b1', 'lps_b2', 'lps_b3'],
   extraLabelKey: 'lps_x',
+  extraKind: 'billEgp',
 };
 
 export default function LpService() {

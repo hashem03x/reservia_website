@@ -61,7 +61,7 @@ export function Header() {
       <div className="wrap">
         {/* Accessible name = the visible brand text plus ", Home" (label-in-name, WCAG 2.5.3). */}
         <Link className="brand" to={`/${language}`}>
-          <img src={logo} alt="" width={40} height={40} decoding="async" />
+          <img src={logo} alt="" width={52} height={52} decoding="async" />
           <span>
             <b>{t.brand}</b> <small>{t.brand_sub}</small>
             <span className="sr-only">, {t.nav_home}</span>

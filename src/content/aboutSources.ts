@@ -1,4 +1,7 @@
 /**
+ * INTERNAL REFERENCE ONLY (no longer displayed on the site since October 2026,
+ * at the client's request): the sources behind the figures used in the copy.
+ *
  * Ported verbatim from the reference template's About-page sources list.
  * Kept in English in both languages, matching the template exactly --
  * these are citations to English-language press/industry sources, not

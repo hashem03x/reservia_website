@@ -14,6 +14,7 @@ export interface LandingPageSpec extends CampaignPage {
   statLabelKey: string;
   benefitKeys: [string, string, string];
   extraLabelKey: string;
+  extraKind: 'billEgp' | 'dieselLitres' | 'pumpHp';
 }
 
 /** Shared shape for all five campaign landing pages (`lp-*` in the reference template) -- identical structure, segment-specific content. */
@@ -44,7 +45,7 @@ export function LandingPage({ spec }: { spec: LandingPageSpec }) {
               ))}
             </ul>
           </div>
-          <LeadForm segment={spec.segment} extraLabel={t[spec.extraLabelKey]} idPrefix={spec.idPrefix} />
+          <LeadForm segment={spec.segment} extraLabel={t[spec.extraLabelKey]} extraKind={spec.extraKind} idPrefix={spec.idPrefix} />
         </div>
       </section>
 

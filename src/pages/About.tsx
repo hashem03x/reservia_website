@@ -1,9 +1,17 @@
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
 import { Breadcrumbs } from '../components/layout/Breadcrumbs';
-import { ABOUT_SOURCES } from '../content/aboutSources';
+import { SlidesCarousel } from '../components/sections/SlidesCarousel';
 import banner from '../assets/brand/about-banner.webp';
 
+/**
+ * About Reservia. The company description is shown large for readability;
+ * the company-profile slides follow (rendered once their exported images
+ * are in src/assets/profile/). The Managing Director line and the visible
+ * sources list were removed at the client's request (October 2026); the
+ * figures' sources remain documented internally (docs/TARIFFS.md,
+ * src/content/aboutSources.ts).
+ */
 export default function About() {
   const { t } = useLanguage();
 
@@ -16,7 +24,10 @@ export default function About() {
           <Breadcrumbs path="/about" />
           <span className="eyebrow">{t.ab_eyebrow}</span>
           <h1>{t.ab_title}</h1>
-          <p className="lead">{t.ab_lead}</p>
+          <div className="about-copy">
+            <p>{t.ab_lead}</p>
+            <p>{t.ab_lead2}</p>
+          </div>
         </div>
       </section>
 
@@ -27,26 +38,15 @@ export default function About() {
       </section>
 
       <section className="band">
-        <div className="wrap two">
-          <div className="stack">
+        <div className="wrap">
+          <div className="about-copy about-copy-secondary">
             <p>{t.ab_p2}</p>
-            <p><b>{t.ab_md}</b></p>
-            <p style={{ color: 'var(--muted)' }}>Clean &middot; Smart &middot; Safe &middot; Affordable</p>
-          </div>
-          <div className="stack">
-            <h2 className="h3">{t.ab_src_t}</h2>
-            <ol className="sources">
-              {ABOUT_SOURCES.map((source) => (
-                <li key={source.href}>
-                  <a href={source.href} target="_blank" rel="noopener noreferrer">
-                    {source.text}
-                  </a>
-                </li>
-              ))}
-            </ol>
+            <p className="about-values">Clean &middot; Smart &middot; Safe &middot; Affordable</p>
           </div>
         </div>
       </section>
+
+      <SlidesCarousel />
     </>
   );
 }

@@ -11,6 +11,7 @@ const spec: LandingPageSpec = {
   statLabelKey: 'lpa_statl',
   benefitKeys: ['lpa_b1', 'lpa_b2', 'lpa_b3'],
   extraLabelKey: 'lpa_x',
+  extraKind: 'pumpHp',
 };
 
 export default function LpAgriculture() {

@@ -5,7 +5,7 @@ import { Seo } from '../components/layout/Seo';
 import { Breadcrumbs } from '../components/layout/Breadcrumbs';
 import { WaLink } from '../components/ui/WaLink';
 import { FieldErrorText } from '../components/forms/FieldErrorText';
-import { env, flags, isLeadsApiConfigured } from '../config/env';
+import { env, flags } from '../config/env';
 import { useLeadForm } from '../hooks/useLeadForm';
 import { useIsClient } from '../hooks/useIsClient';
 import { trackCallClick, trackEmailClick } from '../services/analytics';
@@ -114,7 +114,7 @@ export default function Contact() {
   const hasErrors = Boolean(errors.name || errors.phone);
   const submitting = status === 'submitting';
   // User-initiated continuation only: what they typed goes to WhatsApp if *they* click.
-  const waDetails = '\n\n' + [t[siteType.labelKey], gov.trim(), note.trim()].filter(Boolean).join(', ');
+  const waFields = { location: gov.trim(), extra: [t[siteType.labelKey], note.trim(), calc?.summary].filter(Boolean).join('\n') };
 
   return (
     <>
@@ -244,7 +244,7 @@ export default function Contact() {
               <p className="formmsg err" role="alert">{t.q_fail}</p>
             )}
             {(done || status === 'error') && (
-              <WaLink segment={siteType.segment} extra={waDetails} className="btn wa qwa">
+              <WaLink segment={siteType.segment} fields={waFields} className="btn wa qwa">
                 {t.lp_wa}
               </WaLink>
             )}

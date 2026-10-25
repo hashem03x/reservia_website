@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   bill,
   calcFarm,
+  calcFarmFromDiesel,
+  calcGridFromKwh,
   calcHome,
   calcIndustrialDiesel,
   calcIndustrialGrid,
@@ -182,5 +184,61 @@ describe('Services Sector: grid model at the disclosed service tariff', () => {
     expect(svc.kwp).toBeCloseTo((150000 / RATES.service.value) * 12 * 0.3 / 1750, 6);
     expect(calcIndustrialGrid(150000, 30).note).toBe('n_ind_grid');
     expect(calcIndustrialGrid(150000, 30, 0).ok).toBe(false);
+  });
+});
+
+describe('Residential & Commercial: share to supply from solar', () => {
+  it('without a share, keeps the recommended (best-payback) size -- reference villa unchanged', () => {
+    const r = calcHome(1200, 120, false);
+    expect(r.kwp).toBe(6);
+    expect(r.note).toBe('n_home');
+    expect(r.home!.recommendedSharePct).toBeCloseTo(72.9, 1);
+  });
+
+  it('with a share, sizes to that share of yearly use and changes the results', () => {
+    const half = calcHome(1200, 120, false, 50);
+    expect(half.kwp).toBe(4); // 1,200 x 12 x 50% / 1,750 = 4.1 -> 4.0 kWp
+    expect(half.note).toBe('n_home_share');
+    expect(half.home!.sharePct).toBeCloseTo(48.6, 1);
+    const full = calcHome(1200, 120, false, 100);
+    expect(full.kwp).toBe(8);
+    expect(full.save).toBeGreaterThan(half.save);
+    expect(full.price).toBeGreaterThan(half.price);
+  });
+
+  it('never exceeds the roof', () => {
+    const r = calcHome(1200, 40, false, 100); // 40 m2 roof -> 5 kWp cap
+    expect(r.kwp).toBe(5);
+    expect(r.home!.cap).toBe(5);
+  });
+});
+
+describe('Agricultural Farms: diesel entered as litres or EGP', () => {
+  it('litres path: saving = litres x price x 1.1, panels from pump power', () => {
+    const r = calcFarmFromDiesel(40, 1800, 20.5);
+    expect(r.ok).toBe(true);
+    expect(r.litres).toBe(21600);
+    expect(r.save).toBeCloseTo(21600 * 20.5 * 1.1);
+    expect(r.kwp).toBeCloseTo(41.8, 1);
+    expect(r.note).toBe('n_farm_diesel');
+  });
+
+  it('EGP converts to litres at the entered price (same result as litres)', () => {
+    expect(calcFarmFromDiesel(40, 36900 / 20.5, 20.5)).toEqual(calcFarmFromDiesel(40, 1800, 20.5));
+  });
+
+  it('rejects zero, negative and missing values', () => {
+    expect(calcFarmFromDiesel(40, 0, 20.5).ok).toBe(false);
+    expect(calcFarmFromDiesel(40, -10, 20.5).ok).toBe(false);
+    expect(calcFarmFromDiesel(0, 1800, 20.5).ok).toBe(false);
+    expect(calcFarmFromDiesel(40, 1800, 0).ok).toBe(false);
+  });
+});
+
+describe('Grid sites: kWh input', () => {
+  it('values kWh at the category tariff, matching the equivalent bill exactly', () => {
+    expect(calcGridFromKwh(58800, 30, 2.55)).toEqual(calcIndustrialGrid(58800 * 2.55, 30, 2.55));
+    expect(calcGridFromKwh(58800, 30, 2.55, 'n_svc_grid').note).toBe('n_svc_grid');
+    expect(calcGridFromKwh(0, 30).ok).toBe(false);
   });
 });

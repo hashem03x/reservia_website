@@ -1,44 +1,71 @@
 import type { Language } from '../i18n/LanguageContext';
-import type { Segment } from '../config/navigation';
 
 /**
- * Prefilled WhatsApp messages per segment, extended from the reference
- * template's `WAMSG` object (October 2026 brief) so each one asks for the
- * details an engineer needs to size a system: location plus the
- * segment's consumption figure. Blank "label: " lines are for the
- * customer to complete before sending. `calc` is followed by the
- * calculator's own computed figures (see Calculator.tsx).
+ * Prefilled WhatsApp quote message (client wording, October 2026):
  *
- * Arabic wording is new copy written for this brief -- flagged for client
- * review in docs/CLIENT_DECISIONS.md.
+ *   Hello Reservia, I'd like a solar quote (Please attach Electricity bill).
+ *
+ *   Location: [user input]
+ *   Monthly bill or consumption: [user input]
+ *
+ * One template for every WhatsApp quote CTA. Values the visitor already
+ * entered (calculator, contact or campaign form) are filled in; anything
+ * unknown is left blank after the label for the visitor to complete. The
+ * message asks the visitor to attach the bill -- nothing is attached
+ * automatically. The monthly value always carries its real unit, so diesel
+ * use is never presented as an electricity bill.
+ *
+ * Arabic wording is a translation of the client's English (for review).
  */
-export const WAMSG: Record<Language, Record<Segment, string>> = {
+export const QUOTE_MESSAGE: Record<Language, { intro: string; location: string; monthly: string }> = {
   en: {
-    villas:
-      "Hello Reservia, I'd like a solar quote for my home.\nLocation (area and city): \nMonthly electricity bill (EGP): \nMonthly consumption (kWh, if known): \nI can also send a photo of my bill.",
-    compounds:
-      "Hello Reservia, I'd like a quote for our compound's common areas.\nCompound location: \nMonthly common-area bill (EGP): \nMonthly consumption (kWh, if known): ",
-    agriculture:
-      "Hello Reservia, I'd like a quote for a solar pumping system.\nFarm location: \nPump size (hp): \nWell depth or pumping head (m, if known): \nIrrigation type (drip, pivot or flood): \nPumping hours per day: ",
-    industrial:
-      "Hello Reservia, I'd like a site assessment for our facility.\nFacility location: \nSite type (factory, oil and gas, other): \nMonthly grid consumption (kWh) or bill (EGP), or monthly diesel use (litres): \nWhat we need (lower bills, less diesel, backup power): ",
-    service:
-      "Hello Reservia, I'd like a site assessment for our building.\nFacility type (hospital, clinic, hotel, school, university, mall, office or club): \nLocation: \nMonthly electricity consumption (kWh) or bill (EGP): ",
-    general: "Hello Reservia, I'd like a solar quote.\nLocation: \nSite type: \nMonthly bill or consumption: ",
-    calc: 'Hello Reservia, I used the savings calculator on your website. My estimate: ',
+    intro: "Hello Reservia, I'd like a solar quote (Please attach Electricity bill).",
+    location: 'Location:',
+    monthly: 'Monthly bill or consumption:',
   },
   ar: {
-    villas:
-      'مرحبًا ريزيرفيا، أريد عرض سعر لنظام طاقة شمسية لمنزلي.\nالموقع (المنطقة والمدينة): \nفاتورة الكهرباء الشهرية (جنيه): \nالاستهلاك الشهري (كيلووات ساعة، إن كان معروفًا): \nيمكنني أيضًا إرسال صورة من الفاتورة.',
-    compounds:
-      'مرحبًا ريزيرفيا، أريد عرض سعر للمناطق المشتركة في الكمبوند.\nموقع الكمبوند: \nالفاتورة الشهرية للمناطق المشتركة (جنيه): \nالاستهلاك الشهري (كيلووات ساعة، إن كان معروفًا): ',
-    agriculture:
-      'مرحبًا ريزيرفيا، أريد عرض سعر لنظام ضخ بالطاقة الشمسية.\nموقع المزرعة: \nقدرة المضخة (حصان): \nعمق البئر أو ارتفاع الرفع (متر، إن كان معروفًا): \nنوع الري (تنقيط أو محوري أو غمر): \nساعات الضخ يوميًا: ',
-    industrial:
-      'مرحبًا ريزيرفيا، أريد معاينة لموقعنا.\nموقع المنشأة: \nنوع الموقع (مصنع، بترول وغاز، غير ذلك): \nالاستهلاك الشهري من الشبكة (كيلووات ساعة) أو الفاتورة (جنيه)، أو استهلاك الديزل الشهري (لتر): \nالمطلوب (خفض الفاتورة، تقليل الديزل، طاقة احتياطية): ',
-    service:
-      'مرحبًا ريزيرفيا، أريد معاينة لمبنانا.\nنوع المنشأة (مستشفى، عيادة، فندق، مدرسة، جامعة، مول، مكاتب أو نادٍ): \nالموقع: \nاستهلاك الكهرباء الشهري (كيلووات ساعة) أو الفاتورة (جنيه): ',
-    general: 'مرحبًا ريزيرفيا، أريد عرض سعر للطاقة الشمسية.\nالموقع: \nنوع الموقع: \nالفاتورة أو الاستهلاك الشهري: ',
-    calc: 'مرحبًا ريزيرفيا، استخدمت حاسبة التوفير في موقعكم. تقديري: ',
+    intro: 'مرحبًا ريزيرفيا، أريد عرض سعر للطاقة الشمسية (يُرجى إرفاق فاتورة الكهرباء).',
+    location: 'الموقع:',
+    monthly: 'الفاتورة أو الاستهلاك الشهري:',
   },
 };
+
+/** How a monthly value is described in the message, by its unit. `{n}` = the formatted number. */
+export const MONTHLY_UNITS: Record<Language, Record<'kwh' | 'billEgp' | 'dieselLitres' | 'dieselEgp', string>> = {
+  en: {
+    kwh: '{n} kWh',
+    billEgp: '{n} EGP (electricity bill)',
+    dieselLitres: '{n} litres of diesel',
+    dieselEgp: '{n} EGP spent on diesel',
+  },
+  ar: {
+    kwh: '{n} كيلووات ساعة',
+    billEgp: '{n} جنيه (فاتورة الكهرباء)',
+    dieselLitres: '{n} لتر ديزل',
+    dieselEgp: '{n} جنيه إنفاق على الديزل',
+  },
+};
+
+export type MonthlyUnit = keyof (typeof MONTHLY_UNITS)['en'];
+
+export interface QuoteFields {
+  /** Location as the visitor typed it (contact/campaign forms); blank when unknown. */
+  location?: string;
+  /** Monthly bill or consumption, already formatted with its unit; blank when unknown. */
+  monthly?: string;
+  /** Optional extra lines (calculator estimate, site type, notes), after a blank line. */
+  extra?: string;
+}
+
+/** Formats a monthly value with its unit for the message (Latin digits, thousands separators). */
+export function monthlyValue(lang: Language, value: number | undefined, unit: MonthlyUnit): string {
+  if (value === undefined || !Number.isFinite(value) || value <= 0) return '';
+  return MONTHLY_UNITS[lang][unit].replace('{n}', Math.round(value).toLocaleString('en-US'));
+}
+
+export function quoteMessage(lang: Language, fields: QuoteFields = {}): string {
+  const m = QUOTE_MESSAGE[lang];
+  // "Label: value", or "Label: " when blank, so the visitor can type straight after the label.
+  const body = [m.intro, '', `${m.location} ${fields.location?.trim() ?? ''}`, `${m.monthly} ${fields.monthly?.trim() ?? ''}`].join('\n');
+  return fields.extra?.trim() ? `${body}\n\n${fields.extra.trim()}` : body;
+}

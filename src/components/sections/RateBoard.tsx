@@ -47,9 +47,9 @@ export function RateBoard() {
           </li>
         ))}
         <li className="bd-row" style={{ borderBottom: 0 }}>
-          <span className="bd-sym" style={{ color: 'var(--leaf)' }} aria-hidden="true">SOL</span>
+          <span className="bd-sym" style={{ color: 'var(--leaf-on-deep)' }} aria-hidden="true">SOL</span>
           <span className="bd-lab">{t.lb_sol}</span>
-          <span className="bd-p" style={{ color: 'var(--leaf)' }}>
+          <span className="bd-p" style={{ color: 'var(--leaf-on-deep)' }}>
             <span className="sr-only">EGP </span>
             {fmt2(SOLAR_COST_PER_KWH_25Y)}
           </span>

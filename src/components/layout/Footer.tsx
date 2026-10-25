@@ -1,11 +1,21 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { CAMPAIGN_PAGES } from '../../config/navigation';
-import { env, flags, isLeadsApiConfigured } from '../../config/env';
+import { env, isLeadsApiConfigured } from '../../config/env';
 import { trackCallClick, trackEmailClick } from '../../services/analytics';
 import { WaLink } from '../ui/WaLink';
 import { WhatsAppIcon } from '../icons/SegmentIcons';
 import logo from '../../assets/brand/logo.webp';
+
+/** Document icon for the footer quote CTA, drawn to match the WhatsApp icon's size and weight. */
+function QuoteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 3h7l5 5v13H7z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M14 3v5h5M10 13h6M10 17h6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 /**
  * Two-column footer: company identity (name with the LLC suffix, the
@@ -30,36 +40,45 @@ export function Footer() {
               </div>
             </div>
             <p>{t.foot_desc}</p>
-            {/* General WhatsApp chat (not the bill CTA). */}
-            <WaLink segment="general" className="btn wa footerWa">
-              <WhatsAppIcon />
-              <span>{t.wa_chat}</span>
-            </WaLink>
+            {/* Two footer CTAs with identical typography and shape (client request); each keeps its own destination. */}
+            <div className="footerCtas">
+              <Link className="btn sun footerCta" to={`/${language}/contact`}>
+                <QuoteIcon />
+                <span>{t.foot_quote}</span>
+              </Link>
+              {/* General WhatsApp chat (not the bill CTA). */}
+              <WaLink segment="general" className="btn wa footerCta">
+                <WhatsAppIcon />
+                <span>{t.wa_chat}</span>
+              </WaLink>
+            </div>
           </div>
 
           <div className="footerCol">
             <h2 className="footerHeading">{t.ct_eyebrow}</h2>
-            <ul>
+            {/* Contact details as supplied by the client (October 2026): sales email (mailto), mobile and landline (tel). */}
+            <ul className="footerContacts">
               <li>
+                <small>{t.foot_email}</small>
+                <a href={`mailto:${env.salesEmail}`} dir="ltr" onClick={() => trackEmailClick(location.pathname)}>
+                  {env.salesEmail}
+                </a>
+              </li>
+              <li>
+                <small>{t.foot_mobile}</small>
                 <a href={`tel:${env.mobilePhone.replace(/[^\d+]/g, '')}`} dir="ltr" onClick={() => trackCallClick(location.pathname)}>
                   {env.mobilePhone}
                 </a>
               </li>
               <li>
-                {/* mailto: only once Reservia confirms (client decision 8, VITE_ENABLE_MAILTO_LINKS). */}
-                {flags.mailtoLinks ? (
-                  <a href={`mailto:${env.businessEmail}`} onClick={() => trackEmailClick(location.pathname)}>
-                    {env.businessEmail}
-                  </a>
-                ) : (
-                  <span>{env.businessEmail}</span>
-                )}
+                <small>{t.foot_landline}</small>
+                <a href={`tel:${env.officePhone.replace(/[^\d+]/g, '')}`} dir="ltr" onClick={() => trackCallClick(location.pathname)}>
+                  {env.officePhone}
+                </a>
               </li>
               <li>
+                <small>{t.ct_addr_l}</small>
                 <span>{t.ct_addr}</span>
-              </li>
-              <li>
-                <Link to={`/${language}/contact`}>{t.quote}</Link>
               </li>
             </ul>
           </div>

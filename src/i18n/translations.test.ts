@@ -114,3 +114,22 @@ describe('October 2026 brief, part 2', () => {
     expect([en.slogan_1, en.slogan_2, en.slogan_3, en.slogan_4]).toEqual(['Generate', 'Store', 'Optimize', 'Sustain']);
   });
 });
+
+describe('October 2026 brief, part 4', () => {
+  it('shows no Managing Director name or title', () => {
+    for (const text of [all(en), all(ar)]) expect(text).not.toMatch(/Fattah|عبد الفتاح|Managing Director|العضو المنتدب/);
+    expect(en.ab_md).toBeUndefined();
+  });
+
+  it('shows no named source citations next to figures', () => {
+    for (const text of [all(en), all(ar)]) {
+      expect(text).not.toMatch(/\((?:[^()]*?)(IFC|UICC|Afrik21|Egypt Independent|UNDP|Zawya|مؤسسة التمويل|أفريك|إيجيبت إنديبندنت|زاوية|برنامج الأمم)[^()]*\)/);
+      expect(text).not.toMatch(/Sources on the About page|links are on the About page|المصادر في صفحة من نحن/);
+    }
+  });
+
+  it('has the new About description (two paragraphs)', () => {
+    expect(en.ab_lead).toBe(en.h_lead);
+    expect(en.ab_lead2).toBe('We design, install, maintain and facilitate financing for tailored energy solutions that deliver cost-efficient, reliable and sustainable power.');
+  });
+});

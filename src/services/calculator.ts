@@ -99,14 +99,24 @@ function payback(capex: number, S1: number, esc: number, pv: number): PaybackRes
 interface HomeCalcResult {
   kwp: number;
   cap: number;
+  /** Share of yearly consumption the chosen system supplies (%). */
+  sharePct: number;
+  /** Share the best-payback (recommended) size would supply (%). */
+  recommendedSharePct: number;
   save: number;
   before: number;
   after: number;
   pv: number;
 }
 
-/** Sizes the home system to the kWp that maximizes 10-year-hurdle NPV, capped by roof area and 95% of usage. */
-function homeCalc(k: number, roof: number): HomeCalcResult {
+/**
+ * Sizes the home system. Default: the kWp that maximizes 10-year-hurdle NPV,
+ * capped by roof area and 95% of usage (the recommended size). With
+ * `targetSharePct` (the "Share to supply from solar" slider) the system is
+ * instead sized to supply that share of yearly use, in 0.5 kWp steps, still
+ * capped by the roof. Same yield, tariffs and price list either way.
+ */
+function homeCalc(k: number, roof: number, targetSharePct?: number): HomeCalcResult {
   const cap = Math.floor((roof / ROOF) * 2) / 2;
   const useCap = Math.floor(((k * 12 * 0.95) / YIELD) * 2) / 2;
   const max = Math.max(0, Math.min(cap, useCap));
@@ -122,7 +132,23 @@ function homeCalc(k: number, roof: number): HomeCalcResult {
     }
   }
   if (best === 0) best = Math.max(0.5, Math.min(cap || 0.5, 3));
-  return { kwp: best, cap, save: sav(best), before: bill(k), after: bill(Math.max(0, k - (best * YIELD) / 12)), pv: best * pHome(best) };
+  const shareOf = (kwp: number) => Math.min(100, ((kwp * YIELD) / (k * 12)) * 100);
+  const recommendedSharePct = shareOf(best);
+  const target = safeInput(targetSharePct ?? 0);
+  if (target > 0) {
+    const wanted = Math.floor((((k * 12 * Math.min(target, 100)) / 100) / YIELD) * 2) / 2;
+    best = Math.max(0.5, Math.min(wanted, cap || 0.5));
+  }
+  return {
+    kwp: best,
+    cap,
+    sharePct: shareOf(best),
+    recommendedSharePct,
+    save: sav(best),
+    before: bill(k),
+    after: bill(Math.max(0, k - (best * YIELD) / 12)),
+    pv: best * pHome(best),
+  };
 }
 
 export interface CalcResult {
@@ -137,17 +163,48 @@ export interface CalcResult {
   cutPct: number | null;
   payback0: PaybackResult | null;
   payback5: PaybackResult | null;
-  note: 'n_home' | 'n_farm' | 'n_ind_grid' | 'n_svc_grid' | 'n_ind_diesel' | null;
+  note: 'n_home' | 'n_home_share' | 'n_farm' | 'n_farm_diesel' | 'n_ind_grid' | 'n_svc_grid' | 'n_ind_diesel' | null;
   homeCapKwp: number | null;
 }
 
-export function calcHome(monthlyKwh: number, roofM2: number, battery: boolean): CalcResult {
+/**
+ * Residential & Commercial. `sharePct` (10-100) sizes the system to that
+ * share of yearly use; omit it for the recommended (best-payback) size.
+ */
+export function calcHome(monthlyKwh: number, roofM2: number, battery: boolean, sharePct?: number): CalcResult {
   monthlyKwh = safeInput(monthlyKwh);
   roofM2 = safeInput(roofM2);
   if (monthlyKwh < 20 || roofM2 < 4) return emptyResult();
-  const home = homeCalc(monthlyKwh, roofM2);
+  const home = homeCalc(monthlyKwh, roofM2, sharePct);
   const price = home.pv + (battery ? BAT : 0);
-  return finish(home.kwp, home.save, price, home.pv, null, home, 'n_home', home.cap);
+  return finish(home.kwp, home.save, price, home.pv, null, home, sharePct ? 'n_home_share' : 'n_home', home.cap);
+}
+
+/**
+ * Agricultural Farms from the diesel the pump uses today (instead of pump
+ * hours): litres a month, or EGP a month converted to litres at the diesel
+ * price entered. Panels are still sized at 1.4 x pump power and priced on
+ * the farm price list; the yearly saving is that fuel plus 10% generator
+ * servicing -- the same assumptions as calcFarm.
+ */
+export function calcFarmFromDiesel(pumpHp: number, monthlyLitres: number, dieselPrice: number): CalcResult {
+  pumpHp = safeInput(pumpHp);
+  monthlyLitres = safeInput(monthlyLitres);
+  dieselPrice = safeInput(dieselPrice);
+  if (!pumpHp || !monthlyLitres || !dieselPrice) return emptyResult();
+  const kwp = Math.round(pumpHp * 0.746 * 1.4 * 10) / 10;
+  const price = kwp * P_FARM;
+  const litres = monthlyLitres * 12;
+  return finish(kwp, litres * dieselPrice * GEN_OM, price, price, litres, null, 'n_farm_diesel', null);
+}
+
+/**
+ * Grid-connected site from monthly consumption in kWh. Valued at the same
+ * tariff the bill path uses (kWh x tariff), so a bill and a kWh figure for
+ * the same site give the same estimate -- they are never mixed.
+ */
+export function calcGridFromKwh(monthlyKwh: number, solarSharePct: number, tariff: number = IND_TAR, note: 'n_ind_grid' | 'n_svc_grid' = 'n_ind_grid'): CalcResult {
+  return calcIndustrialGrid(safeInput(monthlyKwh) * safeInput(tariff), solarSharePct, tariff, note);
 }
 
 export function calcFarm(pumpHp: number, hoursPerDay: number, daysPerYear: number, dieselPrice: number): CalcResult {

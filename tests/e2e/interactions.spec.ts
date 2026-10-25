@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { LEADS_URL, PII, blockExternalNavigation, dataLayer, events, open, watchErrors } from './helpers';
-import { WAMSG } from '../../src/content/whatsappMessages';
+import { quoteMessage } from '../../src/content/whatsappMessages';
 
 /** The "Send your bill to WhatsApp" CTA (any page). */
 const BILL = 'main a.btn.wa:has-text("Send your bill to WhatsApp")';
@@ -28,7 +28,7 @@ test.describe('calculator', () => {
     await expect(results).toContainText('4.8 years');
 
     const text = await waText(page, BILL);
-    expect(text.startsWith(WAMSG.en.calc)).toBe(true);
+    expect(text.startsWith("Hello Reservia, I'd like a solar quote (Please attach Electricity bill).\n\nLocation: \nMonthly bill or consumption: 1,200 kWh")).toBe(true);
     for (const part of ['6.0 kWp', '184,000 EGP', '36,804 EGP/yr', '5.3 years', '4.8 years']) expect(text).toContain(part);
 
     await blockExternalNavigation(page);
@@ -161,9 +161,10 @@ test.describe('WhatsApp links', () => {
       await open(page, path);
       if (path.includes('/lp/')) {
         // Campaign pages swap the floating button for the sticky bar (general chat, not the bill CTA).
-        expect(await waText(page, '.lpbar a.btn.wa')).toBe(WAMSG[lang][segment]);
+        expect(await waText(page, '.lpbar a.btn.wa')).toBe(quoteMessage(lang));
+        void segment;
       } else {
-        expect(await waText(page, 'a.wafab')).toBe(WAMSG[lang][segment]);
+        expect(await waText(page, 'a.wafab')).toBe(quoteMessage(lang));
         await expect(page.locator('a.wafab')).toHaveAttribute('rel', 'noopener noreferrer');
       }
     });
@@ -262,13 +263,14 @@ test.describe('contact form', () => {
     await expectNoPii(page);
   });
 
-  test('phone links are tracked; emails stay plain text until mailto is enabled', async ({ page }) => {
+  test('phone links are tracked; contact-page emails stay plain text; footer sales email is a mailto link', async ({ page }) => {
     await open(page, '/en/contact');
     await blockExternalNavigation(page);
     await page.locator('.contact-list a[href^="tel:"]').first().click();
     expect(await events(page, 'click_call')).toHaveLength(1);
     await expect(page.locator('.contact-list a[href^="mailto:"]')).toHaveCount(0);
-    await expect(page.locator('footer a[href^="mailto:"]')).toHaveCount(0);
+    // Footer sales email is a mailto: link at the client's request (October 2026), address verbatim.
+    await expect(page.locator('footer a[href^="mailto:"]')).toHaveAttribute('href', 'mailto:Resrevia_sales@reservia-energu.com');
   });
 
   test('no response-time promise anywhere on the contact page', async ({ page }) => {
@@ -301,7 +303,7 @@ test.describe('campaign form (service sector)', () => {
     const leads = await events(page, 'generate_lead');
     expect(leads).toHaveLength(1);
     expect(leads[0]).toMatchObject({ segment: 'service', group: 'industrial', source: 'landing_form', site_input: 250000, event_id: bodies[0].eventId });
-    expect(await waText(page, '.lpform a.btn.wa')).toContain('250000');
+    expect(await waText(page, '.lpform a.btn.wa')).toContain('Monthly bill or consumption: 250,000 EGP (electricity bill)');
     await expectNoPii(page);
   });
 });

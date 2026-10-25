@@ -11,6 +11,7 @@ const spec: LandingPageSpec = {
   statLabelKey: 'lpi_statl',
   benefitKeys: ['lpi_b1', 'lpi_b2', 'lpi_b3'],
   extraLabelKey: 'lpi_x',
+  extraKind: 'dieselLitres',
 };
 
 export default function LpIndustrial() {

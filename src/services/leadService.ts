@@ -15,6 +15,10 @@ export { segmentGroup };
 export interface CalculatorContext {
   category: 'residential_commercial' | 'agricultural_farms' | 'industrial_facilities' | 'services_sector';
   siteConfig?: 'on-grid' | 'off-grid';
+  /** On-grid sites: which figure the visitor entered (never both). */
+  gridInput?: 'bill' | 'kwh';
+  /** Diesel sites and farms: how diesel use was entered (never both); farms may use pump hours instead. */
+  dieselInput?: 'litres' | 'egp' | 'pump-hours';
   monthlyKwh?: number;
   roofM2?: number;
   battery?: boolean;
@@ -23,6 +27,9 @@ export interface CalculatorContext {
   tree?: string;
   facilityType?: string;
   monthlyElectricityCostEgp?: number;
+  monthlyDieselLitres?: number;
+  monthlyDieselCostEgp?: number;
+  /** Residential: the share chosen on the slider; omitted when the recommended size is used. Sites: share to supply from solar. */
   solarSharePct?: number;
   dieselPriceEgp?: number;
   systemSizeKwp: number;

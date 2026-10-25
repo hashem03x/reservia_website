@@ -11,6 +11,7 @@ const spec: LandingPageSpec = {
   statLabelKey: 'lpv_statl',
   benefitKeys: ['lpv_b1', 'lpv_b2', 'lpv_b3'],
   extraLabelKey: 'lpv_x',
+  extraKind: 'billEgp',
 };
 
 export default function LpVillas() {

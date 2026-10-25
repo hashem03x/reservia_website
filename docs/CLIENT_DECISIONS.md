@@ -126,6 +126,9 @@ small, local change. The **Change when answered** column says exactly where.
   links (they already were in the footer), and clicks are tracked as `click_call`.
 - **When answered.** Set `VITE_ENABLE_MAILTO_LINKS=true`. The contact page and footer then render
   `mailto:` links tracked as `click_email`. No code change is needed.
+- **Update (October 2026, part 4).** At the client's request the footer now shows the sales email
+  as a `mailto:` link whatever this flag says. The contact page still follows the flag. See §13 for
+  the spelling of the address.
 
 ## 9. Public company details
 
@@ -220,3 +223,48 @@ small, local change. The **Change when answered** column says exactly where.
   - Sharm El-Sheikh / TAQA (Afrik21) and the five museums (UNDP) could not be re-fetched (no
     content / HTTP 403) and remain as written in the approved template. Please re-check before
     launch.
+
+## 13. Open points from the October 2026 part 4 brief
+
+- **Sales email spelling.** The footer shows **Resrevia_sales@reservia-energu.com** exactly as
+  supplied, as a `mailto:` link. Both parts differ from the company profile, which uses the
+  **reservia-energy.com** domain (`Business_info@reservia-energy.com`):
+  - the mailbox reads "Resrevia" rather than "Reservia";
+  - the domain reads "energ**u**" rather than "energ**y**".
+
+  Mail sent to the domain as written will probably bounce. Please confirm the address. The
+  correction is one line, `salesEmail` in `src/config/contactDefaults.ts` (or the `VITE_SALES_EMAIL`
+  variable).
+- **Company profile slides.** The About page carousel is built and tested, but it stays hidden until
+  the slide images exist. The project has no PowerPoint or LibreOffice, and the deck is built from
+  separate shapes and text, so no faithful slide images could be produced here. Nothing was
+  approximated or redrawn.
+  - **What is needed:** export `Company Profile.pptx` from PowerPoint (File → Export → PNG, all
+    slides, 1920 × 1080).
+  - **Where it goes:** save the images as `src/assets/profile/slide-01.webp` … `slide-15.webp`. PNG
+    files can be converted to WebP.
+  - **What happens then:** the carousel appears automatically, in deck order, with no code change.
+    The accessible descriptions for each slide are already in `src/content/profileSlides.ts`.
+- **Brand palette source.** The deck's theme file is the default Office theme, so the colours were
+  taken from the deck itself:
+  - colours used on the slides, as found in the slide XML;
+  - dominant colours of the cover image.
+
+  | Role | Colours |
+  | --- | --- |
+  | Deep emerald | #0A3D30 / #004D3A |
+  | Forest green | #1B5E20 |
+  | Teal | #005B4F |
+  | Leaf green | #7CB342 |
+  | Pale green | #A5D6A7 |
+  | Aqua | #72D7C7 |
+  | Mint | #EAF5F1 |
+
+  All of them live in `src/styles/tokens.css`. If the company has an official brand guide with
+  exact values, swapping them in there updates the whole site.
+- **Hosting catch-all rewrite.** `vercel.json` now sends every unknown path to `/index.html` with
+  status 200. Mistyped URLs therefore return a "soft 404": the page says "not found" while the HTTP
+  status says success. Search engines treat these as low-quality pages. The prerendered build
+  already writes a real `404.html` for this case. Removing the `rewrites` block restores proper 404
+  status codes, and every real page is prerendered, so no route depends on the rewrite. This was
+  left unchanged pending your decision.

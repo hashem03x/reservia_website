@@ -11,7 +11,7 @@
 */
 
 *{box-sizing:border-box}
-html{scroll-padding-top:calc(88px + env(safe-area-inset-top,0px));scroll-padding-bottom:96px}
+html{scroll-padding-top:calc(96px + env(safe-area-inset-top,0px));scroll-padding-bottom:96px}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;margin:0}
 a{color:var(--navy)}
 /* Bebas Neue ships one weight (400) -- headings request 400 explicitly so
@@ -41,12 +41,12 @@ main:focus,h1:focus{outline:none}
 
 /* header */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-.top .wrap{display:flex;align-items:center;gap:14px;min-height:68px}
+.top .wrap{display:flex;align-items:center;gap:14px;min-height:76px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);flex-shrink:1;min-width:0}
-.brand img{width:40px;height:40px;flex-shrink:0;background:#fff;border-radius:50%;padding:2px}
+.brand img{width:52px;height:52px;flex-shrink:0;background:#fff;border-radius:50%;padding:2px}
 .brand span{min-width:0;overflow:hidden}
-.brand b{font-family:var(--display);font-size:1.4rem;font-weight:400;letter-spacing:.02em;display:block;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.brand small{display:block;font-size:.68rem;color:var(--muted);letter-spacing:.04em;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand b{font-family:var(--display);font-size:1.8rem;font-weight:400;letter-spacing:.02em;display:block;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{display:block;font-size:.74rem;color:var(--muted);letter-spacing:.04em;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* primary nav: one line only above the compact breakpoint, no wrapping */
 nav.main{display:flex;align-items:center;gap:2px;flex-wrap:nowrap;flex-shrink:1;min-width:0;margin-inline-start:auto}
@@ -86,13 +86,15 @@ body[data-lp="1"] .lp-phone{display:inline-flex!important}
 @media (max-width:640px){body[data-lp="1"] .lp-phone{display:none!important}}
 body[data-lp="1"] .wafab{display:none}
 @media (max-width:420px){.brand small{display:none}}
+/* larger brand (Oct 2026): step down on narrow phones so the header never wraps */
+@media (max-width:480px){.brand img{width:44px;height:44px}.brand b{font-size:1.55rem}}
 @media (max-width:440px){.top .wrap{gap:8px}.tools{gap:6px}.menu-btn{padding-inline:14px}}
 
 /* compact (tablet + mobile) navigation: single hamburger-driven drawer.
    1240px (not 1180px) to keep extra margin now that .tools also carries
    the theme toggle alongside the language switcher and CTA. */
 @media (max-width:1240px){
-  nav.main{display:none;position:absolute;inset-inline:0;top:100%;max-height:calc(100vh - 68px);overflow-y:auto;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 20px 16px;flex-direction:column;align-items:stretch;gap:0}
+  nav.main{display:none;position:absolute;inset-inline:0;top:100%;max-height:calc(100vh - 76px);overflow-y:auto;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 20px 16px;flex-direction:column;align-items:stretch;gap:0}
   nav.main.open{display:flex}
   nav.main a{padding:13px 4px;min-height:44px;display:flex;align-items:center;border-bottom:1px solid var(--line)}
   .menu-btn{display:inline-flex;margin-inline-start:auto}
@@ -161,7 +163,7 @@ html[dir="rtl"] .bd-cols{letter-spacing:0;font-family:var(--body);font-size:.76r
 .bd-lab{font-family:var(--body);font-size:.78rem;color:var(--muted-on-deep);line-height:1.25}
 .bd-p{font-weight:600;font-size:.95rem;color:var(--ink-on-deep);text-align:end;direction:ltr;unicode-bidi:isolate}
 .bd-c{font-size:.74rem;text-align:end;direction:ltr;unicode-bidi:isolate;white-space:nowrap}
-.bd-c.up{color:#ff8a65}.bd-c.flat{color:var(--leaf)}
+.bd-c.up{color:#ffa48a}.bd-c.flat{color:var(--leaf-on-deep)}
 .board .note{font:400 .74rem/1.45 var(--body);color:var(--muted-on-deep);border-top:0;padding-top:9px;margin:0}
 .bd-list{list-style:none;margin:0;padding:0}
 
@@ -551,7 +553,7 @@ html[dir="rtl"] .partners-btn.next svg{transform:rotate(90deg)}
 .partner.circle{width:120px;height:120px;border-radius:50%;padding:22px}
 .partner img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block}
 .partner a{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:inherit}
-.partner-pending{font-size:.8rem;color:#526579;border:1.5px dashed #c5d3df;border-radius:14px;padding:8px 12px;text-align:center}
+.partner-pending{font-size:.8rem;color:#4a6457;border:1.5px dashed #c3dccf;border-radius:14px;padding:8px 12px;text-align:center}
 @media (max-width:560px){.partner.rounded{width:150px;height:88px;padding:14px 16px}.partner.circle{width:100px;height:100px;padding:18px}}
 @media (prefers-reduced-motion:reduce){.partners-list{scroll-behavior:auto}}
 
@@ -577,9 +579,17 @@ html[dir="rtl"] .partners-btn.next svg{transform:rotate(90deg)}
 .calc-attached{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;background:var(--sunken);border-radius:var(--r);padding:12px 14px;margin-bottom:16px;font-size:.88rem}
 .calc-attached p{color:var(--ink);min-width:0}
 
-/* footer WhatsApp chat button */
-.footerWa{margin-top:18px}
-.footerWa svg{width:20px;height:20px;fill:#fff;flex-shrink:0}
+/* footer CTAs: "Get a free quote" and "Chat with us on WhatsApp" share one treatment (same .btn base, size, icon slot) */
+.footerCtas{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.footerCta svg{width:20px;height:20px;flex-shrink:0}
+.btn.wa.footerCta svg{fill:#fff}
+.btn.sun.footerCta svg{color:var(--sun-ink)}
+/* footer contact list: label above each value */
+.footerContacts li{display:grid;gap:2px}
+.footerContacts small{font-size:.74rem;color:var(--muted-on-deep);opacity:.85;text-transform:uppercase;letter-spacing:.06em}
+html[dir="rtl"] .footerContacts small{letter-spacing:0}
+.footerContacts a,.footerContacts span{color:var(--ink-on-deep);word-break:break-word}
+.footerContacts a{text-align:start}
 
 /* ============================================================
    "Back to top" button (ScrollTopButton.tsx). Stacked above the
@@ -652,3 +662,31 @@ html[dir="rtl"] .partners-btn.next svg{transform:rotate(90deg)}
 .pricetable th{font-size:.82rem;color:var(--muted);font-weight:600}
 .pricetable td.num{font-weight:600;direction:ltr;unicode-bidi:isolate}
 .btn.btn-wrap{white-space:normal;text-align:center}
+
+/* hero rate board: nudged slightly towards the outer edge on desktop (mirrors in RTL) */
+@media (min-width:901px){.hero-grid>.board{position:relative;inset-inline-start:20px}}
+
+/* About: larger, more readable company description (Oct 2026) */
+.about-copy{display:grid;gap:16px;max-width:68ch;margin-top:8px}
+.about-copy p{font-size:clamp(1.12rem,1.6vw,1.32rem);line-height:1.75;color:var(--ink)}
+.about-copy p:first-child{font-weight:500}
+.about-copy-secondary p{font-size:clamp(1.05rem,1.4vw,1.18rem);font-weight:400}
+.about-copy-secondary .about-values{color:var(--muted);font-family:var(--mono);font-size:.95rem;letter-spacing:.04em}
+
+/* About: company-profile slide carousel */
+.slides-head{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.slides-track{list-style:none;margin:22px 0 0;padding:0;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;overscroll-behavior-x:contain;scrollbar-width:none;border-radius:var(--r-lg);border:1px solid var(--line);background:#fff;box-shadow:var(--shadow-md)}
+.slides-track::-webkit-scrollbar{display:none}
+.slides-track:focus-visible{outline-offset:3px}
+.slide{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center}
+.slide img{width:100%;height:100%;object-fit:contain;display:block}
+.slides-dots{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:14px}
+.slides-dot{width:28px;height:28px;padding:0;border:0;background:transparent;cursor:pointer;display:grid;place-items:center}
+.slides-dot::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--line);transition:background var(--dur-fast) var(--ease),transform var(--dur-fast) var(--ease)}
+.slides-dot:hover::before{background:var(--leaf)}
+.slides-dot[aria-current="true"]::before{background:var(--navy);transform:scale(1.25)}
+@media (prefers-reduced-motion:reduce){.slides-track{scroll-behavior:auto}.slides-dot::before{transition:none}}
+
+/* calculator: solar-share slider sits at the bottom of the Residential & Commercial form */
+.share-field{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.linkbtn{justify-self:start;background:none;border:0;padding:4px 0;color:var(--navy);font:600 .85rem var(--body);text-decoration:underline;cursor:pointer}

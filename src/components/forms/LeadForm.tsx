@@ -5,6 +5,7 @@ import { useLeadForm } from '../../hooks/useLeadForm';
 import { parseOptionalNumber, validateName, validateOptionalNumber, validatePhone } from '../../services/validation';
 import { BillWaLink, WaLink } from '../ui/WaLink';
 import { FieldErrorText } from './FieldErrorText';
+import { monthlyValue } from '../../content/whatsappMessages';
 import type { Segment } from '../../config/navigation';
 
 /**
@@ -14,8 +15,19 @@ import type { Segment } from '../../config/navigation';
  * clear sending / sent / preview / failed state, and a lead event only
  * after confirmed delivery (see useLeadForm).
  */
-export function LeadForm({ segment, extraLabel, idPrefix }: { segment: Segment; extraLabel: string; idPrefix: string }) {
-  const { t } = useLanguage();
+export function LeadForm({
+  segment,
+  extraLabel,
+  extraKind,
+  idPrefix,
+}: {
+  segment: Segment;
+  extraLabel: string;
+  /** What the optional numeric field holds, so the WhatsApp message labels it correctly. */
+  extraKind: 'billEgp' | 'dieselLitres' | 'pumpHp';
+  idPrefix: string;
+}) {
+  const { t, language } = useLanguage();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [gov, setGov] = useState('');
@@ -39,7 +51,13 @@ export function LeadForm({ segment, extraLabel, idPrefix }: { segment: Segment; 
   const locked = submitting || done;
   const hasErrors = Boolean(errors.name || errors.phone || errors.extra);
   const parsedExtra = parseOptionalNumber(extra);
-  const waDetails = parsedExtra !== undefined ? `\n\n${extraLabel}: ${parsedExtra}` : undefined;
+  // Bill or diesel use fills "Monthly bill or consumption" with its real unit; pump size is
+  // not a consumption figure, so it goes on an extra line instead.
+  const waFields = {
+    location: gov.trim(),
+    monthly: extraKind === 'pumpHp' ? '' : monthlyValue(language, parsedExtra, extraKind),
+    extra: extraKind === 'pumpHp' && parsedExtra !== undefined ? `${extraLabel}: ${parsedExtra}` : '',
+  };
 
   return (
     <form className="panel lpform" data-seg={segment} noValidate onSubmit={onSubmit} aria-labelledby={id('t')} aria-busy={submitting}>
@@ -143,7 +161,7 @@ export function LeadForm({ segment, extraLabel, idPrefix }: { segment: Segment; 
         </div>
       )}
       {(done || status === 'error') && (
-        <WaLink segment={segment} extra={waDetails} style={{ width: '100%', marginTop: 12 }}>
+        <WaLink segment={segment} fields={waFields} style={{ width: '100%', marginTop: 12 }}>
           {t.lp_wa}
         </WaLink>
       )}

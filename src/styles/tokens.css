@@ -1,64 +1,62 @@
 /*
   Design tokens -- Reservia "Integrated Energy Solutions" identity.
 
-  Replaces the earlier solar-EPC palette ported from the reference
-  template with a broader industrial-tech system: the company spans
-  electrical infrastructure, engineering, and industrial energy
-  operations, not only rooftop solar, so the visual language now reads
-  as "power/engineering/technology" rather than "solar panels."
+  Palette (October 2026): the white-and-green colours of the official
+  company profile ("Company Profile.pptx"), taken from the colours used on
+  its slides -- deep green #1B5E20, the cover's deep emerald (#004D3A
+  family) and teal-green #005B4F, leaf green #7CB342, pale green #A5D6A7,
+  aqua #72D7C7 and mint white #EAF5F1. (The deck's theme file is the
+  generic Office theme, so the slide colours are the brand reference.)
 
-  Token NAMES are kept stable (--navy, --teal, --sun, --leaf, ...)
-  because they're wired through reservia.css already -- only the VALUES
-  change, per the instruction to update variables in place rather than
-  rename them. Two tokens are intentionally repointed to a different
-  role than their old literal color suggested:
-    --navy  now holds Electric Blue (#20BDE5), the bright interactive/
-            active-state accent -- not the deep brand navy (see --brand
-            for that). This matches "use electric cyan/blue for
-            interactive elements, active states" from the brand brief.
-    --teal  now holds Electric Cyan (#087EAB), the secondary/technical
-            accent (eyebrows, mono labels, icon details).
+  Token NAMES are kept stable (--navy, --teal, --sun, --leaf, ...) because
+  they are wired through reservia.css; only the VALUES change. Some names
+  are historical -- their roles:
+    --brand / --bg-deep   deep emerald identity surfaces (hero, footer, CTA band)
+    --navy                interactive accent: links, active states, selected tab
+    --teal                secondary / technical accent: eyebrows, mono labels
+    --sun                 primary call-to-action fill (leaf green)
+    --cyan-bright         glows and focus rings on deep green surfaces
+  Every text pairing below is >= 4.5:1 (WCAG AA); the axe-core browser
+  matrix checks this on every page in both themes.
 */
 
 :root {
   /* ---- Light surfaces ---- */
-  --bg: #f4f7fa;       /* Cool Mist */
-  --surface: #ffffff;   /* Pure White */
-  --sunken: #e9f0f5;    /* Steel Mist */
+  --bg: #f3f9f5;       /* green-tinted white */
+  --surface: #ffffff;  /* white */
+  --sunken: #eaf5f1;   /* profile mint white */
 
-  /* ---- Deep/industrial surfaces: hero, footer, selected feature bands ---- */
-  --bg-deep: #091725;      /* Deep Industrial Blue */
-  --surface-deep: #11263b; /* elevated card/panel on a deep surface */
-  --line-deep: #1e3a52;
-  --ink-on-deep: #eaf2fa;
-  --muted-on-deep: #9fb4c7;
+  /* ---- Deep surfaces: hero, footer, CTA band ---- */
+  --bg-deep: #0a3d30;      /* deep emerald (profile cover) */
+  --surface-deep: #0f4a3a; /* raised panel on a deep surface (rate board) */
+  --line-deep: #1f5e4b;
+  --ink-on-deep: #eef7f2;
+  --muted-on-deep: #b4d3c5;
+  --leaf-on-deep: #a5d6a7;
 
   /* ---- Text ---- */
-  --ink: #102b46;    /* Deep Blue-Black (== Midnight Navy brand hue) */
-  --muted: #526579;  /* Slate Blue-Gray */
+  --ink: #102a20;    /* green-black body text */
+  --muted: #4a6457;  /* secondary text, >= 5.9:1 on every light surface */
 
   /* ---- Brand + accents ---- */
-  --brand: #102b46;  /* Midnight Navy -- primary brand identity, dark surfaces */
-  /* Deepened from #087eab (Oct 2026 accessibility pass): #087eab is only
-     ~4.0-4.2:1 on the tinted --bg/--sunken surfaces; #066a91 is >= 5.2:1 on
-     every light surface while staying in the same Electric Cyan family. */
-  --teal: #066a91;   /* Electric Cyan -- secondary brand / technical accents */
-  --navy: #066a91;   /* interactive accent (links, active states, focus-adjacent borders) -- same Electric Cyan as --teal; >= 5.2:1 on every light surface (WCAG AA), brightens in dark mode */
-  --cyan-bright: #20bde5; /* Electric Blue -- reserved for glows/sparks/loader effects, not for body-text-sized links (contrast) */
-  --sun: #ffb547;    /* Warm Amber -- energy highlight / primary CTA */
-  --sun-ink: #102b46; /* text on amber buttons */
-  --sun-text: #9a6a12; /* amber-family text, contrast-checked for light backgrounds */
-  --leaf: #16a085;   /* Grid Green -- sustainability accent, used sparingly (fills, icons) */
-  --leaf-text: #0e7a64; /* Grid Green for text: >= 4.8:1 on light surfaces (#16a085 is ~3.3:1) */
+  --brand: #0a3d30;  /* deep emerald -- primary brand identity, dark surfaces */
+  --teal: #005b4f;   /* profile teal-green -- eyebrows, technical labels */
+  --navy: #1b5e20;   /* profile deep green -- links, active states (>= 7:1 on white) */
+  --cyan-bright: #72d7c7; /* profile aqua -- glows, eyebrows and focus on deep green */
+  --sun: #7cb342;    /* profile leaf green -- primary CTA fill */
+  --sun-ink: #0b2e22; /* text on leaf-green buttons (5.9:1) */
+  --sun-text: #33691e; /* green text used where amber text was (6.6:1 on white) */
+  --leaf: #7cb342;   /* leaf green -- fills, ticks, icons */
+  --leaf-text: #2e7d32; /* green for text: >= 4.6:1 on light surfaces */
   --on-navy: #ffffff; /* text on a solid --navy fill */
-  --brand-text: #102b46; /* brand-coloured display text; flips to light ink in dark mode */
+  --brand-text: #0a3d30; /* brand-coloured display text; flips to light ink in dark mode */
 
-  --line: #d6e1ea;   /* Cool Steel borders */
-  --field: #7e93a8;
+  --line: #d2e5da;   /* soft green borders */
+  --field: #6f9080;  /* form field borders, >= 3:1 against the page */
   --err: #c23b32;
-  --focus: #0e8fbf;
-  --wa: #12803c;     /* unchanged -- WhatsApp's own brand color, kept for recognizability */
-  --diesel: #8a7563; /* unchanged supporting neutral (pain-point ticks) */
+  --focus: #1b5e20;
+  --wa: #12803c;     /* WhatsApp's own brand colour, kept for recognisability */
+  --diesel: #8a7563; /* supporting neutral (pain-point ticks) */
 
   --display: 'Bebas Neue', 'Readex Pro', 'IBM Plex Sans Arabic', system-ui, sans-serif;
   --body: 'IBM Plex Sans Arabic', 'Readex Pro', system-ui, sans-serif;
@@ -68,10 +66,10 @@
   --r-lg: 18px;
   --wrap: 1180px;
 
-  /* ---- Elevation ---- */
-  --shadow-sm: 0 1px 2px rgba(9, 23, 37, 0.07);
-  --shadow-md: 0 10px 28px rgba(9, 23, 37, 0.1);
-  --shadow-lg: 0 24px 56px rgba(9, 23, 37, 0.16);
+  /* ---- Elevation (green-tinted shadows) ---- */
+  --shadow-sm: 0 1px 2px rgba(10, 61, 48, 0.07);
+  --shadow-md: 0 10px 28px rgba(10, 61, 48, 0.1);
+  --shadow-lg: 0 24px 56px rgba(10, 61, 48, 0.16);
 
   /* ---- Motion ---- */
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -89,34 +87,38 @@
   it (or has a saved `dark` preference from a previous visit). See
   index.html for the inline pre-paint script that applies the saved
   choice before first render, avoiding a flash of the wrong theme.
+
+  Dark palette: the same greens, deepened for surfaces and lightened for
+  text and accents (pale green #A5D6A7 and aqua #72D7C7 from the profile).
 */
 :root[data-theme='dark'] {
-  --bg: #0a1826;
-  --surface: #102236;
-  --sunken: #15304a;
-  --bg-deep: #05101b;
-  --surface-deep: #0c1f33;
-  --line-deep: #1c3a52;
-  --ink-on-deep: #eaf2fa;
-  --muted-on-deep: #9fb4c8;
-  --ink: #e8f1fa;
-  --muted: #9fb4c8;
-  --brand: #0e2238;
-  --teal: #3fb4de;
-  --navy: #49d3f2;
-  --cyan-bright: #5fdcf7;
-  --sun: #ffc768;
-  --sun-ink: #102236;
-  --sun-text: #ffc768;
-  --leaf: #4fd1a5;
-  --leaf-text: #4fd1a5;
-  --on-navy: #102236;
-  --brand-text: #e8f1fa;
+  --bg: #0b1a14;
+  --surface: #11241c;
+  --sunken: #173126;
+  --bg-deep: #061510;
+  --surface-deep: #0d241b;
+  --line-deep: #1d3d31;
+  --ink-on-deep: #eef7f2;
+  --muted-on-deep: #a9c7ba;
+  --leaf-on-deep: #a5d6a7;
+  --ink: #e8f3ed;
+  --muted: #a6bfb3;
+  --brand: #0c2a1f;
+  --teal: #72d7c7;
+  --navy: #a5d6a7;
+  --cyan-bright: #72d7c7;
+  --sun: #9ccc65;
+  --sun-ink: #0b1a14;
+  --sun-text: #a5d6a7;
+  --leaf: #81c784;
+  --leaf-text: #a5d6a7;
+  --on-navy: #0b1a14;
+  --brand-text: #e8f3ed;
   --diesel: #c2a98d;
-  --line: #234258;
-  --field: #5e7e9a;
+  --line: #24443a;
+  --field: #5f8574;
   --err: #ff8a7a;
-  --focus: #49d3f2;
+  --focus: #a5d6a7;
   color-scheme: dark;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.35);

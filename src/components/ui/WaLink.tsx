@@ -4,6 +4,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { waHref } from '../../services/whatsapp';
 import { trackWhatsappClick } from '../../services/analytics';
 import { offersBillWhatsapp, type Segment } from '../../config/navigation';
+import type { QuoteFields } from '../../content/whatsappMessages';
 
 /**
  * "Send your bill to WhatsApp". Renders only where the client's visibility
@@ -30,7 +31,7 @@ export function BillWaLink(props: Omit<Parameters<typeof WaLink>[0], 'children'>
 export function WaLink({
   segment,
   trackSegment,
-  extra,
+  fields,
   systemSizeKwp,
   className = 'btn wa',
   style,
@@ -39,7 +40,8 @@ export function WaLink({
 }: {
   segment: Segment;
   trackSegment?: Segment;
-  extra?: string;
+  /** Values for the prefilled quote message (location, monthly bill/consumption, extra lines). */
+  fields?: QuoteFields;
   systemSizeKwp?: number;
   className?: string;
   style?: CSSProperties;
@@ -48,7 +50,7 @@ export function WaLink({
 }) {
   const { language, t } = useLanguage();
   const location = useLocation();
-  const href = waHref(language, segment, extra);
+  const href = waHref(language, segment, fields);
   if (!href) return null;
 
   return (
