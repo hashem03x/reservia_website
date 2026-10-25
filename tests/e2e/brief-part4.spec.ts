@@ -90,7 +90,7 @@ test.describe('footer contacts and CTAs', () => {
   test('sales email (mailto, verbatim), mobile and landline (tel)', async ({ page }) => {
     await open(page, '/en');
     const list = page.locator('footer .footerContacts');
-    await expect(list.locator('a[href="mailto:Resrevia_sales@reservia-energu.com"]')).toHaveText('Resrevia_sales@reservia-energu.com');
+    await expect(list.locator('a[href="mailto:Resrevia_sales@reservia-energy.com"]')).toHaveText('Resrevia_sales@reservia-energy.com');
     await expect(list.locator('a[href="tel:+201211892995"]')).toHaveText('+201211892995');
     await expect(list.locator('a[href="tel:+20225222814"]')).toHaveText('+20 2 2522 2814');
   });

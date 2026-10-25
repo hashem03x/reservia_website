@@ -226,25 +226,13 @@ small, local change. The **Change when answered** column says exactly where.
 
 ## 13. Open points from the October 2026 part 4 brief
 
-- **Sales email spelling.** The footer shows **Resrevia_sales@reservia-energu.com** exactly as
-  supplied, as a `mailto:` link. Both parts differ from the company profile, which uses the
-  **reservia-energy.com** domain (`Business_info@reservia-energy.com`):
-  - the mailbox reads "Resrevia" rather than "Reservia";
-  - the domain reads "energ**u**" rather than "energ**y**".
-
-  Mail sent to the domain as written will probably bounce. Please confirm the address. The
-  correction is one line, `salesEmail` in `src/config/contactDefaults.ts` (or the `VITE_SALES_EMAIL`
-  variable).
-- **Company profile slides.** The About page carousel is built and tested, but it stays hidden until
-  the slide images exist. The project has no PowerPoint or LibreOffice, and the deck is built from
-  separate shapes and text, so no faithful slide images could be produced here. Nothing was
-  approximated or redrawn.
-  - **What is needed:** export `Company Profile.pptx` from PowerPoint (File → Export → PNG, all
-    slides, 1920 × 1080).
-  - **Where it goes:** save the images as `src/assets/profile/slide-01.webp` … `slide-15.webp`. PNG
-    files can be converted to WebP.
-  - **What happens then:** the carousel appears automatically, in deck order, with no code change.
-    The accessible descriptions for each slide are already in `src/content/profileSlides.ts`.
+- **Sales email.** Confirmed by the client (25 October 2026) as
+  **Resrevia_sales@reservia-energy.com**, on the company domain. The mailbox name is spelled
+  "Resrevia" as confirmed. It is shown in the footer as a `mailto:` link.
+- **Company profile slides.** Added 25 October 2026 from the client's own slide exports (15 JPG
+  slides at 4001 × 2250), resized to 1920 × 1080 WebP as `src/assets/profile/slide-01.webp` …
+  `slide-15.webp`. The carousel on the About page shows them in deck order. To update a slide,
+  replace its file with a new export of the same name.
 - **Brand palette source.** The deck's theme file is the default Office theme, so the colours were
   taken from the deck itself:
   - colours used on the slides, as found in the slide XML;
