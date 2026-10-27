@@ -6,6 +6,17 @@
   "trailingSlash": false,
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "reserviawebsite.vercel.app"
+        }
+      ],
+      "destination": "https://reservia-energy.com/",
+      "statusCode": 301
+    },
+    {
       "source": "/:path*",
       "has": [
         {
