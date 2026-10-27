@@ -58,7 +58,7 @@ function staticSeo(mode: string, deployEnv: string): Plugin {
     transformIndexHtml: {
       order: 'post',
       handler(html) {
-        return html.replace(MARKER, staticHead({ lang: 'en', page: 'home', siteUrl: base ?? '', orgJsonLd: org, ogImage: base ? `${base}/og-image.jpg` : null }));
+        return html.replace(MARKER, staticHead({ lang: 'en', page: 'home', siteUrl: base ?? '', orgJsonLd: org, ogImage: base ? `${base}/og-image.png` : null }));
       },
     },
     closeBundle() {

@@ -7,9 +7,11 @@
 export const CONTACT_DEFAULTS = {
   whatsappNumber: '201211892995',
   businessEmail: 'Business_info@reservia-energy.com',
-  // Sales email and mobile as supplied and confirmed by the client (October 2026), verbatim
-  // (the mailbox name is spelled 'Resrevia' as confirmed).
-  salesEmail: 'Resrevia_sales@reservia-energy.com',
+  // Sales email, as corrected and reconfirmed by the client (26 October 2026 SEO re-audit):
+  // 'Reservia_Sales@reservia-energy.com'. The client's 25 October confirmation used
+  // 'Resrevia_sales' (a transposed-letter typo of 'Reservia'); the 26 October correction
+  // supersedes it. See docs/CLIENT_DECISIONS.md §13.
+  salesEmail: 'Reservia_Sales@reservia-energy.com',
   mobilePhone: '+201211892995',
   officePhone: '+20 2 2522 2814',
   website: 'reservia-energy.com',

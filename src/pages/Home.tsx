@@ -63,6 +63,12 @@ export default function Home() {
         <div className="wrap">
           <h2>{t.seg_title}</h2>
           <SegmentPicker />
+          {/* The guide exists in Arabic only; shown on both languages, like the same link on the Agriculture page. */}
+          <p className="micro">
+            <Link to="/ar/solar-irrigation-guide" hrefLang="ar" lang={language === 'ar' ? undefined : 'en'}>
+              {t.a_guide_link}
+            </Link>
+          </p>
         </div>
       </section>
 

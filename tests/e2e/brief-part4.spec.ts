@@ -29,13 +29,13 @@ test.describe('header branding and rate board', () => {
       await page.setViewportSize({ width, height: 900 });
       await open(page, '/en');
       const logo = await page.locator('header .brand > img').boundingBox();
-      expect(logo!.width).toBe(width <= 480 ? 44 : 52);
+      expect(logo!.width).toBe(width <= 480 ? 50 : 60);
       // Official wordmark image (battery "i", round "a"), undistorted and not clipped.
       const wm = page.locator('header .brand .wm-light');
       await expect(wm).toBeVisible();
       await expect(page.locator('header .brand .wm-dark')).toBeHidden();
       const box = (await wm.boundingBox())!;
-      expect(box.height).toBe(width <= 380 ? 17 : width <= 420 ? 22 : width <= 480 ? 26 : 32);
+      expect(box.height).toBe(width <= 380 ? 20 : width <= 420 ? 26 : width <= 480 ? 30 : 38);
       expect(box.width / box.height).toBeCloseTo(539 / 96, 1);
       expect(await wm.evaluate((el) => el.parentElement!.parentElement!.scrollWidth <= el.parentElement!.parentElement!.clientWidth + 1)).toBe(true);
       const header = await page.locator('header.top').boundingBox();
@@ -212,7 +212,7 @@ test.describe('footer contacts and CTAs', () => {
   test('sales and business emails (mailto), mobile and landline (tel)', async ({ page }) => {
     await open(page, '/en');
     const list = page.locator('footer .footerContacts');
-    await expect(list.locator('a[href="mailto:Resrevia_sales@reservia-energy.com"]')).toHaveText('Resrevia_sales@reservia-energy.com');
+    await expect(list.locator('a[href="mailto:Reservia_Sales@reservia-energy.com"]')).toHaveText('Reservia_Sales@reservia-energy.com');
     await expect(list.locator('a[href="mailto:Business_info@reservia-energy.com"]')).toHaveText('Business_info@reservia-energy.com');
     await expect(list.locator('li small')).toContainText(['Sales email', 'Business email', 'Mobile', 'Landline']);
     await expect(list.locator('a[href="tel:+201211892995"]')).toHaveText('+201211892995');

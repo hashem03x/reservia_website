@@ -62,7 +62,7 @@ export function Seo({
   const base = normalizeSiteUrl(env.siteUrl);
   const urls = route && !noindex ? pageUrls(env.siteUrl, language, route) : null;
   const robots = isPreviewDeployment ? 'noindex, nofollow' : noindex ? 'noindex, follow' : 'index, follow';
-  const ogImage = base ? `${base}/og-image.jpg` : null;
+  const ogImage = base ? `${base}/og-image.png` : null;
 
   const jsonLd: unknown[] = [];
   if (faq && faq.length > 0) jsonLd.push(faqJsonLd(language, faq));

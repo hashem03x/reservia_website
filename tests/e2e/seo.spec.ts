@@ -109,7 +109,7 @@ test.describe('new pages and links', () => {
   test('language switch on the Arabic-only guide goes to the English parent page', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await open(page, '/ar/solar-irrigation-guide');
-    await page.locator('button.lang').click();
+    await page.locator('a.lang').click();
     await expect(page).toHaveURL(/\/en\/agriculture$/);
   });
 

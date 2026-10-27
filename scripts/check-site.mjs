@@ -89,7 +89,7 @@ for (const [path, langs, noindex] of ROUTES) {
       if (JSON.stringify(alts) !== JSON.stringify(want)) fail(`${url}: hreflang ${JSON.stringify(alts)} != ${JSON.stringify(want)}`);
     }
     const ogImage = tags(h, /<meta[^>]+property="og:image"[^>]*>/g).map((t) => attr(t, 'content'));
-    if (expectOrigin && !noindex && ogImage[0] !== `${expectOrigin}/og-image.jpg`) fail(`${url}: og:image ${ogImage[0] ?? 'missing'}`);
+    if (expectOrigin && !noindex && ogImage[0] !== `${expectOrigin}/og-image.png`) fail(`${url}: og:image ${ogImage[0] ?? 'missing'}`);
     if (!expectOrigin && ogImage.length) fail(`${url}: og:image without a production origin`);
     if (/vercel\.app|localhost|127\.0\.0\.1/.test(h)) fail(`${url}: preview/localhost URL in <head>`);
 
@@ -100,7 +100,7 @@ for (const [path, langs, noindex] of ROUTES) {
       if (!/\salt="/.test(img)) fail(`${url}: <img> without alt: ${img.slice(0, 90)}`);
     }
     for (const a of tags(body, /<a\b[^>]*href="\/[^"]*"[^>]*>/g)) internalLinks.add(attr(a, 'href').split(/[?#]/)[0]);
-    for (const m of r.text.matchAll(/(?:src|href)="(\/(?:assets|icons)\/[^"]+|\/favicon\.ico|\/og-image\.jpg)"/g)) assets.add(m[1]);
+    for (const m of r.text.matchAll(/(?:src|href)="(\/(?:assets|icons)\/[^"]+|\/favicon\.ico|\/og-image\.png)"/g)) assets.add(m[1]);
   }
 }
 

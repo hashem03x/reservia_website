@@ -80,20 +80,20 @@ export function NavDropdown({
         {label}
         <ChevronIcon className={isOpen ? 'navDropChevron open' : 'navDropChevron'} />
       </button>
-      {isOpen && (
-        <div className="navDropPanel" role="menu" aria-label={label}>
-          {items.map((item) => (
-            <NavLink
-              key={item.path}
-              role="menuitem"
-              to={`/${language}${item.path}`}
-              onClick={() => onOpenChange(false)}
-            >
-              {t[item.labelKey]}
-            </NavLink>
-          ))}
-        </div>
-      )}
+      {/* Always in the DOM -- including the prerendered HTML -- so these links are discoverable
+          without a click; .navDropPanel defaults to display:none and only .open shows it. */}
+      <div className={isOpen ? 'navDropPanel open' : 'navDropPanel'} role="menu" aria-label={label}>
+        {items.map((item) => (
+          <NavLink
+            key={item.path}
+            role="menuitem"
+            to={`/${language}${item.path}`}
+            onClick={() => onOpenChange(false)}
+          >
+            {t[item.labelKey]}
+          </NavLink>
+        ))}
+      </div>
     </div>
   );
 }

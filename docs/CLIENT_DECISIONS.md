@@ -227,8 +227,14 @@ small, local change. The **Change when answered** column says exactly where.
 ## 13. Open points from the October 2026 part 4 brief
 
 - **Sales email.** Confirmed by the client (25 October 2026) as
-  **Resrevia_sales@reservia-energy.com**, on the company domain. The mailbox name is spelled
-  "Resrevia" as confirmed. It is shown in the footer as a `mailto:` link.
+  **Resrevia_sales@reservia-energy.com**, on the company domain. The mailbox name was spelled
+  "Resrevia" as confirmed at the time.
+  - **Correction (26 October 2026, SEO re-audit).** The client corrected this to
+    **Reservia_Sales@reservia-energy.com** -- the 25 October spelling was a transposed-letter typo
+    of "Reservia". `src/config/contactDefaults.ts` and the two e2e assertions that checked the
+    literal address have been updated. `.env.example` and `IMPLEMENTATION_NOTES.md` already used
+    the corrected spelling, so only the runtime default and tests had drifted. It is shown in the
+    footer as a `mailto:` link.
 - **Company profile slides.** Added 25 October 2026 from the client's own slide exports (15 JPG
   slides at 4001 × 2250), resized to 1920 × 1080 WebP as `src/assets/profile/slide-01.webp` …
   `slide-15.webp`. The carousel on the About page shows them in deck order. To update a slide,

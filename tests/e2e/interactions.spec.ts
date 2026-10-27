@@ -135,7 +135,7 @@ test.describe('keyboard and navigation', () => {
   test('language switch keeps the page, sets lang/dir and is tracked', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await open(page, '/en/calculator?tab=farm');
-    const lang = page.locator('button.lang');
+    const lang = page.locator('a.lang');
     await expect(lang).toHaveAccessibleName(/عربي.*Switch the site to Arabic/);
     await lang.click();
     await expect(page).toHaveURL(/\/ar\/calculator\?tab=farm$/);
@@ -143,7 +143,7 @@ test.describe('keyboard and navigation', () => {
     await expect(page.locator('#tab-farm')).toHaveAttribute('aria-selected', 'true');
     const [change] = await events(page, 'language_change');
     expect(change).toMatchObject({ from_lang: 'en', lang: 'ar', page: '/en/calculator' });
-    await expect(page.locator('button.lang')).toHaveAccessibleName(/English.*تحويل الموقع إلى الإنجليزية/);
+    await expect(page.locator('a.lang')).toHaveAccessibleName(/English.*تحويل الموقع إلى الإنجليزية/);
   });
 });
 
@@ -271,7 +271,7 @@ test.describe('contact form', () => {
     await expect(page.locator('.contact-list a[href^="mailto:"]')).toHaveCount(0);
     // Footer sales email is a mailto: link at the client's request (October 2026), address verbatim.
     await expect(page.locator('footer a[href^="mailto:"]')).toHaveCount(2); // sales + business email
-    await expect(page.locator('footer a[href^="mailto:"]').first()).toHaveAttribute('href', 'mailto:Resrevia_sales@reservia-energy.com');
+    await expect(page.locator('footer a[href^="mailto:"]').first()).toHaveAttribute('href', 'mailto:Reservia_Sales@reservia-energy.com');
   });
 
   test('no response-time promise anywhere on the contact page', async ({ page }) => {

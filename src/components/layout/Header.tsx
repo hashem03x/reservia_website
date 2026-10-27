@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { NAV_ENTRIES } from '../../config/navigation';
 import { findRoute, routeLangs, splitPath } from '../../content/seoHead';
@@ -13,14 +13,22 @@ import wordmark from '../../assets/brand/wordmark.webp';
 import wordmarkDark from '../../assets/brand/wordmark-dark.webp';
 
 export function Header() {
-  const { language, t, buildPath } = useLanguage();
+  const { language, t } = useLanguage();
   const location = useLocation();
-  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [openMobileGroups, setOpenMobileGroups] = useState<Set<string>>(new Set());
   const menuBtnRef = useRef<HTMLButtonElement>(null);
   const nextLang = language === 'ar' ? 'en' : 'ar';
+
+  // A real href for the language switch, computed on every render (not just on click), so it's a
+  // genuine crawlable <a href> rather than a JS-only action. Keeps the query (e.g. ?tab=farm) so
+  // the visitor stays on the same view. A page that doesn't exist in the other language (the
+  // Arabic irrigation guide) falls back to its parent route.
+  const { path: currentPath } = splitPath(location.pathname);
+  const currentRoute = findRoute(currentPath);
+  const targetPath = currentRoute && !routeLangs(currentRoute).includes(nextLang) ? (currentRoute.parent ?? '') : currentPath;
+  const langHref = `/${nextLang}${targetPath}${location.search}`;
 
   useEffect(() => {
     setOpen(false);
@@ -39,16 +47,6 @@ export function Header() {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open]);
 
-  function switchLanguage() {
-    trackLanguageChange(location.pathname, language, nextLang);
-    // Keep the query (e.g. ?tab=farm) so the visitor stays on the same view. A page that does
-    // not exist in the other language (the Arabic irrigation guide) falls back to its parent.
-    const { path } = splitPath(location.pathname);
-    const route = findRoute(path);
-    const target = route && !routeLangs(route).includes(nextLang) ? (route.parent ?? '') : path;
-    navigate(buildPath(nextLang, '/' + nextLang + target) + location.search);
-  }
-
   function toggleMobileGroup(label: string) {
     setOpenMobileGroups((prev) => {
       const next = new Set(prev);
@@ -64,7 +62,7 @@ export function Header() {
         {/* Accessible name = the brand name plus ", Home" (label-in-name, WCAG 2.5.3). The name is the
             official wordmark from the company profile (battery "i", round "a"), with a light variant for dark mode. */}
         <Link className="brand" to={`/${language}`}>
-          <img src={logo} alt="" width={52} height={52} decoding="async" />
+          <img src={logo} alt="" width={60} height={60} decoding="async" />
           <span>
             <b>
               <img className="wordmark wm-light" src={wordmark} alt={t.brand} width={539} height={96} decoding="async" />
@@ -113,15 +111,15 @@ export function Header() {
                   {t[entry.labelKey]}
                   <ChevronIcon className={openMobileGroups.has(entry.labelKey) ? 'navDropChevron open' : 'navDropChevron'} />
                 </button>
-                {openMobileGroups.has(entry.labelKey) && (
-                  <div className="navMobileSubList">
-                    {entry.items.map((item) => (
-                      <NavLink key={item.path} to={`/${language}${item.path}`}>
-                        {t[item.labelKey]}
-                      </NavLink>
-                    ))}
-                  </div>
-                )}
+                {/* Always rendered -- including in the prerendered HTML -- so these links are
+                    crawlable without a click; CSS (.open) controls visibility, not mounting. */}
+                <div className={openMobileGroups.has(entry.labelKey) ? 'navMobileSubList open' : 'navMobileSubList'}>
+                  {entry.items.map((item) => (
+                    <NavLink key={item.path} to={`/${language}${item.path}`}>
+                      {t[item.labelKey]}
+                    </NavLink>
+                  ))}
+                </div>
               </div>
             ),
           )}
@@ -140,11 +138,13 @@ export function Header() {
             {env.mobilePhone}
           </a>
           <ThemeToggle />
-          {/* Visible text is the target language's own name; the accessible name adds what the button does, in the current language. */}
-          <button className="lang" type="button" onClick={switchLanguage}>
+          {/* A real <a href>, not a button, so crawlers can follow it directly and it works with
+              no JS (right-click/open-in-new-tab, etc.). Visible text is the target language's own
+              name; the accessible name adds what the link does, in the current language. */}
+          <Link className="lang" to={langHref} onClick={() => trackLanguageChange(location.pathname, language, nextLang)}>
             <span lang={nextLang}>{language === 'ar' ? 'English' : 'عربي'}</span>
             <span className="sr-only">: {t.lang_switch_sr}</span>
-          </button>
+          </Link>
           <Link className="btn sun" to={`/${language}/contact`}>
             {t.quote}
           </Link>
