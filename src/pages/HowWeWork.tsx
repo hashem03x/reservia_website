@@ -1,11 +1,20 @@
+import { Link } from 'react-router-dom';
 import { LazyMotion, domAnimation, m } from 'framer-motion';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
 import { Breadcrumbs } from '../components/layout/Breadcrumbs';
 import { STEP_IMAGES, STEP_IMAGE_SIZES } from '../content/stepImages';
 
+/** Reuses the exact process facts already published on each solution page (a_size_*, i_assess_*, the segment cards) -- see how_diff_* in the translation files. */
+const SITE_DIFFERENCES: Array<{ path: string; t: string; d: string }> = [
+  { path: '/residential', t: 'seg_res_t', d: 'how_diff_res_d' },
+  { path: '/agriculture', t: 'seg_agri_t', d: 'how_diff_agri_d' },
+  { path: '/industrial', t: 'seg_ind_t', d: 'how_diff_ind_d' },
+  { path: '/service', t: 'seg_svc_t', d: 'how_diff_svc_d' },
+];
+
 export default function HowWeWork() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <>
@@ -17,6 +26,7 @@ export default function HowWeWork() {
           <span className="eyebrow">{t.how_eyebrow}</span>
           <h1>{t.how_title}</h1>
           <p className="lead">{t.how_lead}</p>
+          <p className="micro">{t.how_intro_d}</p>
         </div>
       </section>
 
@@ -64,6 +74,26 @@ export default function HowWeWork() {
             </ol>
           </LazyMotion>
 
+        </div>
+      </section>
+
+      {/* Grounded in each solution page's own published process facts (linked below), not new
+          technical claims -- see SITE_DIFFERENCES and how_close_d in the translation files. */}
+      <section className="band alt">
+        <div className="wrap" style={{ maxWidth: 860 }}>
+          <h2>{t.how_diff_t}</h2>
+          <p className="lead">{t.how_diff_lead}</p>
+          <div className="pillars" style={{ marginTop: 18 }}>
+            {SITE_DIFFERENCES.map((seg) => (
+              <div key={seg.path}>
+                <h3>
+                  <Link to={`/${language}${seg.path}`}>{t[seg.t]}</Link>
+                </h3>
+                <p>{t[seg.d]}</p>
+              </div>
+            ))}
+          </div>
+          <p className="lead" style={{ marginTop: 28 }}>{t.how_close_d}</p>
         </div>
       </section>
     </>
