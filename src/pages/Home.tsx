@@ -3,6 +3,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { Seo } from '../components/layout/Seo';
 import { RateBoard } from '../components/sections/RateBoard';
 import { SegmentPicker } from '../components/sections/SegmentPicker';
+import { IndustrialIcon } from '../components/icons/SegmentIcons';
 import { EgyptMap } from '../components/sections/EgyptMap';
 import { Pillars } from '../components/sections/Pillars';
 import { PartnersCarousel } from '../components/sections/PartnersCarousel';
@@ -63,6 +64,18 @@ export default function Home() {
         <div className="wrap">
           <h2>{t.seg_title}</h2>
           <SegmentPicker />
+          {/* Oil and gas is a sub-topic of Industrial Facilities, not a fifth core category (the
+              calculator and the four cards above stay as they are) -- but it's a live, linked page,
+              so it gets its own card here for homepage discoverability, reusing the exact copy
+              already approved for it on the Industrial page. */}
+          <div className="oilGasCard" style={{ marginTop: 18 }}>
+            <Link className="seg" to={`/${language}/oil-gas`} style={{ flexDirection: 'row', alignItems: 'center', gap: 20 }}>
+              <IndustrialIcon />
+              <h3>{t.i_og_t}</h3>
+              <p>{t.i_og_d}</p>
+              <span className="more">{t.seg_more}</span>
+            </Link>
+          </div>
           {/* The guide exists in Arabic only; shown on both languages, like the same link on the Agriculture page. */}
           <p className="micro">
             <Link to="/ar/solar-irrigation-guide" hrefLang="ar" lang={language === 'ar' ? undefined : 'en'}>

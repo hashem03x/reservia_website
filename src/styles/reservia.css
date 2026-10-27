@@ -195,6 +195,10 @@ html[dir="rtl"] .bd-cols{letter-spacing:0;font-family:var(--body);font-size:.76r
 .seg p{color:var(--muted);font-size:.95rem;flex:1}
 .seg .more{font-weight:600;color:var(--navy);font-size:.92rem}
 @media (prefers-reduced-motion:reduce){.seg{transition:none}.seg:hover{transform:none}}
+.oilGasCard .seg{flex-wrap:wrap}
+.oilGasCard .seg svg{flex-shrink:0}
+.oilGasCard .seg p{flex-basis:260px}
+@media (max-width:560px){.oilGasCard .seg{flex-direction:column!important}}
 .region{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--shadow-sm)}
 .region .tag{font-family:var(--mono);font-size:.75rem;color:var(--leaf-text);font-weight:600;letter-spacing:.05em;text-transform:uppercase}
 html[dir="rtl"] .region .tag{font-family:var(--body);letter-spacing:0;font-size:.85rem}

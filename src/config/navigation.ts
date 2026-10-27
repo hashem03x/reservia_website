@@ -26,6 +26,7 @@ export const NAV_ENTRIES: NavEntry[] = [
       { path: '/residential', labelKey: 'nav_res' },
       { path: '/agriculture', labelKey: 'nav_agri' },
       { path: '/industrial', labelKey: 'nav_ind' },
+      { path: '/oil-gas', labelKey: 'nav_oilgas' },
       { path: '/service', labelKey: 'nav_svc' },
     ],
   },

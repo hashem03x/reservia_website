@@ -12,6 +12,15 @@ const CATEGORIES = {
   ar: ['سكني وتجاري', 'المزارع الزراعية', 'المنشآت الصناعية', 'قطاع الخدمات'],
 };
 
+// The Solutions nav menu has a fifth entry -- Oil & Gas, a sub-topic of Industrial Facilities
+// (same relationship as the Arabic irrigation guide under Agriculture) -- inserted before Services
+// Sector. It isn't one of the four core categories, so it's intentionally absent from the
+// calculator tabs, the home cards grid and the page eyebrows, which stay at four.
+const NAV_CATEGORIES = {
+  en: ['Residential & Commercial', 'Agricultural Farms', 'Industrial Facilities', 'Oil & Gas', 'Services Sector'],
+  ar: ['سكني وتجاري', 'المزارع الزراعية', 'المنشآت الصناعية', 'النفط والغاز', 'قطاع الخدمات'],
+};
+
 test.describe('WhatsApp bill CTA visibility rules', () => {
   const allowed = new Set(['', '/residential', '/calculator', '/lp/villas', '/lp/compounds']);
   for (const lang of ['en', 'ar'] as const) {
@@ -68,9 +77,9 @@ test.describe('four solution categories', () => {
       await open(page, `/${lang}`);
       await page.locator('.navDropTrigger').first().click();
       const items = page.locator('.navDropPanel a');
-      await expect(items).toHaveText(CATEGORIES[lang]);
+      await expect(items).toHaveText(NAV_CATEGORIES[lang]);
       expect(await items.evaluateAll((as) => as.map((a) => a.getAttribute('href')))).toEqual(
-        ['/residential', '/agriculture', '/industrial', '/service'].map((p) => `/${lang}${p}`),
+        ['/residential', '/agriculture', '/industrial', '/oil-gas', '/service'].map((p) => `/${lang}${p}`),
       );
       await expect(page.locator('.cards4 a.seg h3')).toHaveText(CATEGORIES[lang]);
       for (const [i, p] of ['/residential', '/agriculture', '/industrial', '/service'].entries()) {
@@ -82,12 +91,12 @@ test.describe('four solution categories', () => {
     });
   }
 
-  test('mobile menu lists the same four categories', async ({ page }) => {
+  test('mobile menu lists the same five Solutions entries', async ({ page }) => {
     await page.setViewportSize({ width: 400, height: 860 });
     await open(page, '/en');
     await page.locator('.menu-btn').click();
     await page.locator('.navMobileGroupTrigger').first().click();
-    await expect(page.locator('.navMobileSubList a')).toHaveText(CATEGORIES.en);
+    await expect(page.locator('.navMobileSubList a')).toHaveText(NAV_CATEGORIES.en);
   });
 });
 
