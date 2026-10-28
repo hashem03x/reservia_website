@@ -81,7 +81,7 @@ export function AppLoader() {
         <span className="loaderSpark ls-c" />
       </div>
       <div className="appLoaderMark">
-        <img src={logo} alt="" className="appLoaderLogo" />
+        <img src={logo} alt="Reservia Integrated Energy Solutions" className="appLoaderLogo" />
         <span className="appLoaderSweep" aria-hidden="true" />
       </div>
       <div className="appLoaderBrand">

@@ -62,7 +62,7 @@ export function Header() {
         {/* Accessible name = the brand name plus ", Home" (label-in-name, WCAG 2.5.3). The name is the
             official wordmark from the company profile (battery "i", round "a"), with a light variant for dark mode. */}
         <Link className="brand" to={`/${language}`}>
-          <img src={logo} alt="" width={60} height={60} decoding="async" />
+          <img src={logo} alt={`${t.brand} ${t.brand_sub}`} width={60} height={60} decoding="async" />
           <span>
             <b>
               <img className="wordmark wm-light" src={wordmark} alt={t.brand} width={539} height={96} decoding="async" />

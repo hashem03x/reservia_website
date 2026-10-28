@@ -33,7 +33,7 @@ export function Footer() {
         <div className="footerGrid">
           <div className="footerBrand">
             <div className="footerBrandMark">
-              <img src={logo} alt="" width={40} height={40} />
+              <img src={logo} alt={`${t.brand} ${t.brand_sub}`} width={40} height={40} />
               <div>
                 <b>{t.brand}</b>
                 <small>{t.brand_legal}</small>
