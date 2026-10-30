@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { waHref } from '../../services/whatsapp';
 import { trackWhatsappClick } from '../../services/analytics';
+import { trackWhatsappClicked } from '../../analytics/amplitude';
 import { offersBillWhatsapp, type Segment } from '../../config/navigation';
 import type { QuoteFields } from '../../content/whatsappMessages';
 
@@ -62,7 +63,14 @@ export function WaLink({
       style={style}
       aria-label={ariaLabel}
       title={ariaLabel ? undefined : t.new_tab}
-      onClick={() => trackWhatsappClick(trackSegment ?? segment, location.pathname, systemSizeKwp)}
+      onClick={() => {
+        const effectiveSegment = trackSegment ?? segment;
+        trackWhatsappClick(effectiveSegment, location.pathname, systemSizeKwp);
+        // Note: this codebase's Segment vocabulary calls the farm/agriculture vertical
+        // 'agriculture', not 'farm' - the Developer Brief's "segment=farm" example maps to this
+        // existing value (not renamed, to avoid touching every other call site/test using it).
+        trackWhatsappClicked(effectiveSegment, location.pathname);
+      }}
     >
       {children}
     </a>

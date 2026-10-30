@@ -6,6 +6,7 @@ import { Seo } from '../components/layout/Seo';
 import { Breadcrumbs } from '../components/layout/Breadcrumbs';
 import { WaLink } from '../components/ui/WaLink';
 import { FieldErrorText } from '../components/forms/FieldErrorText';
+import { HoneypotField } from '../components/forms/HoneypotField';
 import { env, flags } from '../config/env';
 import { useLeadForm } from '../hooks/useLeadForm';
 import { useIsClient } from '../hooks/useIsClient';
@@ -96,9 +97,10 @@ export default function Contact() {
   const siteTypeIndex = chosenType ?? (isClient ? preselected : 0);
   const [gov, setGov] = useState('');
   const [note, setNote] = useState('');
+  const [honeypot, setHoneypot] = useState('');
   const siteType = SITE_TYPES[siteTypeIndex] ?? SITE_TYPES[SITE_TYPES.length - 1];
 
-  const { errors, status, done, onSubmit, clearError } = useLeadForm({
+  const { errors, status, done, refCode, onSubmit, clearError } = useLeadForm({
     fieldIds: { name: 'q_name', phone: 'q_phone' },
     validate: () => ({ name: validateName(name), phone: validatePhone(phone) }),
     build: () => ({
@@ -109,6 +111,7 @@ export default function Contact() {
       message: note.trim() || undefined,
       source: 'contact_form',
       calculator: calc?.context,
+      honeypot,
     }),
   });
 
@@ -166,6 +169,7 @@ export default function Contact() {
 
           <form className="panel" noValidate onSubmit={onSubmit} aria-labelledby="qform-t" aria-busy={submitting}>
             <h2 className="fh" id="qform-t" style={{ marginBottom: 14 }}>{t.lp_form_t}</h2>
+            <HoneypotField value={honeypot} onChange={setHoneypot} />
             {calc && (
               <div className="calc-attached">
                 <p><b>{t.ct_calc_attached}</b> {calc.summary}</p>
@@ -239,7 +243,17 @@ export default function Contact() {
 
             <div role="status" aria-live="polite" className="formstatus">
               {hasErrors && <p className="formmsg err">{t.q_err_summary}</p>}
-              {status === 'sent' && <p className="formmsg ok">{t.q_sent}</p>}
+              {status === 'sent' && (
+                <p className="formmsg ok">
+                  {t.q_sent}
+                  {refCode && (
+                    <>
+                      {' '}
+                      {t.lp_ref_label} <strong dir="ltr">{refCode}</strong>
+                    </>
+                  )}
+                </p>
+              )}
               {status === 'mock' && <p className="formmsg warn">{t.q_done}</p>}
             </div>
             {status === 'error' && (

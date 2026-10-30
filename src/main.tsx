@@ -3,6 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import './styles/reservia.css';
 import { Shell } from './Shell.tsx';
 import { initAnalytics } from './services/analytics.ts';
+import { initAmplitude } from './analytics/amplitude.ts';
 
 // Head tags written at build time (prerendered pages: data-ssr-head; root and
 // 404 pages: data-static-head) serve crawlers and the first paint. React 19
@@ -12,6 +13,7 @@ document.querySelectorAll('[data-static-head], [data-ssr-head]').forEach((el) =>
 
 // Before the first render, so the first page's page_view reaches every configured provider.
 initAnalytics();
+initAmplitude();
 
 const container = document.getElementById('root')!;
 const app = <Shell router={BrowserRouter} />;

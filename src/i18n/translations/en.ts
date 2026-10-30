@@ -117,7 +117,7 @@ q_name:"Name",q_phone:"Phone",q_type:"Site type",o1:"Home or villa",o2:"Compound
 q_gov:"Governorate or area",q_msg:"Monthly bill, diesel use or anything else we should know",q_send:"Get my free quote",
 q_done:"Thanks. This is a prototype, so nothing was sent. On the live site this request goes to Reservia_Sales@reservia-energy.com.",q_err:"Please add your name and a phone number we can reach you on.",q_err_name:"Please add your name.",q_err_phone:"Please add a phone number with at least 8 digits, so we can call or message you.",
 lp_form_t:"Get your free quote",lp_wa:"Continue on WhatsApp",lp_wa_direct:"Or send your bill to WhatsApp",lp_call:"Call us",
-lp_ok_t:"Thank you. Your request is in.",lp_ok_d:"An engineer will call you. Faster: continue on WhatsApp and attach a photo of your bill or pump plate.",
+lp_ok_t:"Thank you. Your request is in.",lp_ok_d:"An engineer will call you. Faster: continue on WhatsApp and attach a photo of your bill or pump plate.",lp_ref_label:"Your reference number:",
 lp_priv:"This is a prototype; nothing is sent yet. On the live site your request goes to our team and we only use it to contact you about your quote.",
 lp_tr1:"Based in Maadi, Cairo",lp_tr2:"Design, install and maintain",lp_more:"Want the full picture first?",
 foot_lp:"Campaign pages:",

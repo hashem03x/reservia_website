@@ -20,6 +20,17 @@ function readOr(value: string | undefined, fallback: string): string {
 
 export const env = {
   leadsApiUrl: rawEnv.VITE_LEADS_API_URL as string | undefined,
+  // Reservia CRM - the real public lead-capture API base URL (e.g.
+  // https://reserviabackend.vercel.app/api/v1), NOT the CRM's UI route
+  // (reserviafrontend.vercel.app/crm). src/services/leadService.ts appends the actual intake
+  // path to this. Separate from VITE_LEADS_API_URL on purpose: that one has always been "the
+  // full URL to POST to" (potentially a future proxy in front of the CRM, per its own comment in
+  // .env.example); this one is specifically the CRM's own base URL, as the integration brief
+  // requires.
+  crmUrl: (rawEnv.VITE_CRM_URL as string | undefined)?.replace(/\/$/, ''),
+  // Amplitude Browser SDK 2.x (src/analytics/amplitude.ts) - a public, client-safe project API
+  // key (never a secret - Amplitude's own browser keys are designed to be shipped in client code).
+  amplitudeApiKey: rawEnv.VITE_AMPLITUDE_API_KEY as string | undefined,
   whatsappNumber: readOr(rawEnv.VITE_WHATSAPP_NUMBER as string | undefined, CONTACT_DEFAULTS.whatsappNumber),
   businessEmail: readOr(rawEnv.VITE_BUSINESS_EMAIL as string | undefined, CONTACT_DEFAULTS.businessEmail),
   salesEmail: readOr(rawEnv.VITE_SALES_EMAIL as string | undefined, CONTACT_DEFAULTS.salesEmail),
@@ -67,6 +78,8 @@ export const isWhatsappConfigured = whatsappDestination !== null;
 export const isPreviewDeployment = rawEnv.VITE_DEPLOY_ENV === 'preview';
 
 export const isLeadsApiConfigured = Boolean(env.leadsApiUrl && env.leadsApiUrl.trim().length > 0);
+export const isCrmConfigured = Boolean(env.crmUrl && env.crmUrl.trim().length > 0);
+export const isAmplitudeConfigured = Boolean(env.amplitudeApiKey && env.amplitudeApiKey.trim().length > 0);
 export const isGa4Configured = Boolean(env.ga4MeasurementId);
 export const isGtmConfigured = Boolean(env.gtmContainerId);
 export const isMetaPixelConfigured = Boolean(env.metaPixelId);

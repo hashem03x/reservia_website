@@ -8,6 +8,7 @@ import { breadcrumbJsonLd, faqJsonLd, findRoute, normalizeSiteUrl, pageJsonLd, p
 import { breadcrumbTrail } from '../../content/breadcrumbs';
 import { jsonLdString } from '../../content/organization';
 import { trackPageView } from '../../services/analytics';
+import { trackPageView as trackAmplitudePageView } from '../../analytics/amplitude';
 
 let firstPageRendered = false;
 
@@ -75,6 +76,7 @@ export function Seo({
 
   useEffect(() => {
     trackPageView(location.pathname, language, title);
+    trackAmplitudePageView(location.pathname, language);
     focusNewPage();
   }, [location.pathname, language, title]);
 

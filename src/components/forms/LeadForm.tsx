@@ -6,6 +6,7 @@ import { useLeadForm } from '../../hooks/useLeadForm';
 import { parseOptionalNumber, validateName, validateOptionalNumber, validatePhone } from '../../services/validation';
 import { BillWaLink, WaLink } from '../ui/WaLink';
 import { FieldErrorText } from './FieldErrorText';
+import { HoneypotField } from './HoneypotField';
 import { monthlyValue } from '../../content/whatsappMessages';
 import type { Segment } from '../../config/navigation';
 
@@ -33,9 +34,13 @@ export function LeadForm({
   const [phone, setPhone] = useState('');
   const [gov, setGov] = useState('');
   const [extra, setExtra] = useState('');
+  // Honeypot (Developer Brief: "a hidden honeypot input") - visually hidden via CSS below, never
+  // asked for, never validated; a real visitor's browser never populates it. See
+  // src/services/leadService.ts's header comment for how a non-empty value is handled server-side.
+  const [honeypot, setHoneypot] = useState('');
   const id = (f: string) => `${idPrefix}_${f}`;
 
-  const { errors, status, done, onSubmit, clearError } = useLeadForm({
+  const { errors, status, done, refCode, onSubmit, clearError } = useLeadForm({
     fieldIds: { name: id('name'), phone: id('phone'), extra: id('extra') },
     validate: () => ({ name: validateName(name), phone: validatePhone(phone), extra: validateOptionalNumber(extra) }),
     build: () => ({
@@ -45,6 +50,7 @@ export function LeadForm({
       governorate: gov.trim() || undefined,
       siteInput: parseOptionalNumber(extra),
       source: 'landing_form',
+      honeypot,
     }),
   });
 
@@ -64,6 +70,7 @@ export function LeadForm({
   return (
     <form className="panel lpform" data-seg={segment} noValidate onSubmit={onSubmit} aria-labelledby={id('t')} aria-busy={submitting}>
       <h2 className="fh" id={id('t')} style={{ marginBottom: 14 }}>{t.lp_form_t}</h2>
+      <HoneypotField value={honeypot} onChange={setHoneypot} />
       <div className="field">
         <label htmlFor={id('name')}>{t.q_name}</label>
         <input
@@ -148,6 +155,11 @@ export function LeadForm({
           <div className="lp-ok show">
             <b>{t.lp_ok_t}</b>
             <p style={{ marginTop: 6, fontSize: '.95rem', color: 'var(--muted)' }}>{t.lp_ok_d}</p>
+            {refCode && (
+              <p style={{ marginTop: 6, fontSize: '.95rem' }}>
+                {t.lp_ref_label} <strong dir="ltr">{refCode}</strong>
+              </p>
+            )}
           </div>
         )}
         {status === 'mock' && (

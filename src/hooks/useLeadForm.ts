@@ -2,7 +2,8 @@ import { useRef, useState, type FormEvent } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useUtmParams } from './useUtmParams';
-import { submitLead, type LeadFormInput } from '../services/leadService';
+import type { LeadFormInput } from '../services/leadService';
+import { submitQuote } from '../analytics/crm-bridge';
 import { newEventId, trackLeadGenerated } from '../services/analytics';
 import type { FieldError } from '../services/validation';
 
@@ -36,6 +37,7 @@ export function useLeadForm<F extends string>({
   const location = useLocation();
   const [errors, setErrors] = useState<Partial<Record<F, FieldError>>>({});
   const [status, setStatus] = useState<LeadFormStatus>('idle');
+  const [refCode, setRefCode] = useState<string | undefined>(undefined);
   const inFlight = useRef(false);
   const eventId = useRef<string | null>(null);
 
@@ -56,7 +58,7 @@ export function useLeadForm<F extends string>({
     const input = build();
     eventId.current ??= newEventId();
     const id = eventId.current;
-    const result = await submitLead(input, { eventId: id, lang: language, utm });
+    const result = await submitQuote(input, { eventId: id, lang: language, utm, page: location.pathname });
     inFlight.current = false;
 
     if (result.status === 'sent') {
@@ -67,6 +69,7 @@ export function useLeadForm<F extends string>({
         lang: language,
         siteInput: input.siteInput,
       });
+      setRefCode(result.refCode);
     }
     setStatus(result.status);
   }
@@ -77,5 +80,5 @@ export function useLeadForm<F extends string>({
   }
 
   const done = status === 'sent' || status === 'mock';
-  return { errors, status, done, onSubmit, clearError };
+  return { errors, status, done, refCode, onSubmit, clearError };
 }

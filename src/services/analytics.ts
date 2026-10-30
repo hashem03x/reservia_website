@@ -55,6 +55,11 @@ const ALLOWED_KEYS = new Set([
   'source',
   'system_size_kwp',
   'site_input',
+  // 'sent' | 'mock' - whether a quote form's submission was actually delivered to the CRM or ran
+  // in preview/mock mode (no endpoint configured). Added for src/analytics/amplitude.ts's
+  // `quote_form_submitted` event; not a PII risk (a fixed, two-value enum), so it is safe to
+  // allow for every event through this one shared filter rather than a second allowlist.
+  'outcome',
   'utm_source',
   'utm_medium',
   'utm_campaign',
