@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 // src/services/analytics.test.ts).
 const store = new Map<string, string>();
 vi.stubGlobal('window', globalThis);
-vi.stubGlobal('sessionStorage', {
+vi.stubGlobal('localStorage', {
   getItem: (k: string) => store.get(k) ?? null,
   setItem: (k: string, v: string) => void store.set(k, v),
 });

@@ -67,6 +67,10 @@ const ALLOWED_KEYS = new Set([
   'utm_content',
   'gclid',
   'fbclid',
+  // Acceptance report finding 1: the short attribution stamp appended to every WhatsApp prefilled
+  // message (services/waRefCode.ts) - logged so the click can be matched to the ref the sales
+  // team sees in the customer's own message.
+  'wa_ref',
 ]);
 
 /** Belt and braces: drop any string that looks like an email address or a phone number, even under an allowed key. */
@@ -82,7 +86,7 @@ export function sanitizeParams(params: Record<string, unknown> = {}): Record<str
     } else if (typeof value === 'string') {
       // Paths and titles are fine; anything resembling contact data is not.
       // (Click ids are opaque random tokens and may legitimately contain long digit runs.)
-      const opaque = key === 'page' || key === 'gclid' || key === 'fbclid';
+      const opaque = key === 'page' || key === 'gclid' || key === 'fbclid' || key === 'wa_ref';
       if (!opaque && (LOOKS_LIKE_EMAIL.test(value) || LOOKS_LIKE_PHONE.test(value))) continue;
       out[key] = value.slice(0, 200);
     }

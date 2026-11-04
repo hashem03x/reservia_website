@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Minimal browser globals for the node test environment.
 const store = new Map<string, string>();
 vi.stubGlobal('window', globalThis);
-vi.stubGlobal('sessionStorage', {
+vi.stubGlobal('localStorage', {
   getItem: (k: string) => store.get(k) ?? null,
   setItem: (k: string, v: string) => void store.set(k, v),
 });
@@ -35,7 +35,7 @@ describe('privacy allowlist', () => {
   });
 
   it('never lets personal data reach the dataLayer through pushEvent', () => {
-    store.set('rsv_utm', JSON.stringify({ utm_source: 'meta', utm_campaign: 'villas' }));
+    store.set('rsv_utm', JSON.stringify({ utm: { utm_source: 'meta', utm_campaign: 'villas' }, firstTouchAt: Date.now() }));
     pushEvent('generate_lead', { segment: 'villas', name: PII[0], phone: PII[1], note: 'my address is ' + PII[4] });
     const json = JSON.stringify(events());
     for (const value of PII) expect(json).not.toContain(value);

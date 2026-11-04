@@ -70,9 +70,14 @@ export function resetAmplitudePageViewDedupe() {
   lastPageViewKey = null;
 }
 
-/** Mirrors src/services/analytics.ts#trackWhatsappClick's call sites exactly (see WaLink.tsx) - same segment, same page, at the same click. */
-export function trackWhatsappClicked(segment: Segment, page: string) {
-  track('whatsapp_clicked', { segment, group: segmentGroup(segment), page });
+/**
+ * Mirrors src/services/analytics.ts#trackWhatsappClick's call sites exactly (see WaLink.tsx) -
+ * same segment, same page, at the same click. `waRef` (acceptance report finding 1) is the SAME
+ * code appended to the message text (services/waRefCode.ts) - logged here too so the click can be
+ * found in Amplitude by the exact ref the sales team sees in the customer's WhatsApp message.
+ */
+export function trackWhatsappClicked(segment: Segment, page: string, waRef?: string) {
+  track('whatsapp_clicked', { segment, group: segmentGroup(segment), page, wa_ref: waRef });
 }
 
 export type QuoteFormOutcome = 'sent' | 'mock';

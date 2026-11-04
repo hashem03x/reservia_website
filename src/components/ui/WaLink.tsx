@@ -51,13 +51,13 @@ export function WaLink({
 }) {
   const { language, t } = useLanguage();
   const location = useLocation();
-  const href = waHref(language, segment, fields);
-  if (!href) return null;
+  const wa = waHref(language, segment, fields);
+  if (!wa) return null;
 
   return (
     <a
       className={className}
-      href={href}
+      href={wa.href}
       target="_blank"
       rel="noopener noreferrer"
       style={style}
@@ -69,7 +69,7 @@ export function WaLink({
         // Note: this codebase's Segment vocabulary calls the farm/agriculture vertical
         // 'agriculture', not 'farm' - the Developer Brief's "segment=farm" example maps to this
         // existing value (not renamed, to avoid touching every other call site/test using it).
-        trackWhatsappClicked(effectiveSegment, location.pathname);
+        trackWhatsappClicked(effectiveSegment, location.pathname, wa.refCode);
       }}
     >
       {children}

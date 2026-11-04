@@ -52,16 +52,35 @@ describe('quote message (client wording, October 2026)', () => {
 
 describe('waHref', () => {
   it('URL-encodes the message, including line breaks, Arabic and symbols', () => {
-    const href = waHref('ar', 'villas', { location: 'المعادي & 100%' })!;
-    expect(href).toMatch(/^https:\/\/wa\.me\/201211892995\?text=/);
-    expect(href.split('?text=')[1]).not.toMatch(/[\s&]/);
-    expect(decode(href)).toBe(quoteMessage('ar', { location: 'المعادي & 100%' }));
+    const wa = waHref('ar', 'villas', { location: 'المعادي & 100%' })!;
+    expect(wa.href).toMatch(/^https:\/\/wa\.me\/201211892995\?text=/);
+    expect(wa.href.split('?text=')[1]).not.toMatch(/[\s&]/);
+    expect(decode(wa.href)).toBe(`${quoteMessage('ar', { location: 'المعادي & 100%' })}\n\n(Ref: ${wa.refCode})`);
   });
 
-  it('every segment uses the same quote template', () => {
+  it('every segment uses the same quote template, with its own Ref stamp appended after it', () => {
     for (const seg of ['general', 'villas', 'agriculture', 'industrial', 'service', 'calc'] as const) {
-      expect(decode(waHref('en', seg)!)).toBe(quoteMessage('en'));
+      const wa = waHref('en', seg)!;
+      expect(decode(wa.href)).toBe(`${quoteMessage('en')}\n\n(Ref: ${wa.refCode})`);
     }
+  });
+
+  describe('acceptance report finding 1: WhatsApp Ref code', () => {
+    it('every link carries a Ref code, visible in the message text the customer sends', () => {
+      const wa = waHref('en', 'villas')!;
+      expect(wa.refCode).toMatch(/^WA-\d{4}-[A-Z]{3}-[A-Z0-9]{4}$/);
+      expect(decode(wa.href)).toContain(`(Ref: ${wa.refCode})`);
+    });
+
+    it('is not the CRM\'s own RSV- lead reference format - never confused with a real lead id', () => {
+      expect(waHref('en', 'villas')!.refCode).not.toMatch(/^RSV-/);
+    });
+
+    it('two links built back to back get two different ref codes', () => {
+      const a = waHref('en', 'villas')!.refCode;
+      const b = waHref('en', 'villas')!.refCode;
+      expect(a).not.toBe(b);
+    });
   });
 });
 
