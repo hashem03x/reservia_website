@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { waHref } from '../../services/whatsapp';
+import { registerWaRefCode } from '../../services/waRefCode';
 import { trackWhatsappClick } from '../../services/analytics';
 import { trackWhatsappClicked } from '../../analytics/amplitude';
 import { offersBillWhatsapp, type Segment } from '../../config/navigation';
@@ -70,6 +71,10 @@ export function WaLink({
         // 'agriculture', not 'farm' - the Developer Brief's "segment=farm" example maps to this
         // existing value (not renamed, to avoid touching every other call site/test using it).
         trackWhatsappClicked(effectiveSegment, location.pathname, wa.refCode);
+        // Change Request 1, Feature 1: register this ref code's attribution with the CRM so the
+        // customer's first inbound message can be resolved to a real source. Fire-and-forget --
+        // never delays the wa.me navigation that's already happening via the real href above.
+        registerWaRefCode(wa.refCode);
       }}
     >
       {children}

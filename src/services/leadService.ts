@@ -1,6 +1,6 @@
 import { env, isLeadsApiConfigured, isCrmConfigured } from '../config/env';
 import { segmentGroup, type Segment } from '../config/navigation';
-import type { UtmParams } from '../hooks/useUtmParams';
+import { getStoredLandingPage, getStoredReferrer, type UtmParams } from '../hooks/useUtmParams';
 import type { Language } from '../i18n/LanguageContext';
 
 export { segmentGroup };
@@ -69,6 +69,8 @@ export interface LeadPayload extends LeadFormInput {
   segmentGroup: string;
   lang: Language;
   pageUrl: string;
+  /** document.referrer at first arrival - CRM source-mapping input (Organic vs Direct), never shown as the source itself. */
+  referrer?: string;
   utm: UtmParams;
   submittedAt: string;
   /**
@@ -121,8 +123,14 @@ export async function submitLead(
     eventId: context.eventId,
     segmentGroup: segmentGroup(input.segment),
     lang: context.lang,
-    // Path only: query strings can carry campaign or personal parameters.
-    pageUrl: window.location.origin + window.location.pathname,
+    // The visitor's FIRST-TOUCH landing page (where the ad/campaign actually sent them), not
+    // wherever they happen to be submitting from - a visitor who lands on a campaign page then
+    // clicks through to /contact before submitting must not have /contact reported as the landing
+    // page. Falls back to the current page only if no first-touch record exists (storage
+    // unavailable, or this is itself the first page view). Path only: query strings can carry
+    // campaign or personal parameters.
+    pageUrl: getStoredLandingPage() || window.location.origin + window.location.pathname,
+    referrer: getStoredReferrer(),
     utm: context.utm,
     submittedAt: new Date().toISOString(),
     ampDeviceId: context.ampDeviceId,

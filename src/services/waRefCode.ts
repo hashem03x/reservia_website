@@ -12,6 +12,43 @@
  * on the `whatsapp_clicked` Amplitude event - see components/ui/WaLink.tsx).
  */
 
+import { env, isCrmConfigured } from '../config/env';
+import { getStoredReferrer, getStoredUtm } from '../hooks/useUtmParams';
+
+const WA_REF_PATH = '/crm/public/wa-ref';
+
+/**
+ * Registers this ref code's first-touch attribution with the CRM (Change Request 1, Feature 1:
+ * "WhatsApp with recognized Ref code -> that code's source"), so that when the customer's first
+ * inbound WhatsApp message is parsed for a `WA-...` code, the CRM already knows what campaign
+ * produced it. Fire-and-forget: never awaited by the caller, never blocks or delays the wa.me
+ * link opening, and any failure (CRM unreachable, not configured) is swallowed -- worst case the
+ * lead just falls back to the generic "WhatsApp Direct" source, same as before this existed.
+ * `keepalive` lets the request survive the page navigating away right after the click.
+ */
+export function registerWaRefCode(code: string): void {
+  if (!isCrmConfigured) return;
+  const utm = getStoredUtm();
+  const body = JSON.stringify({
+    code,
+    utmSource: utm.utm_source ?? null,
+    utmMedium: utm.utm_medium ?? null,
+    utmCampaign: utm.utm_campaign ?? null,
+    utmContent: utm.utm_content ?? null,
+    referrer: getStoredReferrer() ?? null,
+  });
+  try {
+    fetch(`${env.crmUrl}${WA_REF_PATH}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // best-effort only
+  }
+}
+
 const SEGMENT_TAGS: Record<string, string> = {
   villas: 'VIL',
   compounds: 'CMP',

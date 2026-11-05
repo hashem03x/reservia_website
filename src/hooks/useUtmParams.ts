@@ -6,7 +6,7 @@ const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 export type UtmParams = Partial<Record<(typeof UTM_KEYS)[number], string>>;
 
-type StoredUtm = { utm: UtmParams; firstTouchAt: number };
+type StoredUtm = { utm: UtmParams; firstTouchAt: number; referrer?: string; landingPage?: string };
 
 /**
  * First-touch UTM attribution (acceptance report finding 1: "store first-touch UTM for 30
@@ -37,7 +37,13 @@ export function captureUtm(): UtmParams {
         if (value) utm[key] = value;
       });
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ utm, firstTouchAt: existing?.firstTouchAt ?? Date.now() }));
+    // Referrer and landing page are only meaningful at first touch - captured once, same as the
+    // UTM params themselves, never overwritten by a later visit/page. Without this, a visitor who
+    // lands on a campaign page then clicks through to /contact before submitting would have the
+    // form report /contact as the "landing page", losing the page the ad actually sent them to.
+    const referrer = existing?.referrer ?? (typeof document !== 'undefined' ? document.referrer || undefined : undefined);
+    const landingPage = existing?.landingPage ?? (typeof window !== 'undefined' ? window.location.origin + window.location.pathname : undefined);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ utm, firstTouchAt: existing?.firstTouchAt ?? Date.now(), referrer, landingPage }));
   } catch {
     // storage unavailable -- the in-memory value below is still returned for this page load
   }
@@ -47,6 +53,16 @@ export function captureUtm(): UtmParams {
 /** Non-hook accessor for use outside components (analytics click handlers). */
 export function getStoredUtm(): UtmParams {
   return readStored()?.utm ?? {};
+}
+
+/** The first-touch referrer (document.referrer at the visitor's first arrival), or undefined if none was recorded. */
+export function getStoredReferrer(): string | undefined {
+  return readStored()?.referrer;
+}
+
+/** The first-touch landing page (the page the visitor actually arrived on, not wherever they submit from). */
+export function getStoredLandingPage(): string | undefined {
+  return readStored()?.landingPage;
 }
 
 export function useUtmParams(): UtmParams {
