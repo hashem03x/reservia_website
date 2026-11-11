@@ -5,6 +5,7 @@ import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { WhatsAppButton } from '../components/layout/WhatsAppButton';
 import { ScrollTopButton } from '../components/layout/ScrollTopButton';
+import { captureAttribution } from '../analytics/attribution';
 
 function DocumentDirection({ language }: { language: Language }) {
   useEffect(() => {
@@ -23,6 +24,19 @@ function LandingPageMode() {
       document.body.dataset.lp = '0';
     };
   }, [location.pathname]);
+  return null;
+}
+
+/**
+ * Client-side navigations: a new campaign landing reached without a full page load (rare - e.g. a
+ * tagged internal promo link) still updates the last-touch campaign. Internal navigation and
+ * language switches leave the stored first/last touch untouched (src/analytics/attribution.ts).
+ */
+function AttributionTracker() {
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    captureAttribution();
+  }, [pathname, search]);
   return null;
 }
 
@@ -55,6 +69,7 @@ export function LangLayout() {
     <LanguageProvider language={lang}>
       <DocumentDirection language={lang} />
       <LandingPageMode />
+      <AttributionTracker />
       <ScrollToTop />
       <SkipLink />
       <Header />

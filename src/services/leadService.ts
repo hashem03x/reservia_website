@@ -1,6 +1,7 @@
 import { env, isLeadsApiConfigured, isCrmConfigured } from '../config/env';
 import { segmentGroup, type Segment } from '../config/navigation';
-import { getStoredLandingPage, getStoredReferrer, type UtmParams } from '../hooks/useUtmParams';
+import { getStoredLandingPage, getStoredReferrer, getStoredUtm, type UtmParams } from '../hooks/useUtmParams';
+import { attributionForSubmission, type AttributionPayload } from '../analytics/attribution';
 import type { Language } from '../i18n/LanguageContext';
 
 export { segmentGroup };
@@ -72,6 +73,15 @@ export interface LeadPayload extends LeadFormInput {
   /** document.referrer at first arrival - CRM source-mapping input (Organic vs Direct), never shown as the source itself. */
   referrer?: string;
   utm: UtmParams;
+  /**
+   * Full first-touch + last-touch attribution (src/analytics/attribution.ts): campaign parameters,
+   * ad click ids (gclid/gbraid/wbraid/fbclid/ttclid), landing page and external referrer of each.
+   * The CRM keeps the first touch as the lead's acquisition source and the last touch as the most
+   * recent campaign before conversion.
+   */
+  attribution?: AttributionPayload;
+  /** Path the form was actually submitted from (e.g. /en/contact) - informational, never the landing page. */
+  submittedFrom?: string;
   submittedAt: string;
   /**
    * The visitor's own Amplitude device id (src/analytics/amplitude.ts#getAmplitudeDeviceId) --
@@ -129,9 +139,13 @@ export async function submitLead(
     // page. Falls back to the current page only if no first-touch record exists (storage
     // unavailable, or this is itself the first page view). Path only: query strings can carry
     // campaign or personal parameters.
-    pageUrl: getStoredLandingPage() || window.location.origin + window.location.pathname,
+    pageUrl: getStoredLandingPage() || window.location.pathname,
     referrer: getStoredReferrer(),
-    utm: context.utm,
+    // First-touch campaign parameters, read from the site-wide store at submit time (never the
+    // form's own mount-time snapshot, which could predate the store being written).
+    utm: { ...context.utm, ...getStoredUtm() },
+    attribution: attributionForSubmission(),
+    submittedFrom: window.location.pathname,
     submittedAt: new Date().toISOString(),
     ampDeviceId: context.ampDeviceId,
   };

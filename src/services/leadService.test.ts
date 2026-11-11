@@ -31,7 +31,10 @@ describe('submitLead', () => {
     const [, init] = fetchSpy.mock.calls[0];
     const body = JSON.parse(String(init!.body));
     expect(body).toMatchObject({ eventId: 'lead-123', segment: 'service', segmentGroup: 'industrial', lang: 'en' });
-    expect(body.pageUrl).toBe('https://example.test/en/contact');
+    // Path only (no origin, no query string) - the first-touch landing page, or this page when none was recorded.
+    expect(body.pageUrl).toBe('/en/contact');
+    expect(body.submittedFrom).toBe('/en/contact');
+    expect(body.attribution.first.landingPage).toBe('/en/contact');
     expect((init!.headers as Record<string, string>)['Idempotency-Key']).toBe('lead-123');
   });
 
