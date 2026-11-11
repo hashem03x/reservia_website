@@ -43,6 +43,11 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="residential" element={<Residential />} />
           <Route path="agriculture" element={<Agriculture />} />
+          {/* Campaign alias: ad links use /en/farms (the CRM launch acceptance URL). It shows the farm
+              page with its campaign parameters intact (attribution records /en/farms as the landing
+              page); the page's canonical stays /agriculture and the alias is not prerendered or in
+              the sitemap, so search engines see one page. */}
+          <Route path="farms" element={<Agriculture />} />
           <Route path="industrial" element={<Industrial />} />
           <Route path="service" element={<Service />} />
           <Route path="oil-gas" element={<OilGas />} />

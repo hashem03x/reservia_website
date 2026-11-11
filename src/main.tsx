@@ -4,6 +4,12 @@ import './styles/reservia.css';
 import { Shell } from './Shell.tsx';
 import { initAnalytics } from './services/analytics.ts';
 import { initAmplitude } from './analytics/amplitude.ts';
+import { captureAttribution } from './analytics/attribution.ts';
+
+// Record marketing attribution for THIS page load before anything else runs - every page, not just
+// pages with a form, so a campaign landing on /en/farms is still known when the visitor submits the
+// quote form on /en/contact (src/analytics/attribution.ts). Never throws.
+captureAttribution();
 
 // Head tags written at build time (prerendered pages: data-ssr-head; root and
 // 404 pages: data-static-head) serve crawlers and the first paint. React 19
