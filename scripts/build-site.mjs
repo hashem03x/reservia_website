@@ -26,6 +26,12 @@
  * build FAILS: on Vercel the previous deployment keeps serving, rather than
  * a new one silently dropping the editors' published SEO. Unset = no CMS:
  * the site's own text everywhere.
+ *
+ * The feed is always requested uncached (a build started by Publish must see
+ * what was just published), and <outDir>/cms-build.json records which
+ * published content this build was made from (the feed's contentHash), so the
+ * dashboard can tell whether the live website is up to date (GET
+ * /website/live-status). It holds no secrets: only a hash and timestamps.
  */
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -49,7 +55,7 @@ async function fetchCmsFeed(apiUrl) {
   let lastError;
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const res = await fetch(url, { headers: { Accept: 'application/json', 'User-Agent': 'reservia-website-build/1.0' }, signal: AbortSignal.timeout(20_000) });
+      const res = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json', 'Cache-Control': 'no-cache', Pragma: 'no-cache', 'User-Agent': 'reservia-website-build/1.0' }, signal: AbortSignal.timeout(20_000) });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const body = await res.json();
       if (body?.success === false) throw new Error(body.message || 'the API reported a failure');
@@ -64,14 +70,16 @@ async function fetchCmsFeed(apiUrl) {
 
 const cmsApiUrl = (process.env.CMS_API_URL ?? loadEnv('production', process.cwd(), '').CMS_API_URL ?? '').trim();
 delete process.env.RESERVIA_CMS_FEED_FILE; // never inherit a stale snapshot
+let buildStamp = { cms: false };
 if (cmsApiUrl) {
   try {
     const feed = await fetchCmsFeed(cmsApiUrl);
+    buildStamp = { cms: true, contentHash: typeof feed?.data?.contentHash === 'string' ? feed.data.contentHash : null, feedGeneratedAt: feed?.data?.generatedAt ?? null };
     const file = resolve('node_modules/.cache/reservia-cms-feed.json');
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, JSON.stringify(feed));
     process.env.RESERVIA_CMS_FEED_FILE = file;
-    console.log(`[cms] feed fetched: ${feed?.data?.pages?.length ?? 0} published page(s)`);
+    console.log(`[cms] feed fetched: ${feed?.data?.pages?.length ?? 0} published page(s), content ${buildStamp.contentHash ?? '(no hash)'}`);
   } catch (error) {
     console.error(`\n[cms] ${error instanceof Error ? error.message : error}\n[cms] Build stopped so published SEO is never silently dropped. Fix the CMS URL/API, or unset CMS_API_URL to build without the CMS.`);
     process.exit(1);
@@ -148,6 +156,7 @@ writeFileSync(
   page({ lang: 'en', head: '<title>Page not found | Reservia</title>\n    <meta name="robots" content="noindex, follow">', body: '', lp: false }),
 );
 rmSync(ssrDir, { recursive: true, force: true });
+writeFileSync(resolve(outDir, 'cms-build.json'), JSON.stringify({ schemaVersion: 1, ...buildStamp, builtAt: new Date().toISOString() }));
 
 if (problems.length) {
   console.error(`\n[prerender] ${problems.length} problem(s):\n- ${problems.join('\n- ')}`);

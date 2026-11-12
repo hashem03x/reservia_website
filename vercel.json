@@ -67,6 +67,15 @@
       ]
     },
     {
+      "source": "/cms-build.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
+      ]
+    },
+    {
       "source": "/(sitemap.xml|robots.txt)",
       "headers": [
         {
