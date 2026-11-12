@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useIsClient } from '../../hooks/useIsClient';
+import { isEditorMode } from '../../editor/mode';
 import logo from '../../assets/brand/logo.webp';
 import wordmark from '../../assets/brand/wordmark-dark.webp';
 
@@ -25,7 +26,9 @@ const EXIT_MS = 550;
  * fixed delay.
  */
 export function AppLoader() {
-  const [visible, setVisible] = useState(true);
+  // Not in the dashboard's visual editor / draft preview: every edit re-renders the page there,
+  // and the boot sequence would replay over the canvas each time.
+  const [visible, setVisible] = useState(() => !isEditorMode());
   const [exiting, setExiting] = useState(false);
   // Empty in the prerendered HTML and during hydration; the localized label once hydrated.
   const isClient = useIsClient();

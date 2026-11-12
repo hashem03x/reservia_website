@@ -7,6 +7,8 @@ import { organizationJsonLd } from './src/content/organization.ts';
 import { DEFAULT_LANG, normalizeSiteUrl, ROUTES, robotsTxt, sitemapXml, staticHead } from './src/content/seoHead.ts';
 import { EMPTY_CMS_FEED, validateCmsFeed, type CmsFeed } from './src/content/cms.ts';
 import { injectGlobal } from './src/content/cmsInject.ts';
+import { buildVisualCss, cleanVisual } from './src/editor/visual.ts';
+import { editorIds } from './editor-plugin/editorIds.ts';
 
 const MARKER = '<!--static-head-->';
 const CMS_MODULE = 'virtual:cms-feed';
@@ -86,7 +88,10 @@ function staticSeo(mode: string, deployEnv: string, cms: CmsFeed): Plugin {
       handler(html) {
         // Site-wide CMS items (verification tags, favicon, custom code) go into the template, so every
         // prerendered page and the app shell carry them exactly once (src/content/cmsInject.ts).
-        return injectGlobal(html.replace(MARKER, staticHead({ lang: DEFAULT_LANG, page: 'home', siteUrl: base ?? '', orgJsonLd: org, ogImage: base ? `${base}/og-image.png` : null, cms })), cms);
+        const withCms = injectGlobal(html.replace(MARKER, staticHead({ lang: DEFAULT_LANG, page: 'home', siteUrl: base ?? '', orgJsonLd: org, ogImage: base ? `${base}/og-image.png` : null, cms })), cms);
+        // Published visual-editor styles (design tokens, global component styles, element styles).
+        const visualCss = buildVisualCss(cleanVisual(cms.visual)).replace(/<\/style/gi, '');
+        return visualCss ? withCms.replace('</head>', `  <style id="ve-css">${visualCss}</style>\n  </head>`) : withCms;
       },
     },
     closeBundle() {
@@ -110,7 +115,15 @@ export default defineConfig(({ mode }) => {
   const { feed: cms, warnings } = loadCmsFeed();
   for (const w of warnings) console.warn(`[cms] ${w}`);
   return {
-    plugins: [react(), cmsFeedModule(cms), staticSeo(mode, deployEnv, cms)],
+    // editorIds + the 'reservia-editor' JSX runtime make the real components selectable and
+    // editable by the dashboard's Visual Editor (editor-plugin/editorIds.ts, src/editor/).
+    plugins: [editorIds(), react({ jsxImportSource: 'reservia-editor' }), cmsFeedModule(cms), staticSeo(mode, deployEnv, cms)],
+    resolve: {
+      alias: [
+        { find: /^reservia-editor\/jsx-runtime$/, replacement: resolve('src/editor/jsx-runtime.ts') },
+        { find: /^reservia-editor\/jsx-dev-runtime$/, replacement: resolve('src/editor/jsx-dev-runtime.ts') },
+      ],
+    },
     define: { 'import.meta.env.VITE_DEPLOY_ENV': JSON.stringify(deployEnv) },
   };
 });

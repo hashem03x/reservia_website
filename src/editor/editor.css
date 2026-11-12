@@ -1,0 +1,48 @@
+/*
+  Visual editor: base styles of ELEMENTS ADDED in the editor (src/editor/nodes.ts), using the
+  site's design tokens so they match the existing design, plus the editing overlay and the draft
+  preview bar (shown only in the editor iframe / signed preview).
+*/
+.ve-node{box-sizing:border-box}
+h2.ve-heading,h3.ve-heading,h4.ve-heading{margin-block:.4em .3em}
+p.ve-text{margin-block:.5em;max-width:68ch}
+img.ve-image{display:block;max-width:100%;height:auto;border-radius:var(--r)}
+.ve-video{aspect-ratio:16/9;border-radius:var(--r-lg);overflow:hidden;background:#000}
+.ve-video iframe,.ve-video video{width:100%;height:100%;border:0;display:block}
+.ve-icon{color:var(--teal)}
+.ve-box-stack{display:flex;flex-direction:column;gap:12px}
+.ve-box-container,.ve-box-section{max-width:var(--wrap);margin-inline:auto;padding-inline:20px}
+.ve-box-section{padding-block:56px}
+.ve-box-columns,.ve-box-grid{display:grid;grid-template-columns:repeat(var(--ve-cols,2),minmax(0,1fr));gap:20px}
+@media (max-width:900px){.ve-box-columns,.ve-box-grid{grid-template-columns:repeat(min(var(--ve-cols,2),2),minmax(0,1fr))}}
+@media (max-width:560px){.ve-box-columns,.ve-box-grid{grid-template-columns:1fr}}
+.ve-box-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow-sm)}
+.ve-box-cta{background:var(--bg-deep);color:var(--muted-on-deep);border-radius:var(--r-lg);padding:32px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px}
+.ve-box-cta h2,.ve-box-cta h3{color:var(--ink-on-deep)}
+hr.ve-divider{border:0;border-top:1px solid var(--line);margin-block:24px}
+ul.ve-list{padding-inline-start:20px;display:grid;gap:6px}
+.ve-faq{display:grid;gap:10px}
+.ve-faq details{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:0 16px}
+.ve-faq summary{cursor:pointer;font-weight:600;padding:14px 0}
+.ve-empty{min-height:120px;border:2px dashed var(--line);border-radius:var(--r);background:var(--sunken)}
+
+/* ---- editing overlay (editor iframe only) ---- */
+html.ve-editing *{cursor:default}
+html.ve-editing [contenteditable]{cursor:text;outline:none}
+#ve-overlay{position:fixed;inset:0;pointer-events:none;z-index:2147483646;font:12px/1.2 system-ui,sans-serif}
+#ve-overlay .ve-box{position:absolute;left:0;top:0;display:none;box-sizing:border-box}
+#ve-overlay .ve-hover{outline:1px dashed #2563eb;background:rgba(37,99,235,.04)}
+#ve-overlay .ve-sel{outline:2px solid #2563eb}
+#ve-overlay .ve-tag{position:absolute;left:-2px;top:-22px;background:#2563eb;color:#fff;padding:3px 7px;border-radius:4px 4px 0 0;white-space:nowrap;max-width:320px;overflow:hidden;text-overflow:ellipsis}
+#ve-overlay .ve-tools{position:absolute;right:-2px;top:-24px;display:flex;gap:1px;pointer-events:auto;background:#1e3a8a;border-radius:4px 4px 0 0;padding:1px}
+#ve-overlay .ve-tools button,#ve-overlay .ve-drag{all:unset;cursor:pointer;color:#fff;padding:3px 6px;font-size:12px;line-height:16px}
+#ve-overlay .ve-drag{cursor:grab}
+#ve-overlay .ve-tools button:hover,#ve-overlay .ve-drag:hover{background:#2563eb}
+#ve-overlay .ve-drop{position:absolute;left:0;top:0;display:none;background:#f59e0b;border-radius:2px}
+#ve-overlay .ve-drop.ve-drop-inside{background:rgba(245,158,11,.15);outline:2px dashed #f59e0b}
+.ve-inline{outline:2px solid #f59e0b !important;outline-offset:2px}
+
+/* ---- draft preview ---- */
+.ve-preview-bar{position:fixed;inset-inline:0;bottom:0;z-index:2147483000;background:#b45309;color:#fff;font:600 13px/1.4 system-ui,sans-serif;padding:8px 14px;display:flex;gap:10px;justify-content:center;align-items:center}
+.ve-preview-bar button{all:unset;cursor:pointer;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:999px}
+.ve-boot-error{font:15px/1.5 system-ui,sans-serif;max-width:560px;margin:80px auto;padding:20px;border:1px solid #fca5a5;background:#fef2f2;color:#7f1d1d;border-radius:12px}

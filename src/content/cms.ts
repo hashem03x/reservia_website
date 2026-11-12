@@ -139,6 +139,8 @@ export interface CmsFeed {
   navigation: CmsNavigation;
   integrations: CmsIntegrations;
   customCode: CmsCustomCode[];
+  /** Published visual-editor configuration (src/editor/visual.ts), validated there. */
+  visual?: unknown;
 }
 
 export const EMPTY_CMS_FEED: CmsFeed = {
@@ -445,6 +447,7 @@ export function validateCmsFeed(raw: unknown, routePaths: string[]): { feed: Cms
       navigation: cleanNavigation(data.navigation),
       integrations: cleanIntegrations(data.integrations),
       customCode: cleanCustomCode(data.customCode),
+      visual: isObj(data.visual) ? data.visual : undefined,
     },
     warnings,
   };

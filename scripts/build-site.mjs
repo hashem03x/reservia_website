@@ -110,14 +110,14 @@ function splitHoisted(html) {
   return { head, body: html.slice(pos) };
 }
 
-function page({ lang, head, body, lp }) {
+function page({ lang, head, body, lp, route = '/' }) {
   return (
     template.slice(0, headStart) +
     head.trimStart() +
     template.slice(headEnd + HEAD_END.length)
   )
     .replace(/<html[^>]*>/, `<html lang="${lang}" dir="${lang === 'ar' ? 'rtl' : 'ltr'}">`)
-    .replace('<body>', lp ? '<body data-lp="1">' : '<body>')
+    .replace('<body>', `<body${lp ? ' data-lp="1"' : ''} data-route="${route}">`)
     .replace(ROOT, `<div id="root">${body}</div>`);
 }
 
@@ -135,7 +135,7 @@ for (const route of ROUTES) {
       mkdirSync(dirname(file), { recursive: true });
       const cmsPage = cmsByPath.get(route.path);
       const lp = route.path.startsWith('/lp/') || (cmsPage?.pageType === 'managed' && cmsPage.layout === 'landing');
-      writeFileSync(file, injectForPage(page({ lang, head, body, lp }), CMS_FEED, cmsPage?.slug));
+      writeFileSync(file, injectForPage(page({ lang, head, body, lp, route: route.path || '/' }), CMS_FEED, cmsPage?.slug));
       count++;
     } catch (error) {
       problems.push(`${url}: ${error instanceof Error ? error.stack : error}`);
