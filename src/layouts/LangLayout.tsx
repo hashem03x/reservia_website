@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useLayoutEffect } from 'react';
 import { Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import { DEFAULT_LANGUAGE, isLanguage, LanguageProvider, useLanguage, type Language } from '../i18n/LanguageContext';
 import { Header } from '../components/layout/Header';
@@ -8,6 +8,10 @@ import { ScrollTopButton } from '../components/layout/ScrollTopButton';
 import { captureAttribution } from '../analytics/attribution';
 import { CookieNotice } from '../cms/CookieNotice';
 import '../cms/cms.css';
+import '../editor/editor.css';
+import { setRenderContext } from '../editor/store';
+import { routeKey } from '../editor/visual';
+import { isEditorMode } from '../editor/mode';
 
 function DocumentDirection({ language }: { language: Language }) {
   useEffect(() => {
@@ -37,6 +41,7 @@ function LandingPageMode() {
 function AttributionTracker() {
   const { pathname, search } = useLocation();
   useEffect(() => {
+    if (isEditorMode()) return; // dashboard editor / draft preview: no attribution
     captureAttribution();
   }, [pathname, search]);
   return null;
@@ -60,8 +65,22 @@ function SkipLink() {
   );
 }
 
+// Page-specific visual-editor styles are scoped with body[data-route] (src/editor/visual.ts).
+const useIsoLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+function RouteMarker({ route }: { route: string }) {
+  useIsoLayoutEffect(() => {
+    document.body.dataset.route = route;
+  }, [route]);
+  return null;
+}
+
 export function LangLayout() {
   const { lang } = useParams();
+  const { pathname } = useLocation();
+  const route = routeKey(pathname);
+  // Before any element of this page is created: the visual-editor runtime applies the overrides
+  // saved for this page (src/editor/store.ts).
+  if (isLanguage(lang)) setRenderContext(route, lang);
 
   if (!isLanguage(lang)) {
     return <Navigate to={`/${DEFAULT_LANGUAGE}`} replace />;
@@ -70,6 +89,7 @@ export function LangLayout() {
   return (
     <LanguageProvider language={lang}>
       <DocumentDirection language={lang} />
+      <RouteMarker route={route} />
       <LandingPageMode />
       <AttributionTracker />
       <ScrollToTop />
