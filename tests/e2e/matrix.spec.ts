@@ -48,7 +48,8 @@ for (const route of ROUTES) {
               await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(3);
               await expect(page.locator('link[rel="alternate"][hreflang="en"]')).toHaveAttribute('href', `${SITE}/en${route.path}`);
               await expect(page.locator('link[rel="alternate"][hreflang="ar"]')).toHaveAttribute('href', `${SITE}/ar${route.path}`);
-              await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute('href', `${SITE}/en${route.path}`);
+              // x-default -> Arabic, the site's default language.
+              await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute('href', `${SITE}/ar${route.path}`);
             } else {
               // Single-language page (Arabic irrigation guide): no hreflang pair is claimed.
               await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(0);

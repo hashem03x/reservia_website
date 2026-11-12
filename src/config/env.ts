@@ -11,6 +11,14 @@
  */
 
 import { CONTACT_DEFAULTS } from './contactDefaults';
+import { cmsFeed } from '../content/cmsFeed';
+
+// Website CMS (content/cms.ts): contact details an administrator chose to publish, and tracking ids
+// enabled under Integrations, replace the build-time values. One id per provider either way, so a
+// tag is never loaded twice.
+const cmsContact = cmsFeed.settings?.contact ?? null;
+const cmsTracking = cmsFeed.integrations ?? { verification: {} };
+const firstOf = (...values: Array<string | undefined | null>) => values.find((v) => typeof v === 'string' && v.trim().length > 0) ?? undefined;
 
 const rawEnv = import.meta.env;
 
@@ -31,17 +39,19 @@ export const env = {
   // Amplitude Browser SDK 2.x (src/analytics/amplitude.ts) - a public, client-safe project API
   // key (never a secret - Amplitude's own browser keys are designed to be shipped in client code).
   amplitudeApiKey: rawEnv.VITE_AMPLITUDE_API_KEY as string | undefined,
-  whatsappNumber: readOr(rawEnv.VITE_WHATSAPP_NUMBER as string | undefined, CONTACT_DEFAULTS.whatsappNumber),
-  businessEmail: readOr(rawEnv.VITE_BUSINESS_EMAIL as string | undefined, CONTACT_DEFAULTS.businessEmail),
+  whatsappNumber: readOr(firstOf(cmsContact?.whatsappNumber?.replace(/[^\d]/g, ''), rawEnv.VITE_WHATSAPP_NUMBER as string | undefined), CONTACT_DEFAULTS.whatsappNumber),
+  businessEmail: readOr(firstOf(cmsContact?.businessEmail, rawEnv.VITE_BUSINESS_EMAIL as string | undefined), CONTACT_DEFAULTS.businessEmail),
   salesEmail: readOr(rawEnv.VITE_SALES_EMAIL as string | undefined, CONTACT_DEFAULTS.salesEmail),
-  mobilePhone: readOr(rawEnv.VITE_MOBILE_PHONE as string | undefined, CONTACT_DEFAULTS.mobilePhone),
-  officePhone: readOr(rawEnv.VITE_OFFICE_PHONE as string | undefined, CONTACT_DEFAULTS.officePhone),
+  mobilePhone: readOr(firstOf(cmsContact?.mobilePhone, rawEnv.VITE_MOBILE_PHONE as string | undefined), CONTACT_DEFAULTS.mobilePhone),
+  officePhone: readOr(firstOf(cmsContact?.officePhone, rawEnv.VITE_OFFICE_PHONE as string | undefined), CONTACT_DEFAULTS.officePhone),
   website: readOr(rawEnv.VITE_WEBSITE_HOST as string | undefined, CONTACT_DEFAULTS.website),
   siteUrl: (rawEnv.VITE_SITE_URL as string | undefined) ?? '',
-  ga4MeasurementId: rawEnv.VITE_GA4_MEASUREMENT_ID as string | undefined,
-  gtmContainerId: rawEnv.VITE_GTM_CONTAINER_ID as string | undefined,
-  metaPixelId: rawEnv.VITE_META_PIXEL_ID as string | undefined,
-  googleAdsConversionId: rawEnv.VITE_GOOGLE_ADS_CONVERSION_ID as string | undefined,
+  ga4MeasurementId: firstOf(cmsTracking.ga4, rawEnv.VITE_GA4_MEASUREMENT_ID as string | undefined),
+  gtmContainerId: firstOf(cmsTracking.gtm, rawEnv.VITE_GTM_CONTAINER_ID as string | undefined),
+  metaPixelId: firstOf(cmsTracking.metaPixel, rawEnv.VITE_META_PIXEL_ID as string | undefined),
+  googleAdsConversionId: firstOf(cmsTracking.googleAds, rawEnv.VITE_GOOGLE_ADS_CONVERSION_ID as string | undefined),
+  // The Central Portal API base for the draft-preview page (src/pages/CmsPreview.tsx).
+  cmsApiUrl: firstOf(rawEnv.VITE_CMS_API_URL as string | undefined, rawEnv.VITE_CRM_URL as string | undefined)?.replace(/\/+$/, ''),
 };
 
 function readFlag(value: string | undefined): boolean {

@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ChevronIcon } from '../icons/ChevronIcon';
-import type { NavItem } from '../../config/navigation';
-import type { Dictionary } from '../../i18n/translations/en';
+import type { SiteNavLink } from '../../cms/nav';
 
 /**
  * Desktop "Solutions"/"Company" dropdown. Opens on hover (with a short
@@ -14,15 +13,11 @@ import type { Dictionary } from '../../i18n/translations/en';
 export function NavDropdown({
   label,
   items,
-  language,
-  t,
   isOpen,
   onOpenChange,
 }: {
   label: string;
-  items: NavItem[];
-  language: string;
-  t: Dictionary;
+  items: SiteNavLink[];
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -31,7 +26,7 @@ export function NavDropdown({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeTimer = useRef<number | undefined>(undefined);
 
-  const isActive = items.some((item) => location.pathname === `/${language}${item.path}`);
+  const isActive = items.some((item) => !item.external && location.pathname === item.to);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -83,16 +78,17 @@ export function NavDropdown({
       {/* Always in the DOM -- including the prerendered HTML -- so these links are discoverable
           without a click; .navDropPanel defaults to display:none and only .open shows it. */}
       <div className={isOpen ? 'navDropPanel open' : 'navDropPanel'} role="menu" aria-label={label}>
-        {items.map((item) => (
-          <NavLink
-            key={item.path}
-            role="menuitem"
-            to={`/${language}${item.path}`}
-            onClick={() => onOpenChange(false)}
-          >
-            {t[item.labelKey]}
-          </NavLink>
-        ))}
+        {items.map((item) =>
+          item.external ? (
+            <a key={item.to} role="menuitem" href={item.to} target={item.target === '_blank' ? '_blank' : undefined} rel={item.target === '_blank' ? 'noopener noreferrer' : undefined} onClick={() => onOpenChange(false)}>
+              {item.label}
+            </a>
+          ) : (
+            <NavLink key={item.to} role="menuitem" to={item.to} target={item.target === '_blank' ? '_blank' : undefined} onClick={() => onOpenChange(false)}>
+              {item.label}
+            </NavLink>
+          ),
+        )}
       </div>
     </div>
   );

@@ -42,7 +42,7 @@ sitemap, canonical/hreflang tags, the site checker and the tests all read this l
 | `/how-we-work`, `/about` | ✓ | ✓ | 200 | yes | |
 | `/contact` | ✓ | ✓ | 200 | yes | `?type=` preselects the site type. The canonical URL has no query string. |
 | `/lp/villas`, `/lp/compounds`, `/lp/agriculture`, `/lp/industrial`, `/lp/service` | ✓ | ✓ | 200 | **no** | `noindex, follow`. No canonical or hreflang. Linked from the footer. |
-| `/` | | | **307** → `/ar` if the browser prefers Arabic, else `/en` | no | Temporary, so language detection is not cached. |
+| `/` | | | **307** → `/en` if the browser prefers English, else `/ar` (Arabic is the default language) | no | Temporary, so language detection is not cached. x-default points to the Arabic version. |
 | `/en/x/`, `/en/x.html` | | | **308** → `/en/x` | | `trailingSlash: false` and `cleanUrls`. |
 | Anything else | | | **404** (`404.html`, noindex) | no | No catch-all rewrite, so unknown URLs never return the home page with status 200. |
 

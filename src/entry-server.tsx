@@ -4,7 +4,15 @@ import { prerenderToNodeStream } from 'react-dom/static';
 import { StaticRouter } from 'react-router-dom';
 import { Shell } from './Shell.tsx';
 
+import { allRoutes } from './content/seoHead.ts';
+import { cmsFeed } from './content/cmsFeed.ts';
+
 export { ROUTES, routeLangs, sitemapXml, robotsTxt, HEAD_START, HEAD_END } from './content/seoHead.ts';
+export { injectForPage } from './content/cmsInject.ts';
+/** Every page to prerender: the built-in routes plus the CMS-only pages of this build's feed. */
+export const BUILD_ROUTES = allRoutes(cmsFeed);
+/** The validated CMS feed this build was made with (page-scoped custom code, landing layouts). */
+export const CMS_FEED = cmsFeed;
 
 /**
  * Build-time render of one URL (used only by scripts/prerender.mjs, never

@@ -2,10 +2,12 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import en from './translations/en';
 import ar from './translations/ar';
 import type { Dictionary } from './translations/en';
+import { DEFAULT_LANG } from '../content/seoHead';
 
 export const SUPPORTED_LANGUAGES = ['en', 'ar'] as const;
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
-export const DEFAULT_LANGUAGE: Language = 'en';
+// Arabic is the site's default language (content/seoHead.ts DEFAULT_LANG - same value, kept in one place there).
+export const DEFAULT_LANGUAGE: Language = DEFAULT_LANG;
 
 const dictionaries: Record<Language, Dictionary> = { en, ar };
 const DIRECTION: Record<Language, 'ltr' | 'rtl'> = { en: 'ltr', ar: 'rtl' };

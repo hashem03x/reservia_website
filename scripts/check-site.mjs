@@ -85,7 +85,7 @@ for (const [path, langs, noindex] of ROUTES) {
       if (alts.length) fail(`${url}: unexpected hreflang alternates`);
     } else {
       if (canon.length !== 1 || canon[0] !== `${expectOrigin}${url}`) fail(`${url}: canonical ${canon.join(',') || 'missing'}, expected ${expectOrigin}${url}`);
-      const want = langs.length > 1 ? [...langs.map((l) => [l, `${expectOrigin}/${l}${path}`]), ['x-default', `${expectOrigin}/en${path}`]] : [];
+      const want = langs.length > 1 ? [...langs.map((l) => [l, `${expectOrigin}/${l}${path}`]), ['x-default', `${expectOrigin}/ar${path}`]] : [];
       if (JSON.stringify(alts) !== JSON.stringify(want)) fail(`${url}: hreflang ${JSON.stringify(alts)} != ${JSON.stringify(want)}`);
     }
     const ogImage = tags(h, /<meta[^>]+property="og:image"[^>]*>/g).map((t) => attr(t, 'content'));
@@ -137,7 +137,14 @@ if (expectOrigin) {
     if (!/xml/.test(sm.type)) warn(`/sitemap.xml content-type "${sm.type}"`);
     const locs = [...sm.text.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
     const expected = ROUTES.filter(([, , n]) => !n).flatMap(([p, langs]) => langs.map((l) => `${expectOrigin}/${l}${p}`));
-    if (JSON.stringify([...locs].sort()) !== JSON.stringify([...expected].sort())) fail(`/sitemap.xml: URLs differ from the indexable route inventory (${locs.length} vs ${expected.length})`);
+    // The Website CMS adds its own published pages to the sitemap and can switch a built-in page to
+    // noindex, so the sitemap is no longer exactly the built-in inventory: a built-in page missing
+    // from it is reported (it may be noindex in the CMS); extra URLs are CMS pages and are checked
+    // below like every other entry (same origin, HTTP 200).
+    const missing = expected.filter((u) => !locs.includes(u));
+    const extra = locs.filter((u) => !expected.includes(u));
+    for (const u of missing) warn(`/sitemap.xml: built-in page ${u} is not listed (noindex in the CMS?)`);
+    if (extra.length) console.log(`INFO  /sitemap.xml lists ${extra.length} CMS page URL(s) beyond the built-in pages`);
     for (const loc of locs) {
       if (!loc.startsWith(expectOrigin + '/')) { fail(`/sitemap.xml: foreign URL ${loc}`); continue; }
       const r = await get(loc.slice(expectOrigin.length));

@@ -9,9 +9,16 @@
  */
 import { seoText, type PageId } from './seo.ts';
 import { jsonLdString } from './organization.ts';
+import { cmsOverrides, cmsPageFor, managedPageFor, toRoutePath, type CmsFeed } from './cms.ts';
 
 export type Lang = 'en' | 'ar';
 export const LANGS: Lang[] = ['en', 'ar'];
+/**
+ * Arabic is the site's default language (Website CMS SEO brief 2.2, answering CLIENT_DECISIONS.md
+ * section 7's open "which language should / default to"): the x-default alternate, the language
+ * for unknown or unmatched browser languages, and the root index.html.
+ */
+export const DEFAULT_LANG: Lang = 'ar';
 
 export interface RouteDef {
   /** Language-agnostic path: '' for home, '/residential', '/lp/service', ... */
@@ -49,9 +56,27 @@ export const ROUTES: RouteDef[] = [
 
 export const routeLangs = (r: RouteDef): Lang[] => r.langs ?? LANGS;
 
-/** The route for a language-agnostic path, if any. */
-export function findRoute(path: string): RouteDef | undefined {
-  return ROUTES.find((r) => r.path === path);
+/**
+ * Routes for pages that exist only in the CMS (managed pages published at a path with no built-in
+ * page). They are prerendered, listed in the sitemap and get canonical/hreflang exactly like the
+ * built-in pages. A managed page's parent (breadcrumbs) is its CMS parent page, else home.
+ */
+export function cmsRoutes(cms?: CmsFeed | null): RouteDef[] {
+  if (!cms) return [];
+  const pathOfSlug = new Map(cms.pages.map((p) => [p.slug, toRoutePath(p.path)]));
+  return cms.pages
+    .filter((p) => p.dynamic && p.pageType === 'managed')
+    .map((p) => ({ path: toRoutePath(p.path), page: 'cms' as PageId, langs: p.locales, parent: p.parentSlug && pathOfSlug.has(p.parentSlug) ? pathOfSlug.get(p.parentSlug) : p.layout === 'landing' ? undefined : '' }));
+}
+
+/** Built-in routes plus the CMS-only pages of this build. */
+export function allRoutes(cms?: CmsFeed | null): RouteDef[] {
+  return [...ROUTES, ...cmsRoutes(cms)];
+}
+
+/** The route for a language-agnostic path, if any (CMS-only pages included when the feed is given). */
+export function findRoute(path: string, cms?: CmsFeed | null): RouteDef | undefined {
+  return ROUTES.find((r) => r.path === path) ?? cmsRoutes(cms).find((r) => r.path === path);
 }
 
 /** Splits '/ar/oil-gas' into { lang: 'ar', path: '/oil-gas' }. */
@@ -85,17 +110,45 @@ export interface PageUrls {
   alternates: Array<{ hreflang: string; href: string }>;
 }
 
-/** Absolute canonical + hreflang URLs for an indexable page, or null without a valid production origin. */
-export function pageUrls(siteUrl: string | undefined | null, lang: Lang, route: RouteDef): PageUrls | null {
+/** Whether a route is indexable in a language: not a campaign page, and not switched to noindex in the CMS. */
+export function isIndexable(route: RouteDef, lang: Lang, cms?: CmsFeed | null): boolean {
+  return !route.noindex && !cmsOverrides(cms, lang, route.path).noindex;
+}
+
+/**
+ * Absolute canonical + hreflang URLs for an indexable page, or null without a valid production
+ * origin (or for a noindex page). A canonical an editor pointed at another URL in the CMS is used
+ * as-is and that version declares no alternates. hreflang lists only the language versions that
+ * are indexable and their own canonical -- never one that is noindex or canonicalised elsewhere --
+ * with x-default -> Arabic (DEFAULT_LANG) when that version qualifies.
+ */
+export function pageUrls(siteUrl: string | undefined | null, lang: Lang, route: RouteDef, cms?: CmsFeed | null): PageUrls | null {
   const base = normalizeSiteUrl(siteUrl);
-  if (!base || route.noindex) return null;
+  if (!base || !isIndexable(route, lang, cms)) return null;
   const url = (l: Lang) => `${base}/${l}${route.path}`;
-  const langs = routeLangs(route);
-  const alternates =
-    langs.length > 1
-      ? [...langs.map((l) => ({ hreflang: l, href: url(l) })), ...(langs.includes('en') ? [{ hreflang: 'x-default', href: url('en') }] : [])]
-      : [];
+  const override = cmsOverrides(cms, lang, route.path).canonical;
+  if (override) return { canonical: override, alternates: [] };
+  const langs = routeLangs(route).filter((l) => isIndexable(route, l, cms) && !cmsOverrides(cms, l, route.path).canonical);
+  const def = langs.includes(DEFAULT_LANG) ? DEFAULT_LANG : langs[0];
+  const alternates = langs.length > 1 ? [...langs.map((l) => ({ hreflang: l, href: url(l) })), { hreflang: 'x-default', href: url(def) }] : [];
   return { canonical: url(lang), alternates };
+}
+
+/** Title and description for a page: the CMS's when an editor wrote one, otherwise the code's (content/seo.ts). */
+export function pageText(lang: Lang, page: PageId, path: string, cms?: CmsFeed | null): [string, string] {
+  // A section-built page: its whole text is the CMS's (typed, or derived from its own content).
+  const managed = managedPageFor(cms, path);
+  if (managed || page === 'cms') {
+    const p = managed ?? cmsPageFor(cms, path);
+    const s = p?.seo[lang];
+    const name = (lang === 'ar' ? p?.titleAr || p?.titleEn : p?.titleEn || p?.titleAr) || '';
+    if (page === 'cms') return [s?.title || name || 'Reservia', s?.description || ''];
+    const [title, description] = seoText(lang, page);
+    return [s?.title || title, s?.description || description];
+  }
+  const [title, description] = seoText(lang, page);
+  const o = cmsOverrides(cms, lang, path);
+  return [o.title ?? title, o.description ?? description];
 }
 
 /** FAQPage JSON-LD built from the exact visible question/answer strings. */
@@ -151,22 +204,25 @@ export const HEAD_END = '<!--seo:end-->';
  * boot so the live head has no duplicates (see main.tsx). Prerendered pages
  * get their head from the React render instead (scripts/prerender.mjs).
  */
-export function staticHead(options: { lang: Lang; page: PageId; noindex?: boolean; siteUrl: string; orgJsonLd: Record<string, unknown>; ogImage?: string | null }): string {
-  const { lang, page, noindex, siteUrl, orgJsonLd, ogImage } = options;
-  const [title, description] = seoText(lang, page);
+export function staticHead(options: { lang: Lang; page: PageId; noindex?: boolean; siteUrl: string; orgJsonLd: Record<string, unknown>; ogImage?: string | null; cms?: CmsFeed | null }): string {
+  const { lang, page, siteUrl, orgJsonLd, cms } = options;
   const route = ROUTES.find((r) => r.page === page);
-  const urls = route && !noindex ? pageUrls(siteUrl, lang, route) : null;
+  const o = route ? cmsOverrides(cms, lang, route.path) : null;
+  const [title, description] = route ? pageText(lang, page, route.path, cms) : seoText(lang, page);
+  const noindex = options.noindex || !!o?.noindex;
+  const ogImage = o?.ogImage ?? options.ogImage;
+  const urls = route && !noindex ? pageUrls(siteUrl, lang, route, cms) : null;
   const tags = [
     HEAD_START,
     `<title>${esc(title)}</title>`,
     `<meta data-static-head name="description" content="${esc(description)}">`,
-    `<meta data-static-head name="robots" content="${noindex ? 'noindex, follow' : 'index, follow'}">`,
+    `<meta data-static-head name="robots" content="${robotsContent(noindex, !!o?.nofollow)}">`,
     `<meta data-static-head property="og:site_name" content="Reservia Integrated Energy Solutions">`,
     `<meta data-static-head property="og:type" content="website">`,
-    `<meta data-static-head property="og:title" content="${esc(title)}">`,
-    `<meta data-static-head property="og:description" content="${esc(description)}">`,
+    `<meta data-static-head property="og:title" content="${esc(o?.ogTitle ?? title)}">`,
+    `<meta data-static-head property="og:description" content="${esc(o?.ogDescription ?? description)}">`,
     `<meta data-static-head property="og:locale" content="${lang === 'ar' ? 'ar_EG' : 'en_US'}">`,
-    `<meta data-static-head name="twitter:card" content="${ogImage ? 'summary_large_image' : 'summary'}">`,
+    `<meta data-static-head name="twitter:card" content="${o?.twitterCard ?? (ogImage ? 'summary_large_image' : 'summary')}">`,
   ];
   if (ogImage) tags.push(`<meta data-static-head property="og:image" content="${esc(ogImage)}">`, `<meta data-static-head property="og:image:width" content="1200">`, `<meta data-static-head property="og:image:height" content="630">`);
   if (urls) {
@@ -177,25 +233,42 @@ export function staticHead(options: { lang: Lang; page: PageId; noindex?: boolea
   return tags.join('\n    ');
 }
 
-/** sitemap.xml: every indexable page in every language it exists in, with reciprocal alternates; null without a production origin. */
-export function sitemapXml(siteUrl: string): string | null {
-  if (!normalizeSiteUrl(siteUrl)) return null;
-  const entries = ROUTES.filter((r) => !r.noindex).flatMap((r) =>
-    routeLangs(r).map((lang) => {
-      const u = pageUrls(siteUrl, lang, r)!;
-      return ['  <url>', `    <loc>${esc(u.canonical)}</loc>`, ...u.alternates.map((a) => `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${esc(a.href)}"/>`), '  </url>'].join('\n');
+/** "index, follow" / "noindex, follow" / "index, nofollow" / "noindex, nofollow" */
+export function robotsContent(noindex: boolean, nofollow = false): string {
+  return `${noindex ? 'noindex' : 'index'}, ${nofollow ? 'nofollow' : 'follow'}`;
+}
+
+/**
+ * sitemap.xml: every indexable page in every language it exists in, with reciprocal alternates;
+ * null without a production origin. A version the CMS set to noindex, or canonicalised to another
+ * URL, is left out (a sitemap lists canonical, indexable URLs only).
+ */
+export function sitemapXml(siteUrl: string, cms?: CmsFeed | null): string | null {
+  const base = normalizeSiteUrl(siteUrl);
+  if (!base) return null;
+  const entries = allRoutes(cms).filter((r) => !r.noindex).flatMap((r) =>
+    routeLangs(r).flatMap((lang) => {
+      const u = pageUrls(siteUrl, lang, r, cms);
+      if (!u || u.canonical !== `${base}/${lang}${r.path}`) return [];
+      return [['  <url>', `    <loc>${esc(u.canonical)}</loc>`, ...u.alternates.map((a) => `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${esc(a.href)}"/>`), '  </url>'].join('\n')];
     }),
   );
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${entries.join('\n')}\n</urlset>\n`;
 }
 
-/** robots.txt: crawl everything public; Sitemap line only with a production origin; preview builds disallow all. */
-export function robotsTxt(siteUrl: string, preview: boolean): string {
-  if (preview) return 'User-agent: *\nDisallow: /\n\n# Preview deployment -- not for indexing.\n';
+/**
+ * robots.txt: crawl everything public; Sitemap line only with a production origin; preview builds
+ * disallow all. The CMS can add paths to keep out (Settings > Search engines) or, for a staging
+ * domain, discourage indexing of the whole site. (The draft-preview page is noindex itself.)
+ */
+export function robotsTxt(siteUrl: string, preview: boolean, cms?: CmsFeed | null): string {
+  if (preview || cms?.settings?.robots.discourageIndexing) return 'User-agent: *\nDisallow: /\n\n# Not for indexing.\n';
   const base = normalizeSiteUrl(siteUrl);
+  const extra = (cms?.settings?.robots.disallowPaths ?? []).flatMap((p) => [`Disallow: /ar${p}`, `Disallow: /en${p}`]);
   return [
     'User-agent: *',
     'Allow: /',
+    ...extra,
     '',
     base ? `Sitemap: ${base}/sitemap.xml` : '# Sitemap: added automatically once VITE_SITE_URL (the production domain) is set.',
     '',

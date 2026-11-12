@@ -1,4 +1,5 @@
-import { findRoute, type RouteDef } from './seoHead';
+import { findRoute, type Lang, type RouteDef } from './seoHead';
+import { cmsOverrides, cmsPageFor, type CmsFeed } from './cms';
 import type { PageId } from './seo';
 import type { Dictionary } from '../i18n/translations/en';
 
@@ -23,14 +24,26 @@ export interface Crumb {
   path: string;
 }
 
-/** Home > ... > current page, following each route's `parent`. Empty for home, campaign and unknown pages. */
-export function breadcrumbTrail(path: string, t: Dictionary): Crumb[] {
+/**
+ * Home > ... > current page, following each route's `parent`. Empty for home, campaign and unknown
+ * pages, and when an editor switched breadcrumbs off for the page in the CMS. A breadcrumb label
+ * an editor set in the CMS replaces the navigation label for that step; the visible trail and the
+ * BreadcrumbList JSON-LD both come from here, so they always match.
+ */
+export function breadcrumbTrail(path: string, t: Dictionary, cms?: { lang: Lang; feed: CmsFeed | null }): Crumb[] {
   const trail: RouteDef[] = [];
-  let route = findRoute(path);
+  const feed = cms?.feed ?? null;
+  let route = findRoute(path, feed);
   if (!route || route.parent === undefined) return [];
+  const o = cms ? cmsOverrides(cms.feed, cms.lang, path) : null;
+  if (o?.hideBreadcrumbs) return [];
   while (route) {
     trail.unshift(route);
-    route = route.parent === undefined ? undefined : findRoute(route.parent);
+    route = route.parent === undefined ? undefined : findRoute(route.parent, feed);
   }
-  return trail.map((r) => ({ name: t[LABEL_KEY[r.page] ?? 'nav_home'], path: r.path }));
+  const cmsName = (r: RouteDef) => {
+    const p = cmsPageFor(feed, r.path);
+    return p ? (cms?.lang === 'ar' ? p.titleAr || p.titleEn : p.titleEn || p.titleAr) : '';
+  };
+  return trail.map((r) => ({ name: o?.crumbLabels[r.path] || (r.page === 'cms' ? cmsName(r) : '') || t[LABEL_KEY[r.page] ?? 'nav_home'], path: r.path }));
 }

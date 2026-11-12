@@ -18,7 +18,9 @@ export type PageId =
   | 'lp-industrial'
   | 'notfound'
   | 'oilgas'
-  | 'irrigation';
+  | 'irrigation'
+  /** A page that exists only in the CMS (built from sections) - its text comes from the CMS feed. */
+  | 'cms';
 
 /**
  * [title, description] per page per language. Original entries ported

@@ -85,7 +85,7 @@ describe('canonical and hreflang', () => {
     expect(ar.alternates).toEqual([
       { hreflang: 'en', href: `${SITE}/en/service` },
       { hreflang: 'ar', href: `${SITE}/ar/service` },
-      { hreflang: 'x-default', href: `${SITE}/en/service` },
+      { hreflang: 'x-default', href: `${SITE}/ar/service` }, // Arabic is the default language
     ]);
   });
 

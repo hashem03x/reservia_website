@@ -108,7 +108,7 @@ small, local change. The **Change when answered** column says exactly where.
 - **Needed from the client.** The production domain (www or apex), whether to keep `/en` + `/ar`
   (and which language `/` should default to), and confirmation that campaign pages stay noindex.
 - **When answered.** Set `VITE_SITE_URL=https://…` and rebuild. Canonical, hreflang (+ x-default →
-  English), `og:url`, `sitemap.xml` and a `Sitemap:` line in robots.txt are generated
+  Arabic - see the November update below), `og:url`, `sitemap.xml` and a `Sitemap:` line in robots.txt are generated
   automatically. Configure the host to serve `/<lang>/<page>` from `<lang>/<page>.html`
   (default on Netlify, Cloudflare Pages and GitHub Pages; nginx needs
   `try_files $uri $uri.html /index.html`), with `/index.html` as the SPA fallback.
@@ -118,6 +118,14 @@ small, local change. The **Change when answered** column says exactly where.
   page is now prerendered, and `vercel.json` handles clean URLs and 404s. Once the domain points to
   Vercel, setting `VITE_SITE_URL` for Production switches on canonicals, hreflang, `og:image` and the
   sitemap. See [`SEO_LAUNCH.md`](SEO_LAUNCH.md) §4 for the exact steps.
+
+- **Update (November 2026, Website CMS SEO brief).** Default language decided: **Arabic**. `/`
+  redirects to `/en` only for a browser that prefers English, otherwise to `/ar`; x-default
+  points to the Arabic version; the root `index.html` is the Arabic home head. One constant:
+  `DEFAULT_LANG` in `src/content/seoHead.ts`. Search titles, descriptions, canonical overrides,
+  noindex/nofollow, share text/images and breadcrumb labels can now also be set per page in the
+  Central Portal (Website Management > Pages & SEO) and reach the site on its next build - see
+  `src/content/cms.ts` and `CMS_API_URL` in `.env.example`.
 
 ## 8. Clickable emails
 
