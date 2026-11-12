@@ -5,7 +5,7 @@ import { Shell } from '../Shell';
 import { env } from '../config/env';
 import { visualStore } from './store';
 import { buildVisualCss, cleanVisual } from './visual';
-import { leavePreview, type EditorMode } from './mode';
+import { leavePreview, setEditorStage, type EditorMode } from './mode';
 
 /**
  * Boot for the Visual Editor iframe and the signed draft preview. Loads the DRAFT visual
@@ -47,11 +47,12 @@ function fail(container: HTMLElement, message: string, mode: EditorMode) {
   box.setAttribute('data-testid', 've-boot-error');
   box.textContent = message;
   container.appendChild(box);
-  if (mode.kind === 'edit') window.parent.postMessage({ type: 've:error', message }, '*');
+  if (mode.kind === 'edit') setEditorStage('error', message);
 }
 
 export async function bootEditor(mode: EditorMode, container: HTMLElement) {
-  if (!env.cmsApiUrl) return fail(container, 'This website build is not connected to the dashboard (VITE_CMS_API_URL).', mode);
+  if (!env.cmsApiUrl) return fail(container, 'This website build has no dashboard API address (VITE_CMS_API_URL is not set at build time), so it cannot load the draft.', mode);
+  setEditorStage('loading-draft');
   let data: { config: unknown; editorOrigin: string; expiresAt: string | null };
   try {
     const res = await fetch(`${env.cmsApiUrl}/website/public/visual-preview/${encodeURIComponent(mode.token)}`, { cache: 'no-store', credentials: 'omit' });
@@ -59,8 +60,12 @@ export async function bootEditor(mode: EditorMode, container: HTMLElement) {
     if (!res.ok || !body?.data) throw new Error(body?.message || `HTTP ${res.status}`);
     data = body.data;
   } catch (err) {
-    return fail(container, `${(err as Error).message || 'The draft could not be loaded.'}`, mode);
+    const m = (err as Error).message || '';
+    // A network/CORS refusal surfaces as a bare TypeError ("Failed to fetch").
+    const why = /fetch|network|load failed/i.test(m) ? `The website could not reach the dashboard API at ${env.cmsApiUrl} (offline, or this website address is not allowed by the API's CORS settings).` : m || 'The draft could not be loaded.';
+    return fail(container, why, mode);
   }
+  setEditorStage('rendering');
   visualStore.set(cleanVisual(data.config));
 
   // The published stylesheet is replaced by the draft's, kept in sync with every change.
@@ -90,6 +95,8 @@ export async function bootEditor(mode: EditorMode, container: HTMLElement) {
   );
   if (mode.kind === 'edit') {
     const { startBridge } = await import('./bridge');
+    if (!data.editorOrigin) return fail(container, 'The editor link does not name the dashboard it belongs to. Open the Visual Editor again.', mode);
     startBridge(data.editorOrigin);
+    setEditorStage('ready');
   }
 }

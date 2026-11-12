@@ -46,3 +46,34 @@ export function leavePreview() {
   url.searchParams.delete('__vp');
   window.location.replace(url.toString());
 }
+
+/**
+ * Editor canvas status beacon. The dashboard pings the canvas iframe until it is ready; the page
+ * answers with its boot stage only (no content, no tokens - so it can answer any parent), which lets
+ * the dashboard tell "this website build has no editor", "the draft could not be loaded" and
+ * "redirected to another domain" apart instead of waiting forever.
+ */
+type Stage = 'booting' | 'loading-draft' | 'rendering' | 'ready' | 'error';
+let stage: Stage = 'booting';
+let stageDetail = '';
+let beacon = false;
+
+function announce() {
+  if (typeof window === 'undefined' || window.parent === window) return;
+  window.parent.postMessage({ type: 've:pong', editor: 1, stage, detail: stageDetail, page: window.location.pathname }, '*');
+}
+
+export function setEditorStage(next: Stage, detail = '') {
+  stage = next;
+  stageDetail = detail.slice(0, 300);
+  announce();
+}
+
+export function installEditorBeacon() {
+  if (beacon || typeof window === 'undefined') return;
+  beacon = true;
+  window.addEventListener('message', (e) => {
+    if (e.source === window.parent && e.data && e.data.type === 've:ping') announce();
+  });
+  announce();
+}

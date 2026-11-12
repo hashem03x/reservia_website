@@ -430,6 +430,10 @@ export function startBridge(editorOrigin: string) {
       hovered = (m.id as string) || null;
     } else if (m.type === 've:requestTree') {
       sendTree();
+    } else if (m.type === 've:hello') {
+      // The dashboard (re)attached: send everything it needs again.
+      post({ type: 've:ready', route: routeKey(window.location.pathname), lang: document.documentElement.lang, tokens: tokens() });
+      sendTree();
     }
   });
 
