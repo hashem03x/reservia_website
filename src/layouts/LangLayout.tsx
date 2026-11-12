@@ -1,11 +1,13 @@
 import { Suspense, useEffect } from 'react';
 import { Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
-import { isLanguage, LanguageProvider, useLanguage, type Language } from '../i18n/LanguageContext';
+import { DEFAULT_LANGUAGE, isLanguage, LanguageProvider, useLanguage, type Language } from '../i18n/LanguageContext';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { WhatsAppButton } from '../components/layout/WhatsAppButton';
 import { ScrollTopButton } from '../components/layout/ScrollTopButton';
 import { captureAttribution } from '../analytics/attribution';
+import { CookieNotice } from '../cms/CookieNotice';
+import '../cms/cms.css';
 
 function DocumentDirection({ language }: { language: Language }) {
   useEffect(() => {
@@ -62,7 +64,7 @@ export function LangLayout() {
   const { lang } = useParams();
 
   if (!isLanguage(lang)) {
-    return <Navigate to="/en" replace />;
+    return <Navigate to={`/${DEFAULT_LANGUAGE}`} replace />;
   }
 
   return (
@@ -82,6 +84,7 @@ export function LangLayout() {
       <Footer />
       <ScrollTopButton />
       <WhatsAppButton />
+      <CookieNotice />
     </LanguageProvider>
   );
 }

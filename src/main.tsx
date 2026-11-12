@@ -3,6 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import './styles/reservia.css';
 import { Shell } from './Shell.tsx';
 import { initAnalytics } from './services/analytics.ts';
+import { startAnalyticsWhenAllowed } from './cms/consent.ts';
 import { initAmplitude } from './analytics/amplitude.ts';
 import { captureAttribution } from './analytics/attribution.ts';
 
@@ -18,7 +19,7 @@ captureAttribution();
 document.querySelectorAll('[data-static-head], [data-ssr-head]').forEach((el) => el.remove());
 
 // Before the first render, so the first page's page_view reaches every configured provider.
-initAnalytics();
+startAnalyticsWhenAllowed(initAnalytics);
 initAmplitude();
 
 const container = document.getElementById('root')!;

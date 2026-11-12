@@ -33,15 +33,15 @@
         {
           "type": "header",
           "key": "accept-language",
-          "value": "^ar.*"
+          "value": "^en.*"
         }
       ],
-      "destination": "/ar",
+      "destination": "/en",
       "permanent": false
     },
     {
       "source": "/",
-      "destination": "/en",
+      "destination": "/ar",
       "permanent": false
     },
     {

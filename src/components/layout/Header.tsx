@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { NAV_ENTRIES } from '../../config/navigation';
+import { siteNav, linkTo, type SiteNavLink } from '../../cms/nav';
+import { cmsFeed } from '../../content/cmsFeed';
 import { findRoute, routeLangs, splitPath } from '../../content/seoHead';
 import { env } from '../../config/env';
 import { trackCallClick, trackLanguageChange } from '../../services/analytics';
@@ -26,7 +27,32 @@ export function Header() {
   // the visitor stays on the same view. A page that doesn't exist in the other language (the
   // Arabic irrigation guide) falls back to its parent route.
   const { path: currentPath } = splitPath(location.pathname);
-  const currentRoute = findRoute(currentPath);
+  const currentRoute = findRoute(currentPath, cmsFeed);
+  const entries = siteNav(cmsFeed, language, t);
+  const hs = cmsFeed.settings?.header;
+  const showCta = hs?.showCta !== false;
+  const ctaLabel = (language === 'ar' ? hs?.ctaLabelAr || hs?.ctaLabelEn : hs?.ctaLabelEn || hs?.ctaLabelAr) || t.quote;
+  const cta = hs?.ctaHref ? linkTo(hs.ctaHref, language) : { to: `/${language}/contact`, external: false };
+  const navItem = (item: SiteNavLink) =>
+    item.external ? (
+      <a key={item.to} href={item.to} target={item.target === '_blank' ? '_blank' : undefined} rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}>
+        {item.label}
+      </a>
+    ) : (
+      <NavLink key={item.to} to={item.to} end={item.end} target={item.target === '_blank' ? '_blank' : undefined}>
+        {item.label}
+      </NavLink>
+    );
+  const ctaEl = (className: string) =>
+    cta.external ? (
+      <a className={className} href={cta.to}>
+        {ctaLabel}
+      </a>
+    ) : (
+      <Link className={className} to={cta.to}>
+        {ctaLabel}
+      </Link>
+    );
   const targetPath = currentRoute && !routeLangs(currentRoute).includes(nextLang) ? (currentRoute.parent ?? '') : currentPath;
   const langHref = `/${nextLang}${targetPath}${location.search}`;
 
@@ -85,50 +111,29 @@ export function Header() {
         </button>
 
         <nav className={open ? 'main open' : 'main'} id="nav" aria-label={t.nav_aria}>
-          {NAV_ENTRIES.map((entry) =>
+          {entries.map((entry) =>
             entry.type === 'link' ? (
-              <NavLink key={entry.path} to={`/${language}${entry.path === '/' ? '' : entry.path}`} end={entry.path === '/'}>
-                {t[entry.labelKey]}
-              </NavLink>
+              navItem(entry)
             ) : (
-              <div className="navMobileGroup" key={entry.labelKey}>
+              <div className="navMobileGroup" key={entry.key}>
                 {/* Desktop: hover/click dropdown */}
-                <NavDropdown
-                  label={t[entry.labelKey]}
-                  items={entry.items}
-                  language={language}
-                  t={t}
-                  isOpen={openGroup === entry.labelKey}
-                  onOpenChange={(isOpen) => setOpenGroup(isOpen ? entry.labelKey : null)}
-                />
+                <NavDropdown label={entry.label} items={entry.items} isOpen={openGroup === entry.key} onOpenChange={(isOpen) => setOpenGroup(isOpen ? entry.key : null)} />
                 {/* Mobile: accordion */}
-                <button
-                  type="button"
-                  className="navMobileGroupTrigger"
-                  aria-expanded={openMobileGroups.has(entry.labelKey)}
-                  onClick={() => toggleMobileGroup(entry.labelKey)}
-                >
-                  {t[entry.labelKey]}
-                  <ChevronIcon className={openMobileGroups.has(entry.labelKey) ? 'navDropChevron open' : 'navDropChevron'} />
+                <button type="button" className="navMobileGroupTrigger" aria-expanded={openMobileGroups.has(entry.key)} onClick={() => toggleMobileGroup(entry.key)}>
+                  {entry.label}
+                  <ChevronIcon className={openMobileGroups.has(entry.key) ? 'navDropChevron open' : 'navDropChevron'} />
                 </button>
                 {/* Always rendered -- including in the prerendered HTML -- so these links are
                     crawlable without a click; CSS (.open) controls visibility, not mounting. */}
-                <div className={openMobileGroups.has(entry.labelKey) ? 'navMobileSubList open' : 'navMobileSubList'}>
-                  {entry.items.map((item) => (
-                    <NavLink key={item.path} to={`/${language}${item.path}`}>
-                      {t[item.labelKey]}
-                    </NavLink>
-                  ))}
-                </div>
+                <div className={openMobileGroups.has(entry.key) ? 'navMobileSubList open' : 'navMobileSubList'}>{entry.items.map(navItem)}</div>
               </div>
             ),
           )}
-          <Link className="btn sun navMobileCta" to={`/${language}/contact`}>
-            {t.quote}
-          </Link>
+          {showCta && ctaEl('btn sun navMobileCta')}
         </nav>
 
         <div className="tools">
+          {hs?.showPhone !== false && (
           <a
             className="btn ghost lp-phone"
             href={`tel:${env.mobilePhone.replace(/[^\d+]/g, '')}`}
@@ -137,6 +142,7 @@ export function Header() {
           >
             {env.mobilePhone}
           </a>
+          )}
           <ThemeToggle />
           {/* A real <a href>, not a button, so crawlers can follow it directly and it works with
               no JS (right-click/open-in-new-tab, etc.). Visible text is the target language's own
@@ -145,9 +151,7 @@ export function Header() {
             <span lang={nextLang}>{language === 'ar' ? 'English' : 'عربي'}</span>
             <span className="sr-only">: {t.lang_switch_sr}</span>
           </Link>
-          <Link className="btn sun" to={`/${language}/contact`}>
-            {t.quote}
-          </Link>
+          {showCta && ctaEl('btn sun')}
         </div>
       </div>
     </header>
