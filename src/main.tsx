@@ -4,7 +4,7 @@ import './styles/reservia.css';
 import { Shell } from './Shell.tsx';
 import { initAnalytics } from './services/analytics.ts';
 import { startAnalyticsWhenAllowed } from './cms/consent.ts';
-import { detectEditorMode } from './editor/mode.ts';
+import { detectEditorMode, installEditorBeacon } from './editor/mode.ts';
 import { initAmplitude } from './analytics/amplitude.ts';
 import { captureAttribution } from './analytics/attribution.ts';
 
@@ -25,6 +25,7 @@ document.querySelectorAll('[data-static-head], [data-ssr-head]').forEach((el) =>
 // Before the first render, so the first page's page_view reaches every configured provider.
 const container = document.getElementById('root')!;
 if (editorMode) {
+  if (editorMode.kind === 'edit') installEditorBeacon();
   // The draft can differ from the prerendered (published) HTML: render fresh, never hydrate.
   import('./editor/boot.tsx').then(({ bootEditor }) => bootEditor(editorMode, container));
 } else {
