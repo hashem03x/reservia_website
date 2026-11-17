@@ -2,10 +2,11 @@ import type { CSSProperties, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { waHref } from '../../services/whatsapp';
-import { registerWaRefCode } from '../../services/waRefCode';
+import { registerWaRefCode, buildWaRefCode } from '../../services/waRefCode';
 import { trackWhatsappClick } from '../../services/analytics';
 import { trackWhatsappClicked } from '../../analytics/amplitude';
 import { offersBillWhatsapp, type Segment } from '../../config/navigation';
+import { useIsClient } from '../../hooks/useIsClient';
 import type { QuoteFields } from '../../content/whatsappMessages';
 
 /**
@@ -52,7 +53,20 @@ export function WaLink({
 }) {
   const { language, t } = useLanguage();
   const location = useLocation();
-  const wa = waHref(language, segment, fields);
+  // Bug fix (Nov 2026 QA - "WhatsApp reference shows a stale date on first load"): this site is
+  // build-time prerendered (scripts/build-site.mjs), so generating the ref code's date stamp
+  // unconditionally would freeze whatever day the LAST BUILD ran into the static HTML every
+  // visitor gets served until the next deploy (e.g. "WA-1211-..." stuck on 12 Nov). `useIsClient`
+  // is the same hydration-safe gate Contact.tsx already uses for its own browser-only values:
+  // `false` during prerendering/hydration (so the prerendered and first-hydrated render match,
+  // with no misleading ref code), `true` immediately after - and React re-renders right away,
+  // before paint, so the real, freshly-dated code appears with no visible flash. A full page
+  // load/refresh re-prerenders+re-hydrates the same way; an in-app navigation re-renders an
+  // already-hydrated component, so it was never stale there either way - this fix makes the
+  // FIRST load behave the same as every subsequent one.
+  const isClient = useIsClient();
+  const refCode = isClient ? buildWaRefCode(segment) : undefined;
+  const wa = waHref(language, fields, refCode);
   if (!wa) return null;
 
   return (
@@ -74,7 +88,9 @@ export function WaLink({
         // Change Request 1, Feature 1: register this ref code's attribution with the CRM so the
         // customer's first inbound message can be resolved to a real source. Fire-and-forget --
         // never delays the wa.me navigation that's already happening via the real href above.
-        registerWaRefCode(wa.refCode);
+        // Only when hydrated (a real click always is - this guard is for completeness, not
+        // because a pre-hydration click is expected).
+        if (wa.refCode) registerWaRefCode(wa.refCode);
       }}
     >
       {children}

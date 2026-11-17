@@ -51,35 +51,40 @@ describe('quote message (client wording, October 2026)', () => {
 });
 
 describe('waHref', () => {
+  // Bug fix (Nov 2026 QA - stale prerendered ref-code date): waHref no longer generates its own
+  // ref code (that would freeze whatever day the static build ran into every prerendered page -
+  // see WaLink.tsx's header comment). The caller decides what to pass; `buildWaRefCode` itself is
+  // tested independently in waRefCode.test.ts.
+  const REF = 'WA-0511-VIL-K2F9';
+
   it('URL-encodes the message, including line breaks, Arabic and symbols', () => {
-    const wa = waHref('ar', 'villas', { location: 'المعادي & 100%' })!;
+    const wa = waHref('ar', { location: 'المعادي & 100%' }, REF)!;
     expect(wa.href).toMatch(/^https:\/\/wa\.me\/201211892995\?text=/);
     expect(wa.href.split('?text=')[1]).not.toMatch(/[\s&]/);
-    expect(decode(wa.href)).toBe(`${quoteMessage('ar', { location: 'المعادي & 100%' })}\n\n(Ref: ${wa.refCode})`);
+    expect(decode(wa.href)).toBe(`${quoteMessage('ar', { location: 'المعادي & 100%' })}\n\n(Ref: ${REF})`);
   });
 
-  it('every segment uses the same quote template, with its own Ref stamp appended after it', () => {
-    for (const seg of ['general', 'villas', 'agriculture', 'industrial', 'service', 'calc'] as const) {
-      const wa = waHref('en', seg)!;
-      expect(decode(wa.href)).toBe(`${quoteMessage('en')}\n\n(Ref: ${wa.refCode})`);
-    }
+  it('appends the Ref stamp after the quote template when a ref code is given', () => {
+    const wa = waHref('en', undefined, REF)!;
+    expect(decode(wa.href)).toBe(`${quoteMessage('en')}\n\n(Ref: ${REF})`);
+  });
+
+  it('omits the Ref stamp entirely when no ref code is given (the prerendered/pre-hydration case) - never a stale placeholder', () => {
+    const wa = waHref('en')!;
+    expect(wa.refCode).toBeUndefined();
+    expect(decode(wa.href)).toBe(quoteMessage('en'));
+    expect(decode(wa.href)).not.toContain('Ref:');
   });
 
   describe('acceptance report finding 1: WhatsApp Ref code', () => {
-    it('every link carries a Ref code, visible in the message text the customer sends', () => {
-      const wa = waHref('en', 'villas')!;
-      expect(wa.refCode).toMatch(/^WA-\d{4}-[A-Z]{3}-[A-Z0-9]{4}$/);
-      expect(decode(wa.href)).toContain(`(Ref: ${wa.refCode})`);
+    it('a link built with a ref code carries it, visible in the message text the customer sends', () => {
+      const wa = waHref('en', undefined, REF)!;
+      expect(wa.refCode).toBe(REF);
+      expect(decode(wa.href)).toContain(`(Ref: ${REF})`);
     });
 
-    it('is not the CRM\'s own RSV- lead reference format - never confused with a real lead id', () => {
-      expect(waHref('en', 'villas')!.refCode).not.toMatch(/^RSV-/);
-    });
-
-    it('two links built back to back get two different ref codes', () => {
-      const a = waHref('en', 'villas')!.refCode;
-      const b = waHref('en', 'villas')!.refCode;
-      expect(a).not.toBe(b);
+    it('the ref code is returned as-is, never re-derived or mutated by waHref', () => {
+      expect(waHref('en', undefined, REF)!.refCode).toBe(REF);
     });
   });
 });
