@@ -26,6 +26,8 @@ const LpIndustrial = lazy(() => import('./pages/LpIndustrial'));
 const LpService = lazy(() => import('./pages/LpService'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const CmsPreview = lazy(() => import('./pages/CmsPreview'));
+const BlogIndex = lazy(() => import('./pages/BlogIndex'));
+const BlogPost = lazy(() => import('./pages/BlogPost'));
 
 // Arabic is the default; a browser that prefers English gets English (mirrors vercel.json's `/` redirect).
 function detectInitialLanguage(): Language {
@@ -67,6 +69,10 @@ export default function App() {
           <Route path="lp/agriculture" element={<LpAgriculture />} />
           <Route path="lp/industrial" element={<LpIndustrial />} />
           <Route path="lp/service" element={<LpService />} />
+          {/* Blog Management - not a CmsRoute (a blog post isn't a sections-based page); its own
+              routes, listed before the CMS catch-all. */}
+          <Route path="blog" element={<BlogIndex />} />
+          <Route path="blog/:slug" element={<BlogPost />} />
           {/* Signed draft preview (dashboard "Preview"): never prerendered, cached or indexed. */}
           <Route path="__preview" element={<CmsPreview />} />
           {/* Pages that exist only in the CMS; anything else is the not-found page. */}

@@ -39,6 +39,7 @@ export const NAV_ENTRIES: NavEntry[] = [
       { path: '/about', labelKey: 'nav_about' },
     ],
   },
+  { type: 'link', path: '/blog', labelKey: 'nav_blog' },
   { type: 'link', path: '/contact', labelKey: 'nav_contact' },
 ];
 
@@ -52,6 +53,7 @@ export const NAV_ITEMS: NavItem[] = [
   { path: '/calculator', labelKey: 'nav_calc' },
   { path: '/how-we-work', labelKey: 'nav_how' },
   { path: '/about', labelKey: 'nav_about' },
+  { path: '/blog', labelKey: 'nav_blog' },
   { path: '/contact', labelKey: 'nav_contact' },
 ];
 

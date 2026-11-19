@@ -47,6 +47,7 @@ export const ROUTES: RouteDef[] = [
   { path: '/how-we-work', page: 'how', parent: '' },
   { path: '/about', page: 'about', parent: '' },
   { path: '/contact', page: 'contact', parent: '' },
+  { path: '/blog', page: 'blog', parent: '' },
   { path: '/lp/villas', page: 'lp-villas', noindex: true },
   { path: '/lp/compounds', page: 'lp-compounds', noindex: true },
   { path: '/lp/agriculture', page: 'lp-agriculture', noindex: true },
@@ -69,9 +70,28 @@ export function cmsRoutes(cms?: CmsFeed | null): RouteDef[] {
     .map((p) => ({ path: toRoutePath(p.path), page: 'cms' as PageId, langs: p.locales, parent: p.parentSlug && pathOfSlug.has(p.parentSlug) ? pathOfSlug.get(p.parentSlug) : p.layout === 'landing' ? undefined : '' }));
 }
 
-/** Built-in routes plus the CMS-only pages of this build. */
+/**
+ * Routes for published blog posts (Blog Management) - a direct sibling of cmsRoutes() above. Each
+ * post's own resolved SEO (backend utils/website/blogSeoResolver.js, baked into the feed) already
+ * decides per-language indexability, so a language a post marked noindex in is simply never listed
+ * here - pageUrls()/sitemapXml() stay correct with no blog-specific branch in either of them. The
+ * post's `/blog` parent lets a breadcrumb walk back to the listing page the same way any child route
+ * would, though BlogPost.tsx builds its own simple trail directly (its parent isn't itself prerendered
+ * SEO-text-wise the same way a CMS page's parent is - see BlogSeo.tsx's own header comment).
+ */
+export function blogRoutes(cms?: CmsFeed | null): RouteDef[] {
+  if (!cms?.blogPosts?.length) return [];
+  return cms.blogPosts.map((p) => ({
+    path: `/blog/${p.slug}`,
+    page: 'blog-post' as PageId,
+    langs: p.locales.filter((l) => !!p.seo[l] && p.seo[l]?.indexable !== false),
+    parent: '/blog',
+  }));
+}
+
+/** Built-in routes plus the CMS-only pages and published blog posts of this build. */
 export function allRoutes(cms?: CmsFeed | null): RouteDef[] {
-  return [...ROUTES, ...cmsRoutes(cms)];
+  return [...ROUTES, ...cmsRoutes(cms), ...blogRoutes(cms)];
 }
 
 /** The route for a language-agnostic path, if any (CMS-only pages included when the feed is given). */
@@ -190,6 +210,25 @@ export function pageJsonLd(options: { base: string; lang: Lang; route: RouteDef;
 /** WebSite JSON-LD (home pages). No SearchAction: the site has no search. */
 export function websiteJsonLd(base: string, lang: Lang, name: string) {
   return { '@context': 'https://schema.org', '@type': 'WebSite', '@id': `${base}/#website`, url: `${base}/${lang}`, name, inLanguage: ['en', 'ar'], publisher: { '@id': `${base}/#organization` } };
+}
+
+/** Schema.org BlogPosting JSON-LD for one blog post - only facts the post itself states. */
+export function blogPostingJsonLd(options: { base: string; lang: Lang; url: string; headline: string; description: string; datePublished: string | null; authorName: string; image: string | null }) {
+  const { base, lang, url, headline, description, datePublished, authorName, image } = options;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    '@id': `${url}#blogposting`,
+    mainEntityOfPage: url,
+    url,
+    headline,
+    description,
+    inLanguage: lang,
+    ...(datePublished ? { datePublished } : {}),
+    ...(image ? { image: [image] } : {}),
+    author: { '@type': 'Person', name: authorName },
+    publisher: { '@id': `${base}/#organization` },
+  };
 }
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

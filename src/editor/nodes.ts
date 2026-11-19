@@ -65,7 +65,11 @@ export function renderNode(id: string, depth = 0): ReactNode {
   const kids = () => (node.children || []).map((c) => renderNode(c, depth + 1));
   switch (node.type) {
     case 'heading': {
-      const level = Math.min(6, Math.max(2, Number(p.level) || 2));
+      // Bug fix (Visual Editor H1-H6 enhancement): this used to clamp to [2,6], so selecting H1 in
+      // the dashboard's heading-level control silently rendered an H2 on the live site. H1 is a
+      // valid, deliberate choice here (the dashboard warns, but does not block, inserting a second
+      // H1 alongside the page's own title - see props-panel.tsx's NodeControls).
+      const level = Math.min(6, Math.max(1, Number(p.level) || 2));
       return createElement(`h${level}`, base, loc(p.text, lang));
     }
     case 'text':

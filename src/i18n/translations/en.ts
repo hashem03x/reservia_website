@@ -263,7 +263,18 @@ foot_quote:"Get a free quote",
 n_farm_diesel:"Saving based on the diesel your pump uses today, plus 10% for generator servicing. Panels sized at 1.4 times the pump power.",
 foot_email:"Sales email",
 foot_mobile:"Mobile",
-foot_landline:"Landline"
+foot_landline:"Landline",
+nav_blog:"Blog",
+blog_hero_title:"Reservia Blog",
+blog_hero_text:"Insights on solar energy, savings and project stories from Reservia's engineering team.",
+blog_empty_title:"No posts yet",
+blog_empty_text:"Check back soon for articles on solar energy, savings and project stories.",
+blog_all_categories:"All",
+blog_read_more:"Read more",
+blog_load_more:"Load more",
+blog_recent_title:"Recent Blogs",
+blog_back:"Back to Blog",
+blog_by:"By"
 };
 
 export default en;

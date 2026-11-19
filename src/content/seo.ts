@@ -20,7 +20,11 @@ export type PageId =
   | 'oilgas'
   | 'irrigation'
   /** A page that exists only in the CMS (built from sections) - its text comes from the CMS feed. */
-  | 'cms';
+  | 'cms'
+  /** The blog listing page - a real SEO entry below, like any other built-in page. */
+  | 'blog'
+  /** One blog post - its title/description are per-post (BlogSeo.tsx), never read from here. */
+  | 'blog-post';
 
 /**
  * [title, description] per page per language. Original entries ported
@@ -46,6 +50,7 @@ export const SEO: Record<Language, Partial<Record<PageId, [string, string]>>> = 
     'lp-industrial': ['Cut diesel at remote sites and bills at the plant | Reservia', 'Hybrid solar and storage that cuts diesel at remote sites and bills at the plant. Site assessment from Reservia.'],
     notfound: ['Page not found | Reservia', 'The page you are looking for does not exist or may have moved.'],
     oilgas: ['Solar hybrid systems for oil and gas sites in Egypt | Reservia', 'Solar, battery and generator hybrid systems for remote oil and gas sites in Egypt: how they cut diesel use, how a site is assessed and sized, and how to request an engineering assessment.'],
+    blog: ['Solar energy insights and guides | Reservia', 'Articles on solar energy, savings and project stories from Reservia, the Egyptian solar and storage EPC team.'],
   },
   ar: {
     home: ['الطاقة الشمسية والتخزين في مصر | ريزيرفيا', 'تصمم ريزيرفيا وتركّب وتصون أنظمة الطاقة الشمسية والبطاريات للمنازل والمزارع ومواقع البترول والمصانع في أنحاء مصر. اطلب عرض سعر مجانيًا.'],
@@ -65,6 +70,7 @@ export const SEO: Record<Language, Partial<Record<PageId, [string, string]>>> = 
     notfound: ['الصفحة غير موجودة | ريزيرفيا', 'الصفحة التي تبحث عنها غير موجودة أو ربما نُقلت.'],
     oilgas: ['أنظمة طاقة شمسية هجينة لمواقع البترول والغاز في مصر | ريزيرفيا', 'أنظمة هجينة تجمع الطاقة الشمسية والبطاريات والمولدات لمواقع البترول والغاز النائية في مصر: كيف تقلل استهلاك الديزل، وكيف نقيّم الموقع ونحدد حجم النظام، وكيف تطلب تقييمًا هندسيًا.'],
     irrigation: ['دليل الري بالطاقة الشمسية للمزارع في مصر | ريزيرفيا', 'كيف يعمل الري بالطاقة الشمسية، وكيف تختار حجم الطلمبة، ومقارنة تكلفة الضخ بالطاقة الشمسية والديزل، وكيف تتحقق من برامج التمويل المتاحة. أمثلة بافتراضات واضحة.'],
+    blog: ['مقالات عن الطاقة الشمسية ودليلها | ريزيرفيا', 'مقالات عن الطاقة الشمسية والتوفير وقصص المشاريع من فريق ريزيرفيا المصري للطاقة الشمسية والتخزين.'],
   },
 };
 

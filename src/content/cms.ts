@@ -73,6 +73,47 @@ export interface CmsPage {
   dynamic: boolean;
 }
 
+/** One blog post in one language, as the CMS resolved it (backend utils/website/blogSeoResolver.js). */
+export interface CmsBlogPostSeo {
+  title: string;
+  titleSource: string;
+  description: string;
+  descriptionSource: string;
+  url: string;
+  canonical: string;
+  robots: string;
+  indexable: boolean;
+  datePublished: string | null;
+  openGraph: { title: string; description: string; image: string | null };
+  twitter: { card: string; cardSource: string };
+  warnings: string[];
+}
+
+export interface CmsBlogAuthor {
+  nameEn: string;
+  nameAr: string;
+  avatarUrl: string | null;
+}
+
+export interface CmsBlogPost {
+  slug: string;
+  titleEn: string;
+  titleAr: string;
+  excerptEn: string;
+  excerptAr: string;
+  /** Sanitized HTML (backend server/utils/website/htmlSanitizer.js) - never re-sanitized here. */
+  bodyEn: string;
+  bodyAr: string;
+  category: string;
+  tags: string[];
+  author: CmsBlogAuthor;
+  featuredImage: { url: string; altEn?: string; altAr?: string } | null;
+  showRecentSidebar: boolean;
+  locales: Lang[];
+  seo: Partial<Record<Lang, CmsBlogPostSeo>>;
+  publishedAt: string | null;
+}
+
 export interface CmsNavLink {
   type: 'link' | 'group';
   labelEn: string;
@@ -135,6 +176,10 @@ export interface CmsFeed {
   schemaVersion: number;
   generatedAt: string | null;
   pages: CmsPage[];
+  /** Blog Management - published posts only, newest first (same additive-field convention as every
+   * field added to this feed since v1: an older website build that doesn't know about it just never
+   * reads it). */
+  blogPosts: CmsBlogPost[];
   settings: CmsSettings | null;
   navigation: CmsNavigation;
   integrations: CmsIntegrations;
@@ -147,6 +192,7 @@ export const EMPTY_CMS_FEED: CmsFeed = {
   schemaVersion: CMS_SCHEMA_VERSION,
   generatedAt: null,
   pages: [],
+  blogPosts: [],
   settings: null,
   navigation: { header: [], footer: [] },
   integrations: { verification: {} },
@@ -211,6 +257,89 @@ function cleanSeo(raw: unknown): CmsPageSeo | null {
     breadcrumbs: crumbs.map((c) => ({ name: str(c.name, 100), url: str(c.url, 2000), path: typeof c.path === 'string' ? c.path : undefined })),
     warnings: Array.isArray(raw.warnings) ? raw.warnings.filter((w): w is string => typeof w === 'string') : [],
   };
+}
+
+// ---- blog posts ----
+function cleanBlogPostSeo(raw: unknown): CmsBlogPostSeo | null {
+  if (!isObj(raw)) return null;
+  const og = isObj(raw.openGraph) ? raw.openGraph : {};
+  const tw = isObj(raw.twitter) ? raw.twitter : {};
+  return {
+    title: str(raw.title, 200),
+    titleSource: str(raw.titleSource, 20),
+    description: str(raw.description, 400),
+    descriptionSource: str(raw.descriptionSource, 20),
+    url: str(raw.url, 2000),
+    canonical: str(raw.canonical, 2000),
+    robots: str(raw.robots, 40),
+    indexable: raw.indexable !== false,
+    datePublished: typeof raw.datePublished === 'string' ? raw.datePublished : null,
+    openGraph: { title: str(og.title, 200), description: str(og.description, 400), image: httpsUrl(og.image) || null },
+    twitter: { card: str(tw.card, 30), cardSource: str(tw.cardSource, 10) },
+    warnings: Array.isArray(raw.warnings) ? raw.warnings.filter((w): w is string => typeof w === 'string') : [],
+  };
+}
+
+function cleanBlogAuthor(raw: unknown): CmsBlogAuthor {
+  const a = isObj(raw) ? raw : {};
+  return { nameEn: str(a.nameEn, 80), nameAr: str(a.nameAr, 80), avatarUrl: httpsUrl(a.avatarUrl) || null };
+}
+
+/** <p>/<h1-6>/<strong>/<em>/<ul>/<ol>/<li>/<blockquote>/<hr>/<a>/<img>/<br> only - already enforced
+ * server-side (backend/server/utils/website/htmlSanitizer.js) before this ever reaches the feed;
+ * this is a bounds check (size cap), not a second sanitization pass. */
+const blogBody = (v: unknown) => (typeof v === 'string' ? v.slice(0, 200000) : '');
+
+function cleanBlogPost(raw: unknown, warnings: string[]): CmsBlogPost | null {
+  if (!isObj(raw) || typeof raw.slug !== 'string' || !raw.slug) {
+    warnings.push('skipped a malformed blog post entry');
+    return null;
+  }
+  const locales = Array.isArray(raw.locales) ? (raw.locales.filter((l) => l === 'ar' || l === 'en') as Lang[]) : [];
+  if (!locales.length) {
+    warnings.push(`blog post "${String(raw.slug)}" has no language - skipped`);
+    return null;
+  }
+  const seo: CmsBlogPost['seo'] = {};
+  for (const lang of ['ar', 'en'] as Lang[]) {
+    const s = isObj(raw.seo) ? cleanBlogPostSeo(raw.seo[lang]) : null;
+    if (s) seo[lang] = s;
+  }
+  const img = isObj(raw.featuredImage) && safeMedia(raw.featuredImage.url) ? { url: safeMedia(raw.featuredImage.url), altEn: str(raw.featuredImage.altEn, 160), altAr: str(raw.featuredImage.altAr, 160) } : null;
+  return {
+    slug: str(raw.slug, 100),
+    titleEn: str(raw.titleEn, 150),
+    titleAr: str(raw.titleAr, 150),
+    excerptEn: str(raw.excerptEn, 300),
+    excerptAr: str(raw.excerptAr, 300),
+    bodyEn: blogBody(raw.bodyEn),
+    bodyAr: blogBody(raw.bodyAr),
+    category: str(raw.category, 60),
+    tags: (Array.isArray(raw.tags) ? raw.tags : []).filter((t): t is string => typeof t === 'string').slice(0, 10).map((t) => str(t, 40)),
+    author: cleanBlogAuthor(raw.author),
+    featuredImage: img,
+    showRecentSidebar: raw.showRecentSidebar !== false,
+    locales,
+    seo,
+    publishedAt: typeof raw.publishedAt === 'string' ? raw.publishedAt : null,
+  };
+}
+
+function cleanBlogPosts(raw: unknown, warnings: string[]): CmsBlogPost[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const out: CmsBlogPost[] = [];
+  for (const p of raw) {
+    const post = cleanBlogPost(p, warnings);
+    if (!post) continue;
+    if (seen.has(post.slug)) {
+      warnings.push(`two blog posts use the slug "${post.slug}" - only the first is used`);
+      continue;
+    }
+    seen.add(post.slug);
+    out.push(post);
+  }
+  return out;
 }
 
 // ---- sections ----
@@ -443,6 +572,7 @@ export function validateCmsFeed(raw: unknown, routePaths: string[]): { feed: Cms
       schemaVersion: CMS_SCHEMA_VERSION,
       generatedAt: typeof data.generatedAt === 'string' ? data.generatedAt : null,
       pages,
+      blogPosts: cleanBlogPosts(data.blogPosts, warnings),
       settings: cleanSettings(data.settings),
       navigation: cleanNavigation(data.navigation),
       integrations: cleanIntegrations(data.integrations),
@@ -459,6 +589,16 @@ export function validateCmsFeed(raw: unknown, routePaths: string[]): { feed: Cms
 
 export function cmsPageFor(feed: CmsFeed | null | undefined, routePath: string): CmsPage | undefined {
   return feed?.pages.find((p) => toRoutePath(p.path) === routePath);
+}
+
+/** The published blog post at a slug, published in `lang` - undefined otherwise (404, never guessed). */
+export function blogPostFor(feed: CmsFeed | null | undefined, slug: string, lang: Lang): CmsBlogPost | undefined {
+  return feed?.blogPosts.find((p) => p.slug === slug && p.locales.includes(lang));
+}
+
+/** Published posts in a language, newest first - defensive sort (never trusts the feed's own order blindly). */
+export function publishedBlogPosts(feed: CmsFeed | null | undefined, lang: Lang): CmsBlogPost[] {
+  return (feed?.blogPosts ?? []).filter((p) => p.locales.includes(lang)).sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''));
 }
 
 /** The managed (section-built) page published at a route path, if any. */

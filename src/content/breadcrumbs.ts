@@ -16,6 +16,7 @@ const LABEL_KEY: Partial<Record<PageId, string>> = {
   how: 'nav_how',
   about: 'nav_about',
   contact: 'nav_contact',
+  blog: 'nav_blog',
 };
 
 export interface Crumb {

@@ -20,7 +20,7 @@ let firstPageRendered = false;
  * new page instead of staying on the link that was clicked. Skipped on
  * the very first page load, where the browser's default focus is right.
  */
-function focusNewPage() {
+export function focusNewPage() {
   if (!firstPageRendered) {
     firstPageRendered = true;
     return;
