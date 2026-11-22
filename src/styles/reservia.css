@@ -23,7 +23,12 @@ h1{font-size:clamp(2rem,4.6vw,3.4rem);letter-spacing:-.01em}
 h2{font-size:clamp(1.5rem,2.8vw,2.1rem)}
 h3,h2.h3{font-size:1.15rem}
 p{margin:0}
-img,svg{max-width:100%}
+/* height:auto matters here, not just max-width: an <img> with explicit width/height HTML
+   attributes (every CMS-rendered image - see cms/sections.tsx) keeps its native aspect box on
+   Safari (iOS and macOS) unless height is told to follow the shrunk width too - without it, the
+   image's box renders far taller than its visible content on those browsers specifically, reading
+   as "the image is too large" even though the width itself is correctly constrained. */
+img,svg{max-width:100%;height:auto}
 .wrap{max-width:var(--wrap);margin-inline:auto;padding-inline:20px}
 .eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);font-weight:600}
 html[dir="rtl"] .eyebrow{letter-spacing:0;font-family:var(--body);font-size:.9rem}
