@@ -13,6 +13,9 @@ export const CONTACT_DEFAULTS = {
   // supersedes it. See docs/CLIENT_DECISIONS.md §13.
   salesEmail: 'Reservia_Sales@reservia-energy.com',
   mobilePhone: '+201211892995',
+  // Second mobile contact number added alongside the existing one (client request, 23 Nov 2026) --
+  // the original mobilePhone above is never replaced, this is purely additive.
+  mobilePhone2: '01214442484',
   officePhone: '+20 2 2522 2814',
   website: 'reservia-energy.com',
 } as const;

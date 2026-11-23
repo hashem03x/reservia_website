@@ -278,6 +278,33 @@ test.describe('contact form', () => {
     await open(page, '/en/contact');
     await expect(page.locator('body')).not.toContainText(/working day|within \d+ hours/i);
   });
+
+  test('second mobile number shown alongside the existing one, both clickable, existing number unchanged', async ({ page }) => {
+    await open(page, '/en/contact');
+    const mobileRow = page.locator('#c3');
+    await expect(mobileRow.locator('a[href="tel:+201211892995"]')).toHaveText('+201211892995');
+    await expect(mobileRow.locator('a[href="tel:01214442484"]')).toHaveText('01214442484');
+    // The office landline is untouched - still its own single number.
+    await expect(page.locator('#c4').locator('a[href^="tel:"]')).toHaveCount(1);
+  });
+});
+
+test.describe('landing-page header phone pill', () => {
+  test('shows both mobile numbers on desktop, each its own tel: link', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, '/en/lp/villas');
+    const pill = page.locator('.lp-phone-pair');
+    await expect(pill).toBeVisible();
+    await expect(pill.locator('a[href="tel:+201211892995"]')).toHaveText('+201211892995');
+    await expect(pill.locator('a[href="tel:01214442484"]')).toHaveText('01214442484');
+  });
+
+  test('hidden below 640px, same as before this pill existed (the sticky Call/WhatsApp bar covers mobile instead)', async ({ page }) => {
+    await page.setViewportSize({ width: 400, height: 900 });
+    await open(page, '/en/lp/villas');
+    await expect(page.locator('.lp-phone-pair')).toBeHidden();
+    await expect(page.locator('.lpbar a[href="tel:+201211892995"]')).toBeVisible();
+  });
 });
 
 test.describe('campaign form (service sector)', () => {

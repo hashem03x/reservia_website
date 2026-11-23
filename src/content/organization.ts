@@ -14,6 +14,8 @@ export interface OrgContacts {
   salesEmail: string;
   officePhone: string;
   mobilePhone: string;
+  /** Additive second mobile number -- shown alongside mobilePhone, never in its place. */
+  mobilePhone2: string;
 }
 
 export function organizationJsonLd(options: { siteUrl?: string; contacts?: OrgContacts | null }): Record<string, unknown> {
@@ -38,7 +40,9 @@ export function organizationJsonLd(options: { siteUrl?: string; contacts?: OrgCo
     data.email = c.businessEmail;
     data.telephone = c.officePhone;
     data.contactPoint = [
-      { '@type': 'ContactPoint', contactType: 'sales', email: c.salesEmail, telephone: c.mobilePhone, availableLanguage: ['en', 'ar'] },
+      // Two numbers reach the same sales contact point -- schema.org's own guidance for a property
+      // with more than one value is a second value in the same array position, not a packed string.
+      { '@type': 'ContactPoint', contactType: 'sales', email: c.salesEmail, telephone: [c.mobilePhone, c.mobilePhone2], availableLanguage: ['en', 'ar'] },
     ];
   }
   return data;

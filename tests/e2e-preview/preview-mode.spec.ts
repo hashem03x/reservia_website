@@ -11,6 +11,8 @@ test.describe('preview mode (no lead endpoint, no domain)', () => {
     await page.locator('#q_phone').fill('01211892995');
     await page.locator('form button[type="submit"]').click();
     await expect(page.locator('form .formmsg.warn')).toContainText('nothing was sent');
+    // The confirmation text names "our sales team", never the raw internal mailbox name (23 Nov 2026 cleanup).
+    await expect(page.locator('form .formmsg.warn')).not.toContainText('Reservia_Sales');
     await expect(page.locator('form .formmsg.ok')).toHaveCount(0);
     await expect(page.locator('form a.qwa')).toBeVisible();
     expect(await events(page, 'generate_lead')).toHaveLength(0);

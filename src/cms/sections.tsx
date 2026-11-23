@@ -473,10 +473,11 @@ const telHref = (v: string) => `tel:${v.replace(/[^\d+]/g, '')}`;
 
 export function ContactInfoSection({ content, lang, isFirst }: SectionProps) {
   const { t } = useLanguage();
-  const lines: Array<{ label: string; value: string; href?: string }> = [];
+  const lines: Array<{ label: string; value: string; href?: string; value2?: string; href2?: string }> = [];
   if (content.useSiteContacts !== false) {
     const address = cmsFeed.settings?.contact ? (lang === 'ar' ? cmsFeed.settings.contact.addressAr : cmsFeed.settings.contact.addressEn) : t.ct_addr;
-    lines.push({ label: t.foot_mobile, value: env.mobilePhone, href: telHref(env.mobilePhone) });
+    // Second mobile number, added alongside the existing one -- shown on the same line, never in its place.
+    lines.push({ label: t.foot_mobile, value: env.mobilePhone, href: telHref(env.mobilePhone), value2: env.mobilePhone2, href2: telHref(env.mobilePhone2) });
     lines.push({ label: t.foot_landline, value: env.officePhone, href: telHref(env.officePhone) });
     lines.push({ label: t.foot_bemail, value: env.businessEmail, href: `mailto:${env.businessEmail}` });
     lines.push({ label: 'WhatsApp', value: env.whatsappNumber, href: `https://wa.me/${env.whatsappNumber.replace(/\D/g, '')}` });
@@ -505,6 +506,18 @@ export function ContactInfoSection({ content, lang, isFirst }: SectionProps) {
                 </a>
               ) : (
                 <span>{l.value}</span>
+              )}
+              {l.value2 && (
+                <>
+                  {' / '}
+                  {l.href2 ? (
+                    <a href={l.href2} dir="ltr">
+                      {l.value2}
+                    </a>
+                  ) : (
+                    <span>{l.value2}</span>
+                  )}
+                </>
               )}
             </li>
           ))}

@@ -217,6 +217,8 @@ test.describe('footer contacts and CTAs', () => {
     await expect(list.locator('li small')).toContainText(['Sales email', 'Business email', 'Mobile', 'Landline']);
     await expect(list.locator('a[href="tel:+201211892995"]')).toHaveText('+201211892995');
     await expect(list.locator('a[href="tel:+20225222814"]')).toHaveText('+20 2 2522 2814');
+    // Second mobile number, added alongside the first (never replacing it) - client request, 23 Nov 2026.
+    await expect(list.locator('a[href="tel:01214442484"]')).toHaveText('01214442484');
   });
 
   for (const width of [1280, 400]) {

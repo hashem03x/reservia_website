@@ -36,7 +36,26 @@ const SITE_TYPES: Array<{ id: string; labelKey: string; segment: Segment }> = [
   { id: 'other', labelKey: 'o7', segment: 'general' },
 ];
 
-function ContactRow({ id, label, value, href, onActivate, dir }: { id: string; label: string; value: string; href?: string; onActivate?: () => void; dir?: 'ltr' }) {
+function ContactRow({
+  id,
+  label,
+  value,
+  href,
+  onActivate,
+  dir,
+  value2,
+  href2,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  href?: string;
+  onActivate?: () => void;
+  dir?: 'ltr';
+  /** A second linked value shown alongside the first (e.g. a second phone number) -- copy/select still target the first value only. */
+  value2?: string;
+  href2?: string;
+}) {
   const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const valueRef = useRef<HTMLSpanElement>(null);
@@ -68,6 +87,18 @@ function ContactRow({ id, label, value, href, onActivate, dir }: { id: string; l
           </a>
         ) : (
           value
+        )}
+        {value2 && (
+          <>
+            {' / '}
+            {href2 ? (
+              <a href={href2} onClick={onActivate} aria-describedby={`${id}-l`}>
+                {value2}
+              </a>
+            ) : (
+              value2
+            )}
+          </>
         )}
       </span>
       <button className="copy" type="button" onClick={handleCopy} aria-describedby={id}>
@@ -151,7 +182,16 @@ export default function Contact() {
               href={flags.mailtoLinks ? `mailto:${env.salesEmail}` : undefined}
               onActivate={() => trackEmailClick(location.pathname)}
             />
-            <ContactRow id="c3" label={t.ct_phone} value={env.mobilePhone} href={telHref(env.mobilePhone)} onActivate={() => trackCallClick(location.pathname)} dir="ltr" />
+            <ContactRow
+              id="c3"
+              label={t.ct_phone}
+              value={env.mobilePhone}
+              href={telHref(env.mobilePhone)}
+              value2={env.mobilePhone2}
+              href2={telHref(env.mobilePhone2)}
+              onActivate={() => trackCallClick(location.pathname)}
+              dir="ltr"
+            />
             <ContactRow id="c4" label={t.ct_land} value={env.officePhone} href={telHref(env.officePhone)} onActivate={() => trackCallClick(location.pathname)} dir="ltr" />
             <div>
               <small>{t.ct_addr_l}</small>

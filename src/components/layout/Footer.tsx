@@ -111,9 +111,14 @@ export function Footer() {
               </li>
               <li>
                 <small>{t.foot_mobile}</small>
-                <a href={`tel:${env.mobilePhone.replace(/[^\d+]/g, '')}`} dir="ltr" onClick={() => trackCallClick(location.pathname)}>
-                  {env.mobilePhone}
-                </a>
+                <span className="footerPhonePair" dir="ltr">
+                  <a href={`tel:${env.mobilePhone.replace(/[^\d+]/g, '')}`} onClick={() => trackCallClick(location.pathname)}>
+                    {env.mobilePhone}
+                  </a>
+                  <a href={`tel:${env.mobilePhone2.replace(/[^\d+]/g, '')}`} onClick={() => trackCallClick(location.pathname)}>
+                    {env.mobilePhone2}
+                  </a>
+                </span>
               </li>
               <li>
                 <small>{t.foot_landline}</small>

@@ -43,6 +43,11 @@ export const env = {
   businessEmail: readOr(firstOf(cmsContact?.businessEmail, rawEnv.VITE_BUSINESS_EMAIL as string | undefined), CONTACT_DEFAULTS.businessEmail),
   salesEmail: readOr(rawEnv.VITE_SALES_EMAIL as string | undefined, CONTACT_DEFAULTS.salesEmail),
   mobilePhone: readOr(firstOf(cmsContact?.mobilePhone, rawEnv.VITE_MOBILE_PHONE as string | undefined), CONTACT_DEFAULTS.mobilePhone),
+  // Additive second mobile number (client request, 23 Nov 2026) -- shown alongside mobilePhone
+  // above wherever it's displayed, never in place of it. No CMS field for this yet (admin-editable
+  // contact details are a separate, not-yet-requested change) -- env var override only, same
+  // fallback shape as its sibling fields minus the CMS source.
+  mobilePhone2: readOr(rawEnv.VITE_MOBILE_PHONE_2 as string | undefined, CONTACT_DEFAULTS.mobilePhone2),
   officePhone: readOr(firstOf(cmsContact?.officePhone, rawEnv.VITE_OFFICE_PHONE as string | undefined), CONTACT_DEFAULTS.officePhone),
   website: readOr(rawEnv.VITE_WEBSITE_HOST as string | undefined, CONTACT_DEFAULTS.website),
   siteUrl: (rawEnv.VITE_SITE_URL as string | undefined) ?? '',

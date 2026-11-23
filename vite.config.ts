@@ -66,6 +66,7 @@ function staticSeo(mode: string, deployEnv: string, cms: CmsFeed): Plugin {
           salesEmail: pick('VITE_SALES_EMAIL', CONTACT_DEFAULTS.salesEmail),
           officePhone: pick('VITE_OFFICE_PHONE', CONTACT_DEFAULTS.officePhone),
           mobilePhone: pick('VITE_MOBILE_PHONE', CONTACT_DEFAULTS.mobilePhone),
+          mobilePhone2: pick('VITE_MOBILE_PHONE_2', CONTACT_DEFAULTS.mobilePhone2),
         }
       : null,
   });

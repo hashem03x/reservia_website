@@ -99,6 +99,14 @@ body[data-lp="1"] nav.main,body[data-lp="1"] .menu-btn,body[data-lp="1"] .tools 
 body[data-lp="1"] .lp-phone{display:inline-flex!important}
 @media (max-width:640px){body[data-lp="1"] .lp-phone{display:none!important}}
 body[data-lp="1"] .wafab{display:none}
+/* Two numbers in the one landing-page phone pill (second mobile number, added alongside the
+   existing one): the pill keeps its padding/border, but each number is its own plain tel: link
+   so both stay independently clickable and trackable. */
+.lp-phone-pair{gap:6px}
+.lp-phone-pair a{color:inherit;text-decoration:none}
+.lp-phone-pair a:hover{text-decoration:underline}
+.lp-phone-sep{color:var(--line)}
+@media (max-width:860px){.lp-phone-pair{font-size:.85rem;padding-inline:14px}}
 @media (max-width:420px){.brand small{display:none}}
 /* larger brand (Oct 2026): step down on narrow phones so the header never wraps */
 @media (max-width:480px){.brand>img{width:50px;height:50px}.brand .wordmark{height:30px}}
@@ -622,6 +630,9 @@ html[dir="rtl"] .partners-btn.next svg{transform:rotate(90deg)}
 html[dir="rtl"] .footerContacts small{letter-spacing:0}
 .footerContacts a,.footerContacts span{color:var(--ink-on-deep);word-break:break-word}
 .footerContacts a{text-align:start}
+/* Second mobile number, added alongside the existing one: both stay independently clickable tel:
+   links, wrapping onto their own line on narrow screens rather than overflowing the footer column. */
+.footerPhonePair{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 
 /* ============================================================
    "Back to top" button (ScrollTopButton.tsx). Stacked above the

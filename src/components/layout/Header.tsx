@@ -134,14 +134,15 @@ export function Header() {
 
         <div className="tools">
           {hs?.showPhone !== false && (
-          <a
-            className="btn ghost lp-phone"
-            href={`tel:${env.mobilePhone.replace(/[^\d+]/g, '')}`}
-            dir="ltr"
-            onClick={() => trackCallClick(location.pathname)}
-          >
-            {env.mobilePhone}
-          </a>
+          <span className="btn ghost lp-phone lp-phone-pair" dir="ltr">
+            <a href={`tel:${env.mobilePhone.replace(/[^\d+]/g, '')}`} onClick={() => trackCallClick(location.pathname)}>
+              {env.mobilePhone}
+            </a>
+            <span className="lp-phone-sep" aria-hidden="true">/</span>
+            <a href={`tel:${env.mobilePhone2.replace(/[^\d+]/g, '')}`} onClick={() => trackCallClick(location.pathname)}>
+              {env.mobilePhone2}
+            </a>
+          </span>
           )}
           <ThemeToggle />
           {/* A real <a href>, not a button, so crawlers can follow it directly and it works with
